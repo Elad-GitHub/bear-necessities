@@ -16,6 +16,7 @@ using Nomadica.Application.UseCases.Events.GetEventById;
 using Nomadica.Application.UseCases.Events.GetEventsByPlace;
 using Nomadica.Application.UseCases.Events.GetEventsByViewport;
 using Nomadica.Application.UseCases.Events.GetMyEvents;
+using Nomadica.Application.UseCases.Events.SearchEvents;
 using Nomadica.Application.UseCases.Groups.CreateGroup;
 using Nomadica.Application.UseCases.Groups.CreateGroupPost;
 using Nomadica.Application.UseCases.Groups.GetGroupById;
@@ -166,6 +167,7 @@ public static class DependencyInjection
         services.AddScoped<GetEventByIdHandler>();
         services.AddScoped<GetPendingEventsHandler>();
         services.AddScoped<GetMyEventsHandler>();
+        services.AddScoped<SearchEventsHandler>();
 
         services.AddScoped<CreateGroupHandler>();
         services.AddScoped<GetGroupsHandler>();

@@ -40,8 +40,8 @@ export interface CreateGroupRequest {
 export class GroupsService {
   constructor(private api: ApiService) {}
 
-  getGroups(query?: string): Observable<{ items: GroupSummaryDto[] }> {
-    const params: Record<string, any> = { limit: 50 };
+  getGroups(query?: string, limit = 50): Observable<{ items: GroupSummaryDto[] }> {
+    const params: Record<string, any> = { limit };
     if (query) params['query'] = query;
     return this.api.get<{ items: GroupSummaryDto[] }>('/groups', params);
   }

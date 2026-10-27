@@ -18,6 +18,8 @@ public interface IEventRepository : IRepository<Event, EventId>
 
     Task<Event?> GetByIdWithRelationsAsync(EventId id, CancellationToken cancellationToken = default);
     Task<List<Event>> GetByOwnerAsync(UserId ownerId, CancellationToken cancellationToken = default);
+
+    Task<List<Event>> SearchUpcomingByTextAsync(string query, int limit, DateTime nowUtc, CancellationToken cancellationToken = default);
     Task<List<Event>> FindUpcomingByPlacesAsync(IEnumerable<PlaceId> placeIds, CancellationToken cancellationToken = default);
     Task<List<Event>> GetPendingAsync(int pageSize, Guid? cursor, CancellationToken cancellationToken = default);
 

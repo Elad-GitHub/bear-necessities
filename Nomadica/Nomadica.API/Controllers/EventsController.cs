@@ -9,6 +9,7 @@ using Nomadica.Application.UseCases.Events.GetEventsByViewport;
 using Nomadica.Application.UseCases.Events.GetMyEvents;
 using Nomadica.Application.UseCases.Events.GetPendingEvents;
 using Nomadica.Application.UseCases.Events.RejectEvent;
+using Nomadica.Application.UseCases.Events.SearchEvents;
 using Nomadica.Application.UseCases.Events.UpdateEvent;
 
 namespace Nomadica.API.Controllers;
@@ -25,6 +26,7 @@ public class EventsController : BaseApiController
     private readonly GetEventsByPlaceHandler _byPlaceHandler;
     private readonly GetPendingEventsHandler _pendingHandler;
     private readonly GetMyEventsHandler _myEventsHandler;
+    private readonly SearchEventsHandler _searchHandler;
 
     public EventsController(
         CreateEventHandler createHandler,
@@ -36,8 +38,10 @@ public class EventsController : BaseApiController
         GetEventsByViewportHandler viewportHandler,
         GetEventsByPlaceHandler byPlaceHandler,
         GetPendingEventsHandler pendingHandler,
-        GetMyEventsHandler myEventsHandler)
+        GetMyEventsHandler myEventsHandler,
+        SearchEventsHandler searchHandler)
     {
+        _searchHandler = searchHandler;
         _createHandler = createHandler;
         _updateHandler = updateHandler;
         _approveHandler = approveHandler;
@@ -48,6 +52,16 @@ public class EventsController : BaseApiController
         _byPlaceHandler = byPlaceHandler;
         _pendingHandler = pendingHandler;
         _myEventsHandler = myEventsHandler;
+    }
+
+    [HttpGet("search")]
+    public async Task<IActionResult> Search(
+        [FromQuery] string? query,
+        [FromQuery] int limit = 6,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _searchHandler.HandleAsync(new SearchEventsRequest(query, limit), cancellationToken);
+        return Ok(response);
     }
 
     [HttpGet("mine")]

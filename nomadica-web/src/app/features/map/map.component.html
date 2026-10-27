@@ -6,19 +6,13 @@
       <span class="material-icons">pets</span> Bear necessities
     </div>
     <app-category-chips
-      [categories]="categoriesService.categories()"
+      [categories]="visibleCategories()"
       [selectedIds]="placesService.selectedCategories()"
       (selectionChange)="onCategoryChange($event)">
     </app-category-chips>
   </div>
 
   <div id="map" class="map-container"></div>
-
-  <!-- Trip planner trigger -->
-  <button class="plan-trip-fab" *ngIf="!tripActive()" (click)="togglePlanner()" aria-label="Plan a Trip">
-    <span class="material-icons">explore</span>
-    <span class="fab-label">Plan a Trip</span>
-  </button>
 
   <!-- Active trip: day-by-day itinerary -->
   <div class="planner-panel trip-itinerary" *ngIf="tripActive()">
@@ -93,7 +87,7 @@
     <p class="planner-hint">Pick at least {{ minTripCategories }} subcategories — open a category to choose.</p>
     <app-category-chips
       [wrap]="true"
-      [categories]="categoriesService.categories()"
+      [categories]="placeCategories()"
       [selectedIds]="tripCategoryIds()"
       (selectionChange)="onPlannerCategoriesChange($event)">
     </app-category-chips>

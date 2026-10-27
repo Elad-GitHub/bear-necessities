@@ -19,6 +19,9 @@ import { ItineraryDay, MAX_TRIP_DAYS, MIN_TRIP_CATEGORIES } from '../../core/mod
 
 type MapMode = 'places' | 'events' | 'both';
 
+// "Gatherings" holds event types (festival, retreat, ceremony…), so it only makes sense when events are on the map
+const EVENTS_ONLY_CATEGORY_SLUG = 'events';
+
 // Distinct, colour-blind-friendly hues so each trip day reads as its own leg of the route
 const TRIP_DAY_COLORS = ['#00796b', '#e65100', '#5e35b1', '#c2185b', '#1565c0', '#827717', '#6d4c41'];
 
@@ -40,6 +43,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   mapInstance: mapboxgl.Map | null = null;
   mapMode = signal<MapMode>('places');
+  placeCategories = computed(() =>
+    this.categoriesService.categories().filter(category => category.slug !== EVENTS_ONLY_CATEGORY_SLUG));
+  visibleCategories = computed(() =>
+    this.mapMode() === 'places' ? this.placeCategories() : this.categoriesService.categories());
   // Spinner only for the very first load — viewport reloads on pan/zoom stay silent (no flicker)
   showInitialSpinner = signal(true);
   private eventMarkers: mapboxgl.Marker[] = [];
@@ -101,7 +108,22 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   setMapMode(mode: MapMode): void {
     this.mapMode.set(mode);
+    if (mode === 'places' && this.dropHiddenCategorySelections()) {
+      this.loadPlacesForViewport();
+      return;
+    }
     this.refreshForMode();
+  }
+
+  // Leaving events mode hides Gatherings, so any of its subcategories still selected would filter invisibly
+  private dropHiddenCategorySelections(): boolean {
+    const visibleIds = new Set(this.placeCategories().flatMap(parent => (parent.children || []).map(child => child.id)));
+    const selected = this.placesService.selectedCategories();
+    const stillVisible = selected.filter(id => visibleIds.has(id));
+    if (stillVisible.length === selected.length) return false;
+
+    this.placesService.selectedCategories.set(stillVisible);
+    return true;
   }
 
   private refreshForMode(): void {
@@ -130,7 +152,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     // React to ?plan / ?focus / ?fly* whether arriving fresh or already on the map
     this.route.queryParamMap.subscribe(params => {
-      if (params.get('plan') === '1') this.isPlannerOpen.set(true);
+      if (params.get('plan') === '1') {
+        this.isPlannerOpen.set(true);
+        // Clear the flag so the navbar's "Plan a Trip" can reopen the panel on a later click
+        this.router.navigate([], { queryParams: { plan: null }, queryParamsHandling: 'merge', replaceUrl: true });
+      }
 
       const focusId = params.get('focus');
       if (focusId) {

@@ -6,8 +6,8 @@
   <div class="navbar-center">
     <div class="search-wrapper">
       <mat-form-field class="search-field" appearance="outline">
-        <mat-label>Search places...</mat-label>
-        <input matInput #searchInput placeholder="Search places..."
+        <mat-label>Search places, events, communities...</mat-label>
+        <input matInput #searchInput placeholder="Try a city, a place, an event or a community"
           (input)="onSearchInput(searchInput.value)"
           (focus)="hasResults() && isSearchOpen.set(true)">
         <mat-icon matSuffix *ngIf="!isSearching()">search</mat-icon>
@@ -32,6 +32,28 @@
             <span class="result-name">{{ result.name }}</span>
             <span class="result-location" *ngIf="result.city || result.country">
               {{ result.city }}<ng-container *ngIf="result.city && result.country">, </ng-container>{{ result.country }}
+            </span>
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="eventResults().length > 0">
+          <div class="search-section-label">Events</div>
+          <button class="search-result" *ngFor="let eventItem of eventResults()"
+            (click)="openEventResult(eventItem, searchInput)">
+            <mat-icon>celebration</mat-icon>
+            <span class="result-name">{{ eventItem.title }}</span>
+            <span class="result-location" *ngIf="eventItem.startAt">{{ eventItem.startAt | date:'MMM d' }}</span>
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="groupResults().length > 0">
+          <div class="search-section-label">Communities</div>
+          <button class="search-result" *ngFor="let group of groupResults()"
+            (click)="openGroupResult(group, searchInput)">
+            <mat-icon>groups</mat-icon>
+            <span class="result-name">{{ group.name }}</span>
+            <span class="result-location">
+              {{ group.city || group.country || '' }}<ng-container *ngIf="group.city || group.country"> · </ng-container>{{ group.memberCount }} {{ group.memberCount === 1 ? 'member' : 'members' }}
             </span>
           </button>
         </ng-container>

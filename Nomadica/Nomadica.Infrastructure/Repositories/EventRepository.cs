@@ -75,6 +75,25 @@ public class EventRepository : BaseRepository<Event, EventId>, IEventRepository
             .OrderByDescending(e => e.CreatedAt)
             .ToListAsync(cancellationToken);
 
+    // Live events matched by title; undated (permanent/recurring) ones count as upcoming
+    public async Task<List<Event>> SearchUpcomingByTextAsync(
+        string query,
+        int limit,
+        DateTime nowUtc,
+        CancellationToken cancellationToken = default)
+    {
+        var pattern = $"%{query}%";
+        return await Context.Events
+            .Include(e => e.Categories)
+            .Where(e => e.Status == ListingStatus.Live
+                && EF.Functions.Like(e.Title, pattern)
+                && (e.StartAt == null || (e.EndAt ?? e.StartAt) >= nowUtc))
+            .OrderBy(e => e.StartAt == null)
+            .ThenBy(e => e.StartAt)
+            .Take(limit)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<Event?> GetByIdWithRelationsAsync(EventId id, CancellationToken cancellationToken = default)
         => await Context.Events
             .Include(e => e.Categories)

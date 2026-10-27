@@ -9,31 +9,6 @@
 $planner-primary: #00796b;
 $planner-primary-dark: #004d40;
 
-.plan-trip-fab {
-  position: absolute;
-  top: 80px;
-  right: 12px;
-  z-index: 25;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 11px 20px;
-  border: none;
-  border-radius: 24px;
-  background: $planner-primary;
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
-  transition: background 0.2s, transform 0.15s;
-
-  .material-icons { font-size: 19px; }
-
-  &:hover { background: $planner-primary-dark; transform: translateY(-1px); }
-}
-
 .planner-panel {
   position: absolute;
   top: 92px;
@@ -566,15 +541,6 @@ $planner-primary-dark: #004d40;
     min-height: 44px;
   }
 
-  // FAB top-right, mode toggle top-left, banner centered — keep them
-  // from crowding each other on narrow screens.
-  .plan-trip-fab {
-    top: 92px;
-    right: 10px;
-    padding: 10px 16px;
-    font-size: 13px;
-  }
-
   .map-mode-toggle {
     top: 92px;
     left: 10px;
@@ -593,18 +559,6 @@ $planner-primary-dark: #004d40;
 }
 
 @media (max-width: 480px) {
-  // FAB collapses to an icon-only circle (top-right) so it fits beside the
-  // mode toggle (top-left) on a ~360px row without stacking awkwardly.
-  .plan-trip-fab {
-    top: 92px;
-    right: 10px;
-    padding: 11px;
-    border-radius: 50%;
-
-    .fab-label { display: none; }
-    .material-icons { font-size: 20px; }
-  }
-
   .map-mode-toggle {
     top: 92px;
     left: 10px;
