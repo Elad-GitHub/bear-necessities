@@ -1,0 +1,42 @@
+@use '@angular/material' as mat;
+
+@use 'styles/variables';
+@use 'styles/colors';
+@use 'styles/reset';
+@use 'styles/mixins';
+
+@include mat.core();
+
+// Use Angular Material prebuilt theme
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+// Google Font import
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+// Global styles
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: variables.$background;
+  color: variables.$text-primary;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+app-root {
+  display: block;
+  height: 100%;
+}
+
+// Media never forces horizontal overflow on small screens
+img {
+  max-width: 100%;
+}
+
+// Material snackbars/menus can drift off-screen on phones; keep them inset
+.cdk-overlay-pane {
+  max-width: calc(100vw - 16px) !important;
+}

@@ -1,0 +1,228 @@
+$primary: #00796b;
+$primary-light: #e0f2f1;
+$border: #e0e0e0;
+$text: #212121;
+$text-muted: #757575;
+
+.chips-outer {
+  position: relative;
+  background: white;
+  border-bottom: 1px solid $border;
+
+  // Edge fades cue that the row scrolls; they only show when there is more in that direction
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 44px;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 150ms ease;
+  }
+  &::before {
+    left: 0;
+    background: linear-gradient(to right, white 30%, rgba(255, 255, 255, 0));
+  }
+  &::after {
+    right: 0;
+    background: linear-gradient(to left, white 30%, rgba(255, 255, 255, 0));
+  }
+  &.can-left::before { opacity: 1; }
+  &.can-right::after { opacity: 1; }
+}
+
+.chips-container {
+  display: flex;
+  // Single scrollable row so all categories fit one line regardless of count
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 6px;
+  padding: 8px 16px;
+  background: white;
+
+  &::-webkit-scrollbar { display: none; }
+}
+
+.scroll-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid $border;
+  background: white;
+  color: $primary;
+  cursor: pointer;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.18);
+  transition: background 150ms ease;
+
+  .material-icons { font-size: 20px; }
+
+  &:hover { background: $primary-light; }
+
+  &.left { left: 6px; }
+  &.right { right: 6px; }
+}
+
+.chip-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  border: 1px solid #ccc;
+  background: white;
+  color: $text-muted;
+  cursor: pointer;
+  transition: all 200ms ease;
+  white-space: nowrap;
+
+  .chip-icon { font-size: 14px; }
+
+  .arrow {
+    font-size: 15px;
+    transition: transform 200ms ease;
+
+    &.rotated { transform: rotate(180deg); }
+  }
+
+  &.selected {
+    background: $primary;
+    color: white;
+    border-color: $primary;
+  }
+
+  &.open:not(.selected) {
+    border-color: $primary;
+    color: $primary;
+  }
+
+  &:hover:not(.selected) {
+    border-color: $primary;
+    color: $primary;
+  }
+}
+
+.selection-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.3);
+
+  .chip:not(.selected) & {
+    background: $primary-light;
+    color: $primary;
+  }
+}
+
+.dropdown {
+  // Fixed (not absolute) so the horizontally-scrolling chip row can't clip it;
+  // top/left are set inline from the clicked chip's position.
+  position: fixed;
+  width: 224px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.16);
+  border: 1px solid $border;
+  z-index: 1200;
+  padding: 6px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: $text;
+  text-align: left;
+  cursor: pointer;
+  transition: background 150ms ease;
+
+  .check-icon {
+    font-size: 19px;
+    color: #bdbdbd;
+  }
+
+  &:hover { background: #f5f5f5; }
+
+  &.checked {
+    color: $primary;
+    font-weight: 600;
+
+    .check-icon { color: $primary; }
+  }
+
+  &.all-item { font-weight: 600; }
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: $border;
+  margin: 4px 6px;
+}
+
+// --- Mobile ---
+@media (max-width: 760px) {
+  .chips-container {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 10px 12px;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .chip {
+    height: 40px;
+  }
+
+  .dropdown {
+    min-width: 200px;
+    max-width: calc(100vw - 24px);
+    max-height: 60vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .chips-container {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+}

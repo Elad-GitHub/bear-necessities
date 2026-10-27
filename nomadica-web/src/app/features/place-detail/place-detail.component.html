@@ -1,0 +1,230 @@
+<app-navbar></app-navbar>
+
+<div class="place-detail-container">
+  <!-- Loading state -->
+  <app-loading-spinner *ngIf="isLoading()"></app-loading-spinner>
+
+  <ng-container *ngIf="!isLoading() && place(); let place">
+    <!-- Back button -->
+    <button mat-button class="back-button" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to map
+    </button>
+
+    <!-- Hero section -->
+    <div class="hero" [style.backgroundImage]="'url(' + getHeroImageUrl() + ')'">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <div class="hero-info">
+          <div class="category-badges">
+            <mat-chip class="category-chip">
+              {{ place.categoryName || 'Place' }}
+            </mat-chip>
+            <mat-chip class="category-chip" *ngIf="place.isVerified">
+              ✓ Verified
+            </mat-chip>
+          </div>
+          <h1 class="hero-title">{{ place.name }}</h1>
+        </div>
+        <div class="save-actions">
+          <button class="save-btn want-to-go" [class.saved]="isSaveType('WantToGo')"
+            [disabled]="isTogglingSave()" (click)="setSaveType('WantToGo')" title="Want to go there">
+            <mat-icon>{{ isSaveType('WantToGo') ? 'star' : 'star_border' }}</mat-icon>
+            Want to go
+          </button>
+          <button class="save-btn visited" [class.saved]="isSaveType('Visited')"
+            [disabled]="isTogglingSave()" (click)="setSaveType('Visited')" title="I've been there">
+            <mat-icon>{{ isSaveType('Visited') ? 'check_circle' : 'check_circle_outline' }}</mat-icon>
+            Been there
+          </button>
+          <button class="save-btn loved" [class.saved]="isSaveType('VisitedLoved')"
+            [disabled]="isTogglingSave()" (click)="setSaveType('VisitedLoved')" title="Visited & loved it">
+            <mat-icon>{{ isSaveType('VisitedLoved') ? 'favorite' : 'favorite_border' }}</mat-icon>
+            Loved it
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content section -->
+    <div class="content-wrapper">
+      <div class="content-grid">
+        <!-- Left column -->
+        <div class="main-content">
+          <!-- Description -->
+          <section class="section">
+            <h2 class="section-title">About</h2>
+            <p class="description">{{ place.description || 'No description available.' }}</p>
+          </section>
+
+          <!-- External links -->
+          <section class="section" *ngIf="hasExternalLinks()">
+            <h2 class="section-title">Visit</h2>
+            <div class="external-links">
+              <a *ngIf="place.website" [href]="place.website" target="_blank" mat-stroked-button>
+                <mat-icon>language</mat-icon>
+                Website
+              </a>
+              <a *ngIf="place.facebook" [href]="place.facebook" target="_blank" mat-stroked-button>
+                <mat-icon>facebook</mat-icon>
+                Facebook
+              </a>
+              <a *ngIf="place.instagram" [href]="place.instagram" target="_blank" mat-stroked-button>
+                <mat-icon>photo_camera</mat-icon>
+                Instagram
+              </a>
+            </div>
+          </section>
+
+          <!-- Upcoming events -->
+          <section class="section">
+            <h2 class="section-title">Upcoming Events</h2>
+
+            <p class="stub-text" *ngIf="isLoadingEvents()">Loading events...</p>
+            <p class="stub-text" *ngIf="!isLoadingEvents() && upcomingEvents().length === 0">
+              No upcoming events at this place yet.
+            </p>
+
+            <div class="event-list" *ngIf="!isLoadingEvents() && upcomingEvents().length > 0">
+              <div class="event-card" *ngFor="let eventItem of upcomingEvents()" (click)="openEvent(eventItem)">
+                <div class="event-date-box" *ngIf="eventItem.startAt">
+                  <span class="event-month">{{ eventItem.startAt | date:'MMM' }}</span>
+                  <span class="event-day">{{ eventItem.startAt | date:'d' }}</span>
+                </div>
+                <div class="event-date-box" *ngIf="!eventItem.startAt">
+                  <mat-icon>repeat</mat-icon>
+                </div>
+                <div class="event-info">
+                  <h3>{{ eventItem.title }}</h3>
+                  <p class="event-meta">
+                    <span *ngIf="eventItem.startAt">{{ eventItem.startAt | date:'EEE, HH:mm' }}</span>
+                    <span class="event-type" *ngIf="eventItem.eventType">{{ eventItem.eventType }}</span>
+                    <span class="event-price" *ngIf="getEventPriceLabel(eventItem)">{{ getEventPriceLabel(eventItem) }}</span>
+                  </p>
+                </div>
+                <mat-icon class="event-arrow">chevron_right</mat-icon>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Right sidebar -->
+        <aside class="sidebar">
+          <!-- Location card -->
+          <mat-card class="info-card">
+            <mat-card-header>
+              <mat-card-title>Location</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="location-info">
+                <p *ngIf="place.city">
+                  <strong>City:</strong> {{ place.city }}
+                </p>
+                <p *ngIf="place.country">
+                  <strong>Country:</strong> {{ place.country }}
+                </p>
+                <p *ngIf="place.timezone">
+                  <strong>Timezone:</strong> {{ place.timezone }}
+                </p>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Directions -->
+          <mat-card class="info-card">
+            <mat-card-content>
+              <a [href]="getDirectionsUrl()" target="_blank" mat-raised-button color="primary" class="full-width">
+                <mat-icon>directions</mat-icon>
+                Get Directions
+              </a>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Availability -->
+          <mat-card class="info-card" *ngIf="place.seasonality">
+            <mat-card-content>
+              <mat-chip [class.seasonal]="place.seasonality === 'seasonal'" class="availability-chip">
+                {{ place.seasonality === 'seasonal' ? '🌍 Seasonal' : '✓ Year-round' }}
+              </mat-chip>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Rating -->
+          <mat-card class="info-card">
+            <mat-card-header>
+              <mat-card-title>Reviews</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="rating-info">
+                <div class="stars">
+                  <mat-icon *ngFor="let star of getStarRating(reviewsAverage() || 0)" class="filled">
+                    star
+                  </mat-icon>
+                  <mat-icon *ngFor="let star of getStarRating(5 - (reviewsAverage() || 0))" class="empty">
+                    star_border
+                  </mat-icon>
+                </div>
+                <p class="rating-text">
+                  <strong>{{ reviewsAverage() || 'No' }}</strong> / 5
+                  ({{ reviewsTotal() }} reviews)
+                </p>
+              </div>
+              <button mat-raised-button color="accent" class="full-width"
+                *ngIf="!isReviewFormOpen()" (click)="openReviewForm()">
+                Write a Review
+              </button>
+
+              <!-- Review form -->
+              <div class="review-form" *ngIf="isReviewFormOpen()">
+                <div class="star-picker">
+                  <mat-icon *ngFor="let starValue of [1,2,3,4,5]"
+                    [class.picked]="reviewRating() >= starValue"
+                    (click)="setReviewRating(starValue)">
+                    {{ reviewRating() >= starValue ? 'star' : 'star_border' }}
+                  </mat-icon>
+                </div>
+                <textarea class="review-textarea" rows="3" maxlength="2000"
+                  placeholder="Share your experience (optional)..."
+                  [value]="reviewBody()"
+                  (input)="reviewBody.set($any($event.target).value)"></textarea>
+                <div class="review-form-actions">
+                  <button mat-button (click)="closeReviewForm()">Cancel</button>
+                  <button mat-raised-button color="primary"
+                    [disabled]="isSubmittingReview()" (click)="submitReview()">
+                    {{ isSubmittingReview() ? 'Submitting...' : 'Submit' }}
+                  </button>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Reviews list -->
+          <section class="reviews-section" *ngIf="reviews().length > 0">
+            <mat-card class="review-card" *ngFor="let review of reviews()">
+              <mat-card-header>
+                <div class="review-author">
+                  <strong>{{ review.authorDisplayName || 'Anonymous' }}</strong>
+                  <span class="rating-stars">
+                    <mat-icon *ngFor="let i of getStarRating(review.rating)" class="filled">star</mat-icon>
+                  </span>
+                </div>
+              </mat-card-header>
+              <mat-card-content>
+                <p>{{ review.body }}</p>
+              </mat-card-content>
+            </mat-card>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="!isLoading() && !place()">
+    <div class="error-state">
+      <h2>Place not found</h2>
+      <button mat-raised-button color="primary" (click)="goBack()">
+        Back to map
+      </button>
+    </div>
+  </ng-container>
+</div>

@@ -1,0 +1,107 @@
+<app-navbar></app-navbar>
+
+<div class="groups-page">
+  <div class="page-header">
+    <div class="header-content">
+      <button class="back-btn" routerLink="/map" title="Back to map">
+        <span class="material-icons">arrow_back</span>
+      </button>
+      <div class="header-text">
+        <h1><span class="material-icons">groups</span> Communities</h1>
+        <p>Local circles of conscious travelers — share tips, meet people, stay connected.</p>
+      </div>
+      <button class="create-btn" (click)="toggleCreate()">
+        <span class="material-icons">{{ isCreateOpen() ? 'close' : 'add' }}</span>
+        {{ isCreateOpen() ? 'Cancel' : 'New Community' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Create form -->
+    <div class="create-card" *ngIf="isCreateOpen()">
+      <h2>Start a community</h2>
+      <form [formGroup]="createForm" (ngSubmit)="createGroup()">
+        <div class="form-field">
+          <label for="groupName">Name <span class="required">*</span></label>
+          <input id="groupName" type="text" formControlName="name"
+            placeholder='e.g. "Conscious Community Madrid"' />
+        </div>
+
+        <div class="form-field location-field">
+          <label for="groupLocation">Area <span class="required">*</span></label>
+          <input id="groupLocation" #locationInput type="text" autocomplete="off"
+            placeholder="Search a city or region..."
+            (input)="onLocationSearch(locationInput.value)" />
+          <button type="button" class="clear-location" *ngIf="selectedLocation()"
+            (click)="clearLocation(locationInput)">
+            <span class="material-icons">close</span>
+          </button>
+
+          <div class="location-dropdown" *ngIf="locationResults().length > 0">
+            <button type="button" class="location-result" *ngFor="let result of locationResults()"
+              (click)="selectLocation(result, locationInput)">
+              <span class="material-icons">place</span>
+              {{ result.fullName }}
+            </button>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="groupDescription">Description</label>
+          <textarea id="groupDescription" formControlName="description" rows="3"
+            placeholder="What is this community about?"></textarea>
+        </div>
+
+        <div class="create-actions">
+          <button type="submit" class="btn-primary" [disabled]="isCreating()">
+            <span class="material-icons">{{ isCreating() ? 'sync' : 'group_add' }}</span>
+            {{ isCreating() ? 'Creating...' : 'Create Community' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Search -->
+    <div class="list-search">
+      <span class="material-icons">search</span>
+      <input #listSearch type="text" placeholder="Search communities by name, city or country..."
+        (input)="onListSearch(listSearch.value)" />
+    </div>
+
+    <div class="loading-state" *ngIf="isLoading()">
+      <span class="material-icons spinning">sync</span> Loading communities...
+    </div>
+
+    <div class="empty-state" *ngIf="!isLoading() && groups().length === 0">
+      <span class="material-icons">diversity_3</span>
+      <h3>No communities yet</h3>
+      <p>Be the first — start a circle for your favorite corner of the world.</p>
+    </div>
+
+    <div class="groups-grid" *ngIf="!isLoading() && groups().length > 0">
+      <div class="group-card" *ngFor="let group of groups()" (click)="openGroup(group)">
+        <div class="group-icon">
+          <span class="material-icons">groups</span>
+        </div>
+        <div class="group-info">
+          <h3>{{ group.name }}</h3>
+          <p class="group-location" *ngIf="group.city || group.country">
+            <span class="material-icons">place</span>
+            {{ group.city }}<ng-container *ngIf="group.city && group.country">, </ng-container>{{ group.country }}
+          </p>
+          <p class="group-description" *ngIf="group.description">{{ group.description }}</p>
+        </div>
+        <div class="group-meta">
+          <span class="member-count">
+            <span class="material-icons">person</span>
+            {{ group.memberCount }}
+          </span>
+          <span class="member-chip" *ngIf="group.isMember">Member ✓</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

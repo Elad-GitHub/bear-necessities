@@ -1,0 +1,701 @@
+$primary: #00796b;
+$primary-light: #e0f2f1;
+$primary-dark: #004d40;
+$error: #d32f2f;
+$text: #212121;
+$text-muted: #757575;
+$border: #e0e0e0;
+$surface: #ffffff;
+$background: #f5f7f5;
+
+.submit-listing-page {
+  min-height: 100vh;
+  background: $background;
+  padding-top: 64px; // navbar height
+}
+
+// Header
+.page-header {
+  background: linear-gradient(135deg, $primary-dark 0%, $primary 100%);
+  color: white;
+  padding: 32px 24px 28px;
+
+  .header-content {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 4px;
+    transition: background 0.2s;
+
+    &:hover { background: rgba(255, 255, 255, 0.25); }
+  }
+
+  .header-text {
+    h1 {
+      margin: 0 0 6px;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      opacity: 0.85;
+      max-width: 520px;
+    }
+  }
+}
+
+// Form
+.submit-form {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 24px 120px;
+}
+
+.form-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-section {
+  background: $surface;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.sticky-section {
+  position: sticky;
+  top: 80px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: $text;
+  margin: 0 0 16px;
+
+  .section-icon {
+    font-size: 20px;
+    color: $primary;
+  }
+
+  .section-badge {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 600;
+    background: $primary-light;
+    color: $primary;
+    padding: 2px 8px;
+    border-radius: 12px;
+  }
+}
+
+.section-hint {
+  font-size: 13px;
+  color: $text-muted;
+  margin: -8px 0 16px;
+}
+
+// Form fields
+.form-field {
+  margin-bottom: 16px;
+  position: relative;
+
+  &:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: $text;
+    margin-bottom: 6px;
+  }
+
+  input, textarea, select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1.5px solid $border;
+    border-radius: 8px;
+    font-size: 14px;
+    color: $text;
+    background: white;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    font-family: inherit;
+
+    &:focus {
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.12);
+    }
+
+    &.error {
+      border-color: $error;
+
+      &:focus { box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.12); }
+    }
+
+    &::placeholder { color: #bdbdbd; }
+  }
+
+  textarea { resize: vertical; min-height: 96px; }
+
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='%23757575' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+  }
+
+  &.with-icon {
+    position: relative;
+
+    .field-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: $text-muted;
+      pointer-events: none;
+    }
+
+    input { padding-left: 36px; }
+  }
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.required { color: $error; }
+
+.error-msg {
+  display: block;
+  font-size: 11px;
+  color: $error;
+  margin-top: 4px;
+}
+
+.char-count {
+  display: block;
+  font-size: 11px;
+  color: $text-muted;
+  text-align: right;
+  margin-top: 2px;
+}
+
+// Toggle
+.toggle-label {
+  display: block;
+  cursor: default;
+
+  span { display: block; font-size: 13px; font-weight: 500; color: $text; margin-bottom: 8px; }
+}
+
+.toggle-group {
+  display: flex;
+  gap: 8px;
+}
+
+.toggle-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1.5px solid $border;
+  border-radius: 8px;
+  background: white;
+  font-size: 13px;
+  font-weight: 500;
+  color: $text-muted;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  .material-icons { font-size: 18px; }
+
+  &:hover { border-color: $primary; color: $primary; }
+
+  &.active {
+    border-color: $primary;
+    background: $primary-light;
+    color: $primary;
+  }
+}
+
+// Categories
+.category-group {
+  margin-bottom: 16px;
+
+  &:last-child { margin-bottom: 0; }
+}
+
+.category-group-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.category-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border: 1.5px solid $border;
+  border-radius: 20px;
+  background: white;
+  font-size: 13px;
+  font-weight: 500;
+  color: $text-muted;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  .material-icons { font-size: 16px; }
+
+  &:hover:not(.disabled) {
+    border-color: $primary;
+    color: $primary;
+  }
+
+  &.selected {
+    border-color: $primary;
+    background: $primary;
+    color: white;
+  }
+
+  &.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// Map picker
+.map-picker {
+  width: 100%;
+  height: 300px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  border: 1.5px solid $border;
+  cursor: crosshair;
+}
+
+.coordinates-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.map-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: $text-muted;
+  padding: 8px 12px;
+  background: #f5f5f5;
+  border-radius: 6px;
+  margin-top: 8px;
+
+  .material-icons { font-size: 16px; }
+
+  &.success {
+    color: $primary;
+    background: $primary-light;
+  }
+}
+
+// Venue picker (event mode)
+.venue-search {
+  position: relative;
+}
+
+.venue-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid $border;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+  z-index: 30;
+  padding: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.venue-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: $text;
+  text-align: left;
+  cursor: pointer;
+
+  .material-icons { font-size: 17px; color: $primary; }
+
+  .venue-location {
+    margin-left: auto;
+    font-size: 12px;
+    color: $text-muted;
+  }
+
+  &:hover { background: $primary-light; }
+}
+
+.selected-venue {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1.5px solid $primary;
+  border-radius: 8px;
+  background: $primary-light;
+  margin-bottom: 14px;
+
+  .material-icons { font-size: 18px; color: $primary; }
+
+  .venue-name { font-size: 14px; font-weight: 600; color: $text; }
+
+  .venue-location { font-size: 12px; color: $text-muted; }
+
+  .icon-btn {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: 50%;
+    background: none;
+    color: $text-muted;
+    cursor: pointer;
+
+    .material-icons { font-size: 16px; }
+
+    &:hover { background: rgba(0, 0, 0, 0.08); }
+  }
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: $text;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: $primary;
+  }
+}
+
+// Photos (edit mode)
+.photo-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.photo-thumb {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid $border;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.photo-delete {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  .material-icons { font-size: 14px; }
+
+  &:hover { background: $error; }
+}
+
+.photo-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 96px;
+  height: 96px;
+  border: 1.5px dashed $border;
+  border-radius: 10px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: $text-muted;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  .material-icons { font-size: 22px; }
+
+  &:hover { border-color: $primary; color: $primary; }
+
+  &.disabled {
+    pointer-events: none;
+    opacity: 0.6;
+  }
+}
+
+.geocode-search {
+  margin-bottom: 12px;
+
+  .geocode-name {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .venue-location {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// Submit bar
+.submit-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid $border;
+  padding: 14px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  z-index: 100;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 24px;
+  background: $primary;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  .material-icons { font-size: 18px; }
+
+  &:hover:not(:disabled) { background: $primary-dark; }
+
+  &:disabled {
+    background: #bdbdbd;
+    cursor: not-allowed;
+  }
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: white;
+  color: $text-muted;
+  border: 1.5px solid $border;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+
+  &:hover { border-color: $text-muted; color: $text; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinning { animation: spin 1s linear infinite; }
+
+// --- Mobile ---
+@media (max-width: 760px) {
+  // Header: tighter spacing, smaller title, allow text to wrap
+  .page-header {
+    padding: 20px 16px 18px;
+
+    .header-content {
+      gap: 12px;
+    }
+
+    .header-text {
+      min-width: 0;
+
+      h1 {
+        font-size: 21px;
+      }
+
+      p {
+        font-size: 13px;
+        max-width: none;
+      }
+    }
+  }
+
+  // Form: reduce padding, keep room above the fixed submit bar
+  .submit-form {
+    padding: 18px 14px 110px;
+  }
+
+  // Two-column layout (form + map picker) -> single column
+  .form-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .form-column {
+    gap: 16px;
+  }
+
+  .form-section {
+    padding: 16px;
+  }
+
+  // Map picker isn't sticky on mobile (single column has nothing to scroll past)
+  .sticky-section {
+    position: static;
+    top: auto;
+  }
+
+  // Section titles: let the badge wrap below the title instead of overflowing
+  .section-title {
+    flex-wrap: wrap;
+  }
+
+  // Paired fields -> stacked single column
+  .form-row,
+  .coordinates-row {
+    grid-template-columns: 1fr;
+  }
+
+  // Map picker can be a bit shorter on phones
+  .map-picker {
+    height: 240px;
+  }
+
+  // Submit bar stays full-width and pinned; tighten horizontal padding
+  .submit-bar {
+    padding: 12px 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    padding: 18px 14px 16px;
+
+    .header-text h1 {
+      font-size: 20px;
+    }
+  }
+
+  // Toggle groups (e.g. Repeats with 3 options) can get cramped -> wrap
+  .toggle-group {
+    flex-wrap: wrap;
+  }
+
+  // Keep submit buttons full tap-target width and side-by-side, but allow wrap
+  .submit-bar {
+    flex-wrap: wrap;
+
+    .btn-primary,
+    .btn-secondary {
+      flex: 1;
+      justify-content: center;
+      min-height: 44px;
+    }
+  }
+
+  .map-picker {
+    height: 220px;
+  }
+}

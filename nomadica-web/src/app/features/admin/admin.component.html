@@ -1,0 +1,200 @@
+<app-navbar></app-navbar>
+
+<div class="admin-page">
+  <div class="page-header">
+    <div class="header-content">
+      <button class="back-btn" routerLink="/map" title="Back to map">
+        <span class="material-icons">arrow_back</span>
+      </button>
+      <div class="header-text">
+        <h1>
+          <span class="material-icons">admin_panel_settings</span>
+          Moderation Queue
+        </h1>
+        <p>Review submitted listings before they go live on the map.</p>
+      </div>
+      <span class="pending-count" *ngIf="totalPending() > 0">
+        {{ totalPending() }} pending
+      </span>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="queue-tabs">
+      <button class="queue-tab" [class.active]="activeTab() === 'places'" (click)="setTab('places')">
+        <span class="material-icons">place</span>
+        Places
+        <span class="tab-count" *ngIf="pendingPlaces().length">{{ pendingPlaces().length }}</span>
+      </button>
+      <button class="queue-tab" [class.active]="activeTab() === 'events'" (click)="setTab('events')">
+        <span class="material-icons">celebration</span>
+        Events
+        <span class="tab-count" *ngIf="pendingEvents().length">{{ pendingEvents().length }}</span>
+      </button>
+      <button class="queue-tab" [class.active]="activeTab() === 'members'" (click)="setTab('members')">
+        <span class="material-icons">how_to_reg</span>
+        Members
+        <span class="tab-count" *ngIf="pendingMembers().length">{{ pendingMembers().length }}</span>
+      </button>
+    </div>
+
+    <div class="loading-state" *ngIf="isLoading()">
+      <span class="material-icons spinning">sync</span> Loading pending listings...
+    </div>
+
+    <!-- Places queue -->
+    <ng-container *ngIf="!isLoading() && activeTab() === 'places'">
+      <div class="empty-state" *ngIf="pendingPlaces().length === 0">
+        <span class="material-icons">task_alt</span>
+        <h3>All clear!</h3>
+        <p>No places waiting for review.</p>
+      </div>
+
+      <div class="pending-list" *ngIf="pendingPlaces().length > 0">
+        <div class="pending-card" *ngFor="let place of pendingPlaces()">
+          <div class="card-main" (click)="viewPlace(place)">
+            <div class="place-icon">
+              <span class="material-icons">place</span>
+            </div>
+            <div class="place-info">
+              <h3>{{ place.name }}</h3>
+              <p class="place-meta">
+                <span *ngIf="place.city || place.country">
+                  <span class="material-icons">location_on</span>
+                  {{ place.city }}<ng-container *ngIf="place.city && place.country">, </ng-container>{{ place.country }}
+                </span>
+                <span class="status-chip">PENDING REVIEW</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="card-actions" *ngIf="!isRejecting(place.id)">
+            <button class="action-btn approve" [disabled]="isProcessing(place.id)" (click)="approvePlace(place)">
+              <span class="material-icons">check_circle</span>
+              Approve
+            </button>
+            <button class="action-btn reject" [disabled]="isProcessing(place.id)" (click)="openRejectForm(place.id)">
+              <span class="material-icons">cancel</span>
+              Reject
+            </button>
+          </div>
+
+          <div class="reject-form" *ngIf="isRejecting(place.id)">
+            <input type="text" placeholder="Reason for rejection (sent to the submitter)..."
+              [value]="rejectReason()"
+              (input)="rejectReason.set($any($event.target).value)" />
+            <div class="reject-actions">
+              <button class="action-btn subtle" (click)="cancelReject()">Cancel</button>
+              <button class="action-btn reject" [disabled]="isProcessing(place.id)" (click)="confirmRejectPlace(place)">
+                Confirm Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Events queue -->
+    <ng-container *ngIf="!isLoading() && activeTab() === 'events'">
+      <div class="empty-state" *ngIf="pendingEvents().length === 0">
+        <span class="material-icons">task_alt</span>
+        <h3>All clear!</h3>
+        <p>No events waiting for review.</p>
+      </div>
+
+      <div class="pending-list" *ngIf="pendingEvents().length > 0">
+        <div class="pending-card" *ngFor="let eventItem of pendingEvents()">
+          <div class="card-main" (click)="viewEvent(eventItem)">
+            <div class="place-icon event-icon">
+              <span class="material-icons">celebration</span>
+            </div>
+            <div class="place-info">
+              <h3>{{ eventItem.title }}</h3>
+              <p class="place-meta">
+                <span *ngIf="eventItem.startAt">
+                  <span class="material-icons">schedule</span>
+                  {{ eventItem.startAt | date:'MMM d, y • HH:mm' }}
+                </span>
+                <span *ngIf="eventItem.isFree">Free</span>
+                <span *ngIf="!eventItem.isFree && eventItem.price">{{ eventItem.price }} {{ eventItem.currency }}</span>
+                <span class="status-chip">PENDING REVIEW</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="card-actions" *ngIf="!isRejecting(eventItem.id)">
+            <button class="action-btn approve" [disabled]="isProcessing(eventItem.id)" (click)="approveEvent(eventItem)">
+              <span class="material-icons">check_circle</span>
+              Approve
+            </button>
+            <button class="action-btn reject" [disabled]="isProcessing(eventItem.id)" (click)="openRejectForm(eventItem.id)">
+              <span class="material-icons">cancel</span>
+              Reject
+            </button>
+          </div>
+
+          <div class="reject-form" *ngIf="isRejecting(eventItem.id)">
+            <input type="text" placeholder="Reason for rejection (sent to the submitter)..."
+              [value]="rejectReason()"
+              (input)="rejectReason.set($any($event.target).value)" />
+            <div class="reject-actions">
+              <button class="action-btn subtle" (click)="cancelReject()">Cancel</button>
+              <button class="action-btn reject" [disabled]="isProcessing(eventItem.id)" (click)="confirmRejectEvent(eventItem)">
+                Confirm Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+    <!-- Members queue -->
+    <ng-container *ngIf="!isLoading() && activeTab() === 'members'">
+      <div class="empty-state" *ngIf="pendingMembers().length === 0">
+        <span class="material-icons">task_alt</span>
+        <h3>All clear!</h3>
+        <p>No membership applications waiting for review.</p>
+      </div>
+
+      <div class="pending-list" *ngIf="pendingMembers().length > 0">
+        <div class="pending-card" *ngFor="let member of pendingMembers()">
+          <div class="card-main">
+            <div class="place-icon member-icon">
+              <span class="material-icons">person_add</span>
+            </div>
+            <div class="place-info">
+              <h3>{{ member.displayName }}</h3>
+              <p class="place-meta">
+                <span>
+                  <span class="material-icons">mail</span>
+                  {{ member.email }}
+                </span>
+                <span *ngIf="member.appliedAt">
+                  <span class="material-icons">schedule</span>
+                  Applied {{ member.appliedAt | date:'MMM d, y' }}
+                </span>
+                <span class="status-chip">PENDING REVIEW</span>
+              </p>
+              <a class="social-link" *ngIf="member.socialProfileUrl"
+                [href]="member.socialProfileUrl" target="_blank" rel="noopener"
+                (click)="$event.stopPropagation()">
+                <span class="material-icons">open_in_new</span>
+                View social profile
+              </a>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button class="action-btn approve" [disabled]="isProcessing(member.id)" (click)="approveMember(member)">
+              <span class="material-icons">check_circle</span>
+              Approve
+            </button>
+            <button class="action-btn reject" [disabled]="isProcessing(member.id)" (click)="rejectMember(member)">
+              <span class="material-icons">cancel</span>
+              Reject
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>

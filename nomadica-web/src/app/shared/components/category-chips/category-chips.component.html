@@ -1,0 +1,51 @@
+<div class="chips-outer" [class.can-left]="canScrollLeft()" [class.can-right]="canScrollRight()">
+  <button class="scroll-arrow left" *ngIf="canScrollLeft()" (click)="scrollChips(-1)" aria-label="Scroll categories left">
+    <span class="material-icons">chevron_left</span>
+  </button>
+
+  <div class="chips-container" #scroller (scroll)="onScrollerScroll()">
+    <button class="chip" [class.selected]="isAllSelected()" (click)="clearAll()">
+      All
+    </button>
+
+    <div class="chip-wrapper" *ngFor="let parent of categories">
+      <button class="chip"
+        [class.selected]="hasSelectionInParent(parent)"
+        [class.open]="isDropdownOpen(parent.id)"
+        (click)="toggleDropdown(parent.id, $event)">
+        <span class="material-icons chip-icon">{{ getIconForCategory(parent) }}</span>
+        {{ parent.name }}
+        <span class="selection-count" *ngIf="getSelectedChildCount(parent) > 0">{{ getSelectedChildCount(parent) }}</span>
+        <span class="material-icons arrow" [class.rotated]="isDropdownOpen(parent.id)">expand_more</span>
+      </button>
+
+      <div class="dropdown" *ngIf="isDropdownOpen(parent.id)"
+        [style.top.px]="dropdownTop()" [style.left.px]="dropdownLeft()">
+        <button class="dropdown-item all-item"
+          [class.checked]="isEntireParentSelected(parent)"
+          (click)="toggleEntireParent(parent, $event)">
+          <span class="material-icons check-icon">
+            {{ isEntireParentSelected(parent) ? 'check_box' : 'check_box_outline_blank' }}
+          </span>
+          All {{ parent.name }}
+        </button>
+
+        <div class="dropdown-divider"></div>
+
+        <button class="dropdown-item"
+          *ngFor="let child of parent.children"
+          [class.checked]="isChildSelected(child.id)"
+          (click)="toggleChild(child.id, $event)">
+          <span class="material-icons check-icon">
+            {{ isChildSelected(child.id) ? 'check_box' : 'check_box_outline_blank' }}
+          </span>
+          {{ child.name }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <button class="scroll-arrow right" *ngIf="canScrollRight()" (click)="scrollChips(1)" aria-label="Scroll categories right">
+    <span class="material-icons">chevron_right</span>
+  </button>
+</div>

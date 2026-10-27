@@ -1,0 +1,83 @@
+<app-navbar></app-navbar>
+
+<div class="group-detail-page">
+  <app-loading-spinner *ngIf="isLoading()"></app-loading-spinner>
+
+  <ng-container *ngIf="!isLoading() && group(); let groupDetail">
+    <!-- Header -->
+    <div class="group-header">
+      <div class="header-content">
+        <button class="back-btn" (click)="goBack()" title="All communities">
+          <span class="material-icons">arrow_back</span>
+        </button>
+        <div class="group-avatar">
+          <span class="material-icons">groups</span>
+        </div>
+        <div class="header-text">
+          <h1>{{ groupDetail.name }}</h1>
+          <p class="group-meta-line">
+            <span *ngIf="groupDetail.city || groupDetail.country">
+              <span class="material-icons">place</span>
+              {{ groupDetail.city }}<ng-container *ngIf="groupDetail.city && groupDetail.country">, </ng-container>{{ groupDetail.country }}
+            </span>
+            <span>
+              <span class="material-icons">person</span>
+              {{ groupDetail.memberCount }} members
+            </span>
+            <span class="role-chip" *ngIf="groupDetail.myRole === 'Moderator'">Moderator</span>
+          </p>
+        </div>
+        <button class="join-btn" [class.member]="groupDetail.isMember"
+          [disabled]="isJoining()" (click)="toggleMembership()">
+          <span class="material-icons">{{ groupDetail.isMember ? 'check' : 'group_add' }}</span>
+          {{ groupDetail.isMember ? 'Member' : 'Join' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+      <p class="group-description" *ngIf="groupDetail.description">{{ groupDetail.description }}</p>
+
+      <!-- New post -->
+      <div class="post-composer" *ngIf="groupDetail.isMember">
+        <textarea rows="3" maxlength="4000"
+          placeholder="Share a tip, ask a question, say hi to {{ groupDetail.name }}..."
+          [value]="newPostBody()"
+          (input)="newPostBody.set($any($event.target).value)"></textarea>
+        <div class="composer-actions">
+          <button class="btn-primary" [disabled]="isPosting() || !newPostBody().trim()" (click)="submitPost()">
+            <span class="material-icons">send</span>
+            {{ isPosting() ? 'Posting...' : 'Post' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="join-hint" *ngIf="!groupDetail.isMember">
+        <span class="material-icons">lock_open</span>
+        Join the community to post and connect with members.
+      </div>
+
+      <!-- Feed -->
+      <div class="empty-feed" *ngIf="posts().length === 0">
+        <span class="material-icons">forum</span>
+        <p>No posts yet — start the conversation!</p>
+      </div>
+
+      <div class="post-list" *ngIf="posts().length > 0">
+        <div class="post-card" *ngFor="let post of posts()">
+          <div class="post-author-avatar">
+            <img *ngIf="post.authorAvatarUrl" [src]="post.authorAvatarUrl" alt="avatar" />
+            <span *ngIf="!post.authorAvatarUrl">{{ getAuthorInitials(post.authorDisplayName) }}</span>
+          </div>
+          <div class="post-content">
+            <div class="post-meta">
+              <strong>{{ post.authorDisplayName }}</strong>
+              <span class="post-time">{{ post.createdAt | date:'MMM d, y • HH:mm' }}</span>
+            </div>
+            <p class="post-body">{{ post.body }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

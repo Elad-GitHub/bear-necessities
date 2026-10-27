@@ -1,0 +1,83 @@
+<app-navbar></app-navbar>
+
+<div class="map-page">
+  <div class="map-filters">
+    <div class="filters-title">
+      <span class="material-icons">pets</span> Bear necessities
+    </div>
+    <app-category-chips
+      [categories]="categoriesService.categories()"
+      [selectedIds]="placesService.selectedCategories()"
+      (selectionChange)="onCategoryChange($event)">
+    </app-category-chips>
+  </div>
+
+  <div id="map" class="map-container"></div>
+
+  <!-- Trip planner trigger -->
+  <button class="plan-trip-fab" *ngIf="!tripActive()" (click)="togglePlanner()" aria-label="Plan a Trip">
+    <span class="material-icons">explore</span>
+    <span class="fab-label">Plan a Trip</span>
+  </button>
+
+  <!-- Active trip banner -->
+  <div class="trip-banner" *ngIf="tripActive()">
+    <span class="material-icons">route</span>
+    <span class="trip-banner-text">
+      Your route — {{ tripStopCount() }} {{ tripStopCount() === 1 ? 'stop' : 'stops' }}
+      <ng-container *ngIf="tripArea()"> around {{ tripArea()?.name }}</ng-container>
+    </span>
+    <button class="trip-banner-clear" (click)="clearTrip()">
+      <span class="material-icons">close</span> Exit
+    </button>
+  </div>
+
+  <!-- Trip planner panel -->
+  <div class="planner-panel" *ngIf="isPlannerOpen()">
+    <div class="planner-header">
+      <h3><span class="material-icons">explore</span> Plan a Trip</h3>
+      <button class="planner-close" (click)="togglePlanner()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <label class="planner-label">Where to?</label>
+    <div class="planner-area-field">
+      <span class="material-icons">place</span>
+      <input #plannerArea type="text" autocomplete="off"
+        placeholder="Country, region or city..."
+        (input)="onPlannerAreaSearch(plannerArea.value)" />
+      <div class="planner-area-dropdown" *ngIf="tripAreaResults().length > 0">
+        <button type="button" *ngFor="let result of tripAreaResults()"
+          (click)="selectPlannerArea(result, plannerArea)">
+          <span class="material-icons">place</span> {{ result.fullName }}
+        </button>
+      </div>
+    </div>
+
+    <label class="planner-label">What are you into? <span class="planner-optional">(optional)</span></label>
+    <app-category-chips
+      [categories]="categoriesService.categories()"
+      (selectionChange)="onPlannerCategoriesChange($event)">
+    </app-category-chips>
+
+    <button class="planner-go" [disabled]="!tripArea() || isPlanning()" (click)="runTripPlan()">
+      <span class="material-icons">{{ isPlanning() ? 'sync' : 'travel_explore' }}</span>
+      {{ isPlanning() ? 'Mapping your route...' : "Show me what's there" }}
+    </button>
+  </div>
+
+  <div class="map-mode-toggle" *ngIf="!tripActive()">
+    <button [class.active]="mapMode() === 'places'" (click)="setMapMode('places')">
+      <span class="material-icons">place</span> Places
+    </button>
+    <button [class.active]="mapMode() === 'events'" (click)="setMapMode('events')">
+      <span class="material-icons">celebration</span> Events
+    </button>
+    <button [class.active]="mapMode() === 'both'" (click)="setMapMode('both')">
+      Both
+    </button>
+  </div>
+
+  <app-loading-spinner *ngIf="showInitialSpinner()"></app-loading-spinner>
+</div>

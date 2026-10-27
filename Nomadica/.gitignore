@@ -1,0 +1,64 @@
+## .NET / Visual Studio
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+TestResults/
+[Pp]ublish/
+*.msbuildcache
+
+## NuGet
+*.nupkg
+*.snupkg
+packages/
+!**/packages/build/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## Build results
+*.dll
+*.exe
+*.pdb
+*.lib
+*.out
+*.ilk
+
+## Rider
+.idea/
+*.sln.iml
+
+## VS Code
+.vscode/
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/settings.json
+
+## User-specific
+*.rsuser
+*.tmp
+*.cache
+
+## OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+## Environment / secrets
+.env
+.env.*
+!.env.example
+appsettings.*.local.json
+secrets.json
+
+## Docker
+docker-compose.override.yml
+
+## Rider / JetBrains
+*.DotSettings.user

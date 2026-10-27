@@ -1,0 +1,99 @@
+<app-navbar></app-navbar>
+
+<div class="trip-page">
+  <div class="page-header">
+    <div class="header-content">
+      <button class="back-btn" routerLink="/map" title="Back to map">
+        <span class="material-icons">arrow_back</span>
+      </button>
+      <div class="header-text">
+        <h1><span class="material-icons">explore</span> Plan a Trip</h1>
+        <p>Pick a destination and the experiences you love — we'll surface what's there.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Destination -->
+    <div class="planner-card">
+      <h2>Where to?</h2>
+      <div class="area-field">
+        <span class="material-icons">place</span>
+        <input #areaInput type="text" autocomplete="off"
+          placeholder="Search a country, region or city..."
+          (input)="onAreaSearch(areaInput.value)" />
+        <button type="button" class="clear-area" *ngIf="selectedArea()" (click)="clearArea(areaInput)">
+          <span class="material-icons">close</span>
+        </button>
+
+        <div class="area-dropdown" *ngIf="areaResults().length > 0">
+          <button type="button" class="area-result" *ngFor="let result of areaResults()"
+            (click)="selectArea(result, areaInput)">
+            <span class="material-icons">place</span>
+            {{ result.fullName }}
+          </button>
+        </div>
+      </div>
+
+      <div class="selected-area" *ngIf="selectedArea() as area">
+        <span class="material-icons">check_circle</span>
+        Exploring around <strong>{{ area.fullName }}</strong>
+      </div>
+
+      <h2 class="categories-heading">What are you into? <span class="optional">(optional)</span></h2>
+      <app-category-chips
+        [categories]="categoriesService.categories()"
+        (selectionChange)="onCategorySelectionChange($event)">
+      </app-category-chips>
+
+      <button class="plan-btn" [disabled]="!selectedArea() || isLoading()" (click)="planTrip()">
+        <span class="material-icons">{{ isLoading() ? 'sync' : 'travel_explore' }}</span>
+        {{ isLoading() ? 'Finding gems...' : 'Show me what\'s there' }}
+      </button>
+    </div>
+
+    <!-- Results -->
+    <ng-container *ngIf="hasSearched() && !isLoading()">
+      <div class="empty-results" *ngIf="places().length === 0 && events().length === 0">
+        <span class="material-icons">sentiment_dissatisfied</span>
+        <h3>Nothing found here yet</h3>
+        <p>Try a wider area or fewer category filters.</p>
+      </div>
+
+      <!-- Events first -->
+      <section class="results-section" *ngIf="events().length > 0">
+        <h2 class="results-title">
+          <span class="material-icons">celebration</span>
+          Upcoming Events ({{ events().length }})
+        </h2>
+        <div class="result-grid">
+          <div class="result-card event" *ngFor="let eventItem of events()" (click)="openEvent(eventItem)">
+            <div class="result-icon"><span class="material-icons">celebration</span></div>
+            <div class="result-body">
+              <h4>{{ eventItem.title }}</h4>
+              <p *ngIf="eventItem.startAt">{{ eventItem.startAt | date:'MMM d, y' }}</p>
+              <p class="result-sub">{{ eventItem.isFree ? 'Free' : (eventItem.price ? eventItem.price + ' ' + (eventItem.currency || '') : '') }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Places grouped by category -->
+      <section class="results-section" *ngFor="let group of groupedPlaces()">
+        <h2 class="results-title">
+          <span class="material-icons">{{ group.icon }}</span>
+          {{ group.parentName }} ({{ group.places.length }})
+        </h2>
+        <div class="result-grid">
+          <div class="result-card" *ngFor="let place of group.places" (click)="openPlace(place)">
+            <div class="result-icon"><span class="material-icons">place</span></div>
+            <div class="result-body">
+              <h4>{{ place.name }}</h4>
+              <p *ngIf="place.city || place.country">{{ place.city }}<ng-container *ngIf="place.city && place.country">, </ng-container>{{ place.country }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </ng-container>
+  </div>
+</div>

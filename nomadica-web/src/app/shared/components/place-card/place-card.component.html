@@ -1,0 +1,38 @@
+<div class="place-card" (click)="navigateToPlace()">
+  <div class="card-image">
+    <img
+      *ngIf="hasImage()"
+      [src]="getPlaceImageUrl()"
+      [alt]="place.name"
+      class="image">
+    <div *ngIf="!hasImage()" class="placeholder-gradient"></div>
+  </div>
+
+  <div class="card-content">
+    <h3 class="place-name">{{ place.name }}</h3>
+
+    <div class="location">
+      <mat-icon>location_on</mat-icon>
+      <span class="text-muted">{{ place.categoryName }}</span>
+    </div>
+
+    <div class="category-chips" *ngIf="place.categoryName">
+      <mat-chip size="small" variant="filled">{{ place.categoryName }}</mat-chip>
+      <ng-container *ngIf="false">
+        <mat-chip size="small" variant="filled">Secondary</mat-chip>
+      </ng-container>
+    </div>
+
+    <div class="rating" *ngIf="(place.reviewCount || 0) > 0">
+      <div class="stars">
+        <span
+          class="star filled"
+          *ngFor="let i of [0,1,2,3,4]"
+          [class.half]="i === Math.floor(place.averageRating || 0) && (place.averageRating || 0) % 1 > 0">
+          ★
+        </span>
+      </div>
+      <span class="rating-text">{{ (place.averageRating || 0).toFixed(1) }} ({{ place.reviewCount }})</span>
+    </div>
+  </div>
+</div>

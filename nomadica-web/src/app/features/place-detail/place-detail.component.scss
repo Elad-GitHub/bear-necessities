@@ -1,0 +1,641 @@
+$color-primary: #4db8a8;
+$color-success: #4caf50;
+$color-warning: #ffc107;
+$color-text-primary: #333;
+$color-text-secondary: #666;
+$color-background: #f9f9f9;
+$color-border: #e0e0e0;
+$radius-lg: 12px;
+$radius-md: 8px;
+
+:host {
+  display: block;
+  padding-top: 64px;
+}
+
+.place-detail-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.back-button {
+  margin-bottom: 24px;
+  color: $color-primary;
+
+  mat-icon {
+    margin-right: 8px;
+  }
+}
+
+// Hero section
+.hero {
+  height: 360px;
+  background-size: cover;
+  background-position: center;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 48px;
+  display: flex;
+  align-items: flex-end;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+    z-index: 1;
+  }
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.4), transparent);
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 32px;
+  color: white;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.save-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 24px;
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.25);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  &.want-to-go.saved {
+    background: #f9a825;
+    border-color: #f9a825;
+  }
+
+  &.visited.saved {
+    background: #5e35b1;
+    border-color: #5e35b1;
+  }
+
+  &.loved.saved {
+    background: #e53935;
+    border-color: #e53935;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+}
+
+// Review form
+.review-form {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.star-picker {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin-bottom: 12px;
+
+  mat-icon {
+    font-size: 30px;
+    width: 30px;
+    height: 30px;
+    color: #bdbdbd;
+    cursor: pointer;
+    transition: color 0.15s, transform 0.15s;
+
+    &:hover { transform: scale(1.15); }
+
+    &.picked { color: #f9a825; }
+  }
+}
+
+.review-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+
+  &:focus { border-color: #00796b; }
+}
+
+.review-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+// Upcoming events
+.event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.event-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #00796b;
+    box-shadow: 0 2px 10px rgba(0, 121, 107, 0.12);
+  }
+}
+
+.event-date-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  background: #e0f2f1;
+  color: #00796b;
+  flex-shrink: 0;
+
+  .event-month {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .event-day {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  mat-icon { color: #00796b; }
+}
+
+.event-info {
+  flex: 1;
+  min-width: 0;
+
+  h3 {
+    margin: 0 0 3px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #212121;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.event-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 12.5px;
+  color: #757575;
+
+  .event-type {
+    padding: 1px 8px;
+    border-radius: 10px;
+    background: #f5f5f5;
+    font-weight: 500;
+  }
+
+  .event-price {
+    color: #00796b;
+    font-weight: 600;
+  }
+}
+
+.event-arrow {
+  color: #bdbdbd;
+  flex-shrink: 0;
+}
+
+.hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.category-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.category-chip {
+  background-color: $color-primary;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.hero-title {
+  font-size: 48px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.1;
+}
+
+// Content grid
+.content-wrapper {
+  background: white;
+  border-radius: $radius-md;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 32px;
+  padding: 0;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+.main-content {
+  padding: 32px;
+}
+
+.sidebar {
+  padding: 32px;
+  border-left: 1px solid $color-border;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  @media (max-width: 768px) {
+    border-left: none;
+    border-top: 1px solid $color-border;
+    padding-top: 24px;
+  }
+
+  position: sticky;
+  top: 80px;
+  height: fit-content;
+}
+
+// Sections
+.section {
+  margin-bottom: 32px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: $color-text-primary;
+}
+
+.description {
+  font-size: 14px;
+  line-height: 1.6;
+  color: $color-text-secondary;
+  margin: 0;
+}
+
+.stub-text {
+  font-size: 14px;
+  color: $color-text-secondary;
+  font-style: italic;
+  margin: 0;
+}
+
+// External links
+.external-links {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  a {
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+}
+
+// Info cards
+.info-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border-radius: $radius-md;
+
+  mat-card-header {
+    padding: 16px 16px 0 16px;
+    margin-bottom: 12px;
+
+    mat-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0;
+    }
+  }
+
+  mat-card-content {
+    padding: 0 16px 16px 16px;
+  }
+}
+
+.location-info {
+  p {
+    font-size: 13px;
+    margin: 8px 0;
+    color: $color-text-secondary;
+
+    strong {
+      color: $color-text-primary;
+      font-weight: 500;
+    }
+  }
+}
+
+// Map preview
+.map-preview {
+  height: 200px;
+  background: $color-background;
+  border-radius: $radius-md;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.full-width {
+  width: 100%;
+}
+
+// Availability chip
+.availability-chip {
+  width: 100%;
+  justify-content: center;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  background-color: $color-success;
+  color: white;
+
+  &.seasonal {
+    background-color: $color-warning;
+  }
+}
+
+// Rating info
+.rating-info {
+  text-align: center;
+
+  .stars {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 8px;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+
+      &.filled {
+        color: $color-warning;
+      }
+
+      &.empty {
+        color: $color-border;
+      }
+    }
+  }
+
+  .rating-text {
+    font-size: 13px;
+    color: $color-text-secondary;
+    margin: 8px 0 16px 0;
+  }
+}
+
+// Reviews section
+.reviews-section {
+  margin-top: 24px;
+
+  h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+  }
+}
+
+.review-card {
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border-radius: $radius-md;
+
+  mat-card-header {
+    padding: 12px 16px 0 16px;
+    margin-bottom: 8px;
+  }
+
+  mat-card-content {
+    padding: 0 16px 12px 16px;
+    font-size: 13px;
+    line-height: 1.5;
+
+    p {
+      margin: 0;
+      color: $color-text-secondary;
+    }
+  }
+}
+
+.review-author {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+
+  strong {
+    color: $color-text-primary;
+  }
+}
+
+.rating-stars {
+  display: flex;
+  gap: 2px;
+
+  mat-icon {
+    font-size: 12px;
+    width: 12px;
+    height: 12px;
+    color: $color-warning;
+  }
+}
+
+.see-all-link {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: $color-primary;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Error state
+.error-state {
+  text-align: center;
+  padding: 48px 24px;
+
+  h2 {
+    color: $color-text-primary;
+    margin-bottom: 24px;
+  }
+}
+
+// --- Mobile ---
+@media (max-width: 760px) {
+  .place-detail-container {
+    padding: 14px;
+  }
+
+  .back-button {
+    margin-bottom: 16px;
+  }
+
+  // Hero: shorter, less padding, stack info above wrapping action row
+  .hero {
+    height: auto;
+    min-height: 240px;
+    margin-bottom: 24px;
+  }
+
+  .hero-content {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+    gap: 14px;
+  }
+
+  .hero-title {
+    font-size: 28px;
+  }
+
+  // The 3 save buttons wrap and fill the row evenly
+  .save-actions {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .save-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-height: 40px;
+  }
+
+  // Collapse two-column grid to single column; sidebar drops below
+  .content-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .main-content {
+    padding: 16px;
+  }
+
+  .sidebar {
+    padding: 16px;
+    border-left: none;
+    border-top: 1px solid $color-border;
+    position: static;
+    top: auto;
+  }
+
+  .section {
+    margin-bottom: 24px;
+  }
+
+  .external-links a {
+    flex: 1 1 auto;
+  }
+
+  .error-state {
+    padding: 32px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 22px;
+  }
+
+  .hero {
+    min-height: 200px;
+  }
+
+  // Stack the save buttons so each is a comfortable full-width tap target
+  .save-btn {
+    flex: 1 1 100%;
+  }
+}

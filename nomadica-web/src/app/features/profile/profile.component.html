@@ -1,0 +1,216 @@
+<div class="profile-page">
+
+  <!-- Header -->
+  <div class="profile-header">
+    <div class="header-content">
+      <button class="back-btn" routerLink="/map" title="Back to map">
+        <span class="material-icons">arrow_back</span>
+      </button>
+      <div class="avatar">
+        <img *ngIf="authService.currentUser()?.avatarUrl" [src]="authService.currentUser()?.avatarUrl" alt="avatar" />
+        <span *ngIf="!authService.currentUser()?.avatarUrl">{{ getInitials() }}</span>
+      </div>
+      <div class="user-info">
+        <h1>{{ authService.currentUser()?.displayName }}</h1>
+        <p class="email">{{ authService.currentUser()?.email }}</p>
+        <div class="meta-row">
+          <span class="role-badge" *ngFor="let role of authService.currentUser()?.roles">{{ role }}</span>
+          <span class="member-since" *ngIf="getMemberSince()">
+            <span class="material-icons">cake</span>
+            Member since {{ getMemberSince() }}
+          </span>
+        </div>
+      </div>
+      <button class="logout-btn" (click)="logout()">
+        <span class="material-icons">logout</span>
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-container">
+    <div class="tabs">
+      <button class="tab" [class.active]="activeTab() === 'rsvps'" (click)="setTab('rsvps')">
+        <span class="material-icons">event_available</span>
+        My RSVPs
+        <span class="count-badge" *ngIf="rsvps().length">{{ rsvps().length }}</span>
+      </button>
+      <button class="tab" [class.active]="activeTab() === 'saved'" (click)="setTab('saved')">
+        <span class="material-icons">bookmark</span>
+        Saved
+        <span class="count-badge" *ngIf="savedItems().length">{{ savedItems().length }}</span>
+      </button>
+      <button class="tab" [class.active]="activeTab() === 'listings'" (click)="setTab('listings')">
+        <span class="material-icons">storefront</span>
+        My Listings
+        <span class="count-badge" *ngIf="totalListings()">{{ totalListings() }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="tab-content">
+
+    <!-- RSVPs -->
+    <ng-container *ngIf="activeTab() === 'rsvps'">
+      <div class="loading-state" *ngIf="isLoadingRsvps()">
+        <span class="material-icons spinning">sync</span> Loading your RSVPs...
+      </div>
+
+      <div class="empty-state" *ngIf="!isLoadingRsvps() && rsvps().length === 0">
+        <span class="material-icons">event_busy</span>
+        <h3>No RSVPs yet</h3>
+        <p>Find an event on the map and RSVP to see it here.</p>
+        <button class="btn-primary" routerLink="/map">Explore the Map</button>
+      </div>
+
+      <div class="card-list" *ngIf="!isLoadingRsvps() && rsvps().length > 0">
+        <div class="list-card" *ngFor="let rsvp of rsvps()" (click)="openRsvpEvent(rsvp)">
+          <div class="card-icon">
+            <span class="material-icons">celebration</span>
+          </div>
+          <div class="card-body">
+            <h3>{{ rsvp.eventTitle }}</h3>
+            <p class="card-subtitle" *ngIf="rsvp.placeName">
+              <span class="material-icons">place</span> {{ rsvp.placeName }}
+            </p>
+            <p class="card-subtitle" *ngIf="rsvp.eventStartAt">
+              <span class="material-icons">schedule</span> {{ rsvp.eventStartAt | date:'EEE, MMM d, y • HH:mm' }}
+            </p>
+          </div>
+          <div class="card-actions">
+            <span class="status-chip" [ngClass]="getRsvpStatusClass(rsvp.status)">{{ rsvp.status }}</span>
+            <span class="party-size" *ngIf="rsvp.partySize > 1">
+              <span class="material-icons">group</span> {{ rsvp.partySize }}
+            </span>
+            <button class="icon-btn danger" (click)="cancelRsvp(rsvp, $event)" title="Cancel RSVP">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Saved -->
+    <ng-container *ngIf="activeTab() === 'saved'">
+      <div class="loading-state" *ngIf="isLoadingSaved()">
+        <span class="material-icons spinning">sync</span> Loading saved items...
+      </div>
+
+      <div class="empty-state" *ngIf="!isLoadingSaved() && savedItems().length === 0">
+        <span class="material-icons">bookmark_border</span>
+        <h3>Nothing saved yet</h3>
+        <p>Save places and events you want to remember.</p>
+        <button class="btn-primary" routerLink="/map">Explore the Map</button>
+      </div>
+
+      <div class="card-list" *ngIf="!isLoadingSaved() && savedItems().length > 0">
+        <div class="list-card" *ngFor="let saved of savedItems()" (click)="openSavedItem(saved)">
+          <div class="card-icon" [class.event-icon]="saved.targetType === 'Event'">
+            <span class="material-icons">{{ saved.targetType === 'Event' ? 'celebration' : 'place' }}</span>
+          </div>
+          <div class="card-body">
+            <h3>{{ saved.summary?.name || 'Listing' }}</h3>
+            <p class="card-subtitle" *ngIf="saved.summary?.city || saved.summary?.country">
+              <span class="material-icons">place</span>
+              {{ saved.summary?.city }}<ng-container *ngIf="saved.summary?.city && saved.summary?.country">, </ng-container>{{ saved.summary?.country }}
+            </p>
+            <p class="card-subtitle">
+              <span class="material-icons">bookmark_added</span> Saved {{ saved.savedAt | date:'MMM d, y' }}
+            </p>
+          </div>
+          <div class="card-actions">
+            <span class="save-type-chip" [ngClass]="'save-' + saved.saveType.toLowerCase()">
+              {{ getSaveTypeLabel(saved.saveType) }}
+            </span>
+            <span class="type-chip">{{ saved.targetType }}</span>
+            <button class="icon-btn danger" (click)="unsaveItem(saved, $event)" title="Remove from saved">
+              <span class="material-icons">bookmark_remove</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- My Listings -->
+    <ng-container *ngIf="activeTab() === 'listings'">
+      <div class="loading-state" *ngIf="isLoadingListings()">
+        <span class="material-icons spinning">sync</span> Loading your listings...
+      </div>
+
+      <div class="empty-state" *ngIf="!isLoadingListings() && totalListings() === 0">
+        <span class="material-icons">add_location_alt</span>
+        <h3>No listings yet</h3>
+        <p>Know a special place? Share it with the community.</p>
+        <button class="btn-primary" routerLink="/submit">Submit a Place</button>
+      </div>
+
+      <div class="card-list" *ngIf="!isLoadingListings() && totalListings() > 0">
+
+        <!-- Places -->
+        <div class="list-card" *ngFor="let listing of myListings()" (click)="openListing(listing)">
+          <div class="card-icon">
+            <span class="material-icons">place</span>
+          </div>
+          <div class="card-body">
+            <h3>{{ listing.name }}</h3>
+            <p class="card-subtitle" *ngIf="listing.city || listing.country">
+              <span class="material-icons">location_on</span>
+              {{ listing.city }}<ng-container *ngIf="listing.city && listing.country">, </ng-container>{{ listing.country }}
+            </p>
+            <p class="rejection-reason" *ngIf="listing.rejectionReason">
+              <span class="material-icons">info</span>
+              Rejected: {{ listing.rejectionReason }}
+            </p>
+          </div>
+          <div class="card-actions">
+            <span class="listing-status-chip" [ngClass]="getListingStatusClass(listing.status)">
+              {{ getListingStatusLabel(listing.status) }}
+            </span>
+            <button class="icon-btn" (click)="editListing(listing, $event)" title="Edit listing">
+              <span class="material-icons">edit</span>
+            </button>
+            <button class="icon-btn danger" (click)="deleteListing(listing, $event)" title="Delete listing">
+              <span class="material-icons">delete</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Events -->
+        <div class="list-card" *ngFor="let eventListing of myEventListings()" (click)="openEventListing(eventListing)">
+          <div class="card-icon event-icon">
+            <span class="material-icons">celebration</span>
+          </div>
+          <div class="card-body">
+            <h3>{{ eventListing.title }}</h3>
+            <p class="card-subtitle" *ngIf="eventListing.startAt">
+              <span class="material-icons">schedule</span>
+              {{ eventListing.startAt | date:'EEE, MMM d, y • HH:mm' }}
+            </p>
+            <p class="card-subtitle" *ngIf="!eventListing.startAt && eventListing.eventType === 'Recurring'">
+              <span class="material-icons">repeat</span> Recurring event
+            </p>
+            <p class="rejection-reason" *ngIf="eventListing.rejectionReason">
+              <span class="material-icons">info</span>
+              Rejected: {{ eventListing.rejectionReason }}
+            </p>
+          </div>
+          <div class="card-actions">
+            <span class="listing-status-chip" [ngClass]="getListingStatusClass(eventListing.status)">
+              {{ getListingStatusLabel(eventListing.status) }}
+            </span>
+            <button class="icon-btn" (click)="editEventListing(eventListing, $event)" title="Edit event">
+              <span class="material-icons">edit</span>
+            </button>
+            <button class="icon-btn danger" (click)="cancelEventListing(eventListing, $event)" title="Cancel event">
+              <span class="material-icons">delete</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </ng-container>
+
+  </div>
+</div>

@@ -1,0 +1,470 @@
+$primary: #00796b;
+$primary-light: #e0f2f1;
+$primary-dark: #004d40;
+$error: #d32f2f;
+$text: #212121;
+$text-muted: #757575;
+$border: #e0e0e0;
+$surface: #ffffff;
+$background: #f5f7f5;
+
+.event-detail-page {
+  min-height: 100vh;
+  background: $background;
+  padding-top: 64px;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 16px 24px 0;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: $text-muted;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  .material-icons { font-size: 18px; }
+
+  &:hover { background: rgba(0, 0, 0, 0.05); color: $text; }
+}
+
+// Hero
+.hero {
+  position: relative;
+  min-height: 260px;
+  margin: 12px 24px 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, $primary-dark 0%, $primary 100%);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent 60%);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 28px;
+  color: white;
+
+  h1 {
+    margin: 8px 0;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+}
+
+.badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+
+  .material-icons { font-size: 14px; }
+
+  &.price-badge { background: rgba(255, 255, 255, 0.92); color: $primary-dark; }
+}
+
+.event-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 15px;
+  opacity: 0.95;
+
+  .material-icons { font-size: 18px; }
+}
+
+// Layout
+.content-wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: start;
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.section {
+  background: $surface;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+
+  h2 {
+    margin: 0 0 14px;
+    font-size: 17px;
+    font-weight: 600;
+    color: $text;
+  }
+}
+
+.description {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: $text;
+  white-space: pre-line;
+}
+
+.category-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-tag {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 16px;
+  background: $primary-light;
+  color: $primary;
+}
+
+.occurrence-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.occurrence-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: $background;
+  font-size: 14px;
+  color: $text;
+
+  .material-icons { font-size: 18px; color: $primary; }
+}
+
+// Sidebar
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 80px;
+}
+
+.rsvp-card {
+  background: $surface;
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+
+  h3 {
+    margin: 0 0 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: $text;
+  }
+}
+
+.rsvp-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: $primary-light;
+  color: $primary;
+  font-size: 13.5px;
+  margin-bottom: 14px;
+
+  .material-icons { font-size: 18px; }
+}
+
+.party-size-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  font-size: 14px;
+  color: $text;
+}
+
+.party-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1.5px solid $border;
+    border-radius: 50%;
+    background: white;
+    color: $text;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    .material-icons { font-size: 16px; }
+
+    &:hover:not(:disabled) { border-color: $primary; color: $primary; }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
+}
+
+.party-value {
+  min-width: 24px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.rsvp-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.rsvp-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  border: 1.5px solid $border;
+  border-radius: 10px;
+  background: white;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: $text-muted;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  .material-icons { font-size: 18px; }
+
+  &:hover:not(:disabled) { border-color: $primary; color: $primary; }
+
+  &.active {
+    background: $primary;
+    border-color: $primary;
+    color: white;
+  }
+
+  &:disabled { opacity: 0.6; cursor: wait; }
+}
+
+.calendar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  border: 1.5px solid $primary;
+  border-radius: 8px;
+  background: white;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  color: $primary;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  .material-icons { font-size: 18px; }
+
+  &:hover { background: $primary-light; }
+}
+
+.cancel-rsvp-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 9px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 13px;
+  font-family: inherit;
+  color: $error;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover:not(:disabled) { background: #ffebee; }
+  &:disabled { opacity: 0.6; }
+}
+
+.login-hint {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: $text-muted;
+
+  a { color: $primary; font-weight: 600; }
+}
+
+.capacity-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid $border;
+  font-size: 13px;
+  color: $text-muted;
+
+  .material-icons { font-size: 17px; }
+}
+
+.info-card {
+  background: $surface;
+  border-radius: 12px;
+  padding: 18px 22px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+
+  h3 {
+    margin: 0 0 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.venue-link, .online-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid $border;
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  color: $text;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+
+  .material-icons { font-size: 18px; color: $primary; }
+
+  .arrow { margin-left: auto; color: $text-muted; }
+
+  &:hover { border-color: $primary; }
+}
+
+// --- Mobile ---
+@media (max-width: 760px) {
+  .back-btn {
+    margin: 12px 16px 0;
+    min-height: 40px;
+  }
+
+  .hero {
+    min-height: 200px;
+    margin: 12px 16px 0;
+  }
+
+  .hero-content {
+    padding: 16px;
+
+    h1 { font-size: 22px; }
+  }
+
+  .event-time {
+    flex-wrap: wrap;
+    font-size: 14px;
+  }
+
+  .content-wrapper {
+    padding: 16px;
+  }
+
+  // RSVP sidebar drops below main content in a single column
+  .content-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .sidebar {
+    position: static;
+    top: auto;
+  }
+
+  .section {
+    padding: 16px;
+  }
+
+  .rsvp-card {
+    padding: 16px;
+  }
+
+  .info-card {
+    padding: 16px;
+  }
+
+  // Keep RSVP tap targets comfortable on touch
+  .party-controls button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .rsvp-btn {
+    min-height: 44px;
+  }
+
+  .calendar-btn,
+  .venue-link,
+  .online-link {
+    min-height: 44px;
+  }
+
+  .cancel-rsvp-btn {
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-content h1 { font-size: 20px; }
+
+  .badges { gap: 6px; }
+}

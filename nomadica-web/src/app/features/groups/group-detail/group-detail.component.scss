@@ -1,0 +1,341 @@
+$primary: #00796b;
+$primary-light: #e0f2f1;
+$primary-dark: #004d40;
+$text: #212121;
+$text-muted: #757575;
+$border: #e0e0e0;
+$surface: #ffffff;
+$background: #f5f7f5;
+
+.group-detail-page {
+  min-height: 100vh;
+  background: $background;
+  padding-top: 64px;
+}
+
+.group-header {
+  background: linear-gradient(135deg, $primary-dark 0%, $primary 100%);
+  color: white;
+  padding: 28px 24px;
+
+  .header-content {
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s;
+
+    &:hover { background: rgba(255, 255, 255, 0.28); }
+  }
+
+  .group-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    .material-icons { font-size: 30px; }
+  }
+
+  .header-text {
+    flex: 1;
+    min-width: 0;
+
+    h1 { margin: 0 0 6px; font-size: 22px; font-weight: 700; }
+  }
+
+  .group-meta-line {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0;
+    font-size: 13px;
+    opacity: 0.9;
+    flex-wrap: wrap;
+
+    > span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .material-icons { font-size: 15px; }
+  }
+
+  .role-chip {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  .join-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 22px;
+    background: white;
+    border: none;
+    border-radius: 22px;
+    color: $primary-dark;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s;
+
+    .material-icons { font-size: 18px; }
+
+    &.member {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1.5px solid rgba(255, 255, 255, 0.6);
+    }
+
+    &:hover:not(:disabled) { transform: scale(1.03); }
+    &:disabled { opacity: 0.6; cursor: wait; }
+  }
+}
+
+.content {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.group-description {
+  margin: 0 0 20px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: $text;
+  background: $surface;
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+// Composer
+.post-composer {
+  background: $surface;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1.5px solid $border;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+
+    &:focus { border-color: $primary; }
+  }
+}
+
+.composer-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  background: $primary;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  .material-icons { font-size: 17px; }
+
+  &:hover:not(:disabled) { background: $primary-dark; }
+  &:disabled { background: #bdbdbd; cursor: not-allowed; }
+}
+
+.join-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  background: $primary-light;
+  border-radius: 10px;
+  color: $primary-dark;
+  font-size: 13.5px;
+  margin-bottom: 20px;
+
+  .material-icons { font-size: 18px; }
+}
+
+// Feed
+.empty-feed {
+  text-align: center;
+  padding: 50px 24px;
+  color: $text-muted;
+
+  .material-icons { font-size: 46px; color: #bdbdbd; margin-bottom: 10px; }
+  p { margin: 0; font-size: 14px; }
+}
+
+.post-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.post-card {
+  display: flex;
+  gap: 12px;
+  background: $surface;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.post-author-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: $primary;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+  overflow: hidden;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+.post-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.post-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 4px;
+
+  strong { font-size: 14px; color: $text; }
+}
+
+.post-time {
+  font-size: 12px;
+  color: $text-muted;
+}
+
+.post-body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: $text;
+  white-space: pre-line;
+  word-break: break-word;
+}
+
+// --- Mobile ---
+@media (max-width: 760px) {
+  .group-header {
+    padding: 18px 16px;
+
+    .header-content {
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .group-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+
+      .material-icons { font-size: 26px; }
+    }
+
+    .header-text {
+      // keep beside the avatar but allow it to take remaining row space
+      flex: 1 1 auto;
+
+      h1 {
+        font-size: 20px;
+        word-break: break-word;
+      }
+    }
+
+    .join-btn {
+      // drop the join button to its own full-width row
+      flex: 1 1 100%;
+      justify-content: center;
+      min-height: 44px;
+    }
+  }
+
+  .content {
+    padding: 16px;
+  }
+
+  .group-description {
+    padding: 14px 16px;
+  }
+
+  .empty-feed {
+    padding: 40px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .group-header {
+    padding: 16px 14px;
+
+    .header-text h1 {
+      font-size: 19px;
+    }
+  }
+
+  .content {
+    padding: 14px;
+  }
+
+  .post-meta {
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+}

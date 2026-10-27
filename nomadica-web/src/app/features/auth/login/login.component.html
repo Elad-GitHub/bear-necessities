@@ -1,0 +1,43 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="logo-text">HippieLand</span>
+    </div>
+    <h2>Welcome back</h2>
+    <p class="auth-subtitle">Sign in to discover conscious communities worldwide</p>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" placeholder="you@example.com">
+        <mat-error *ngIf="loginForm.get('email')?.hasError('required')">Email is required</mat-error>
+        <mat-error *ngIf="loginForm.get('email')?.hasError('email')">Enter a valid email</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Password</mat-label>
+        <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password">
+        <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword" [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hidePassword">
+          <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        <mat-error *ngIf="loginForm.get('password')?.hasError('required')">Password is required</mat-error>
+        <mat-error *ngIf="loginForm.get('password')?.hasError('minlength')">Password must be at least 8 characters</mat-error>
+      </mat-form-field>
+
+      <div class="error-message" *ngIf="errorMessage()">
+        <mat-icon>error_outline</mat-icon>
+        {{ errorMessage() }}
+      </div>
+
+      <button mat-raised-button color="primary" type="submit" class="full-width submit-btn" [disabled]="isLoading()">
+        <mat-spinner *ngIf="isLoading()" diameter="20" strokeWidth="3"></mat-spinner>
+        <span *ngIf="!isLoading()">Sign In</span>
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <span>Don't have an account?</span>
+      <button mat-button color="primary" (click)="goToRegister()">Join HippieLand</button>
+    </div>
+  </div>
+</div>
