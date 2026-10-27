@@ -8,4 +8,4 @@ Full project context (architecture, how to run, gotchas, pending work) is in `Hi
 
 Restored here on 2026-10-27 from that Drive backup. The old database was not backed up: recreate it with EF migrations, then re-import places with `dotnet run --project Nomadica.API -- import-osm --iso GR --country Greece` (and PT, MX, TH, CR).
 
-Config files contain live secrets (R2 keys, JWT key, sa password). Never push them to a public repo; rotate before deploying.
+Secrets (DB connection string, JWT key, R2 keys) live in `dotnet user-secrets` for Nomadica.API, not in appsettings*.json — keep it that way. They still need rotating before deploy (the old values sat in plain config and on Drive). Run `dotnet user-secrets list` in `Nomadica/Nomadica.API` to see which keys are set.
