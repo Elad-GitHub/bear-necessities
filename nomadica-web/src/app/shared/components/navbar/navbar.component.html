@@ -15,15 +15,6 @@
       </mat-form-field>
 
       <div class="search-dropdown" *ngIf="isSearchOpen() && hasResults()">
-        <ng-container *ngIf="destinationResults().length > 0">
-          <div class="search-section-label">Destinations</div>
-          <button class="search-result" *ngFor="let destination of destinationResults()"
-            (click)="openDestination(destination, searchInput)">
-            <mat-icon>explore</mat-icon>
-            <span class="result-name">{{ destination.fullName }}</span>
-          </button>
-        </ng-container>
-
         <ng-container *ngIf="placeResults().length > 0">
           <div class="search-section-label">Places</div>
           <button class="search-result" *ngFor="let result of placeResults()"
@@ -55,6 +46,15 @@
             <span class="result-location">
               {{ group.city || group.country || '' }}<ng-container *ngIf="group.city || group.country"> · </ng-container>{{ group.memberCount }} {{ group.memberCount === 1 ? 'member' : 'members' }}
             </span>
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="destinationResults().length > 0">
+          <div class="search-section-label">Destinations</div>
+          <button class="search-result" *ngFor="let destination of destinationResults()"
+            (click)="openDestination(destination, searchInput)">
+            <mat-icon>explore</mat-icon>
+            <span class="result-name">{{ destination.fullName }}</span>
           </button>
         </ng-container>
       </div>
