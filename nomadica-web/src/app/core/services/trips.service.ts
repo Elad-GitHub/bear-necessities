@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { PlaceSummaryDto } from '../models/place.model';
 import { EventSummaryDto } from '../models/event.model';
+import { Itinerary, ItineraryOptions } from '../models/trip.model';
 
 export interface TripSuggestions {
   places: PlaceSummaryDto[];
@@ -30,5 +31,19 @@ export class TripsService {
     if (options.categoryIds?.length) params['categoryIds'] = options.categoryIds;
 
     return this.api.get<TripSuggestions>('/trips/suggestions', params);
+  }
+
+  getItinerary(options: ItineraryOptions): Observable<Itinerary> {
+    const params: Record<string, any> = {
+      latitude: options.latitude,
+      longitude: options.longitude,
+      categoryIds: options.categoryIds,
+      days: options.days
+    };
+    if (options.country) params['country'] = options.country;
+    if (options.stopsPerDay) params['stopsPerDay'] = options.stopsPerDay;
+    if (options.radiusKm) params['radiusKm'] = options.radiusKm;
+
+    return this.api.get<Itinerary>('/trips/itinerary', params);
   }
 }

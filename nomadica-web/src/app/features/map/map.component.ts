@@ -1,6 +1,6 @@
-import { Component, AfterViewInit, OnDestroy, ViewChild, ElementRef, signal, NgZone } from '@angular/core';
+import { Component, AfterViewInit, OnDestroy, ViewChild, ElementRef, signal, computed, NgZone, HostListener } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Subject, Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 import mapboxgl from 'mapbox-gl';
 import { environment } from '../../../environments/environment';
 import { PlacesService, MapBbox } from '../../core/services/places.service';
@@ -15,8 +15,12 @@ import { GeocodingService, GeocodeResult } from '../../core/services/geocoding.s
 import { DirectionsService } from '../../core/services/directions.service';
 import { PlaceSummaryDto } from '../../core/models/place.model';
 import { EventSummaryDto } from '../../core/models/event.model';
+import { ItineraryDay, MAX_TRIP_DAYS, MIN_TRIP_CATEGORIES } from '../../core/models/trip.model';
 
 type MapMode = 'places' | 'events' | 'both';
+
+// Distinct, colour-blind-friendly hues so each trip day reads as its own leg of the route
+const TRIP_DAY_COLORS = ['#00796b', '#e65100', '#5e35b1', '#c2185b', '#1565c0', '#827717', '#6d4c41'];
 
 const SAVE_TYPE_COLORS: Record<string, string> = {
   WantToGo: '#f9a825',
@@ -44,14 +48,23 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private lastRenderedPlaces: PlaceSummaryDto[] = [];
 
   // Trip planner state
+  readonly minTripCategories = MIN_TRIP_CATEGORIES;
+  readonly maxTripDays = MAX_TRIP_DAYS;
   isPlannerOpen = signal(false);
   isPlanning = signal(false);
   tripActive = signal(false);
   tripArea = signal<GeocodeResult | null>(null);
   tripAreaResults = signal<GeocodeResult[]>([]);
-  tripStopCount = signal(0);
-  private tripCategoryIds: string[] = [];
-  private tripMarkers: mapboxgl.Marker[] = [];
+  tripCategoryIds = signal<string[]>([]);
+  tripDays = signal(3);
+  itinerary = signal<ItineraryDay[]>([]);
+  selectedTripDay = signal<number | null>(null);
+  tripStopCount = computed(() => this.itinerary().reduce((total, day) => total + day.stops.length, 0));
+  canPlanTrip = computed(() =>
+    !!this.tripArea() && this.tripCategoryIds().length >= MIN_TRIP_CATEGORIES && !this.isPlanning());
+  private planningSubscription: Subscription | null = null;
+  private tripStopPoints: GeoJSON.Feature[] = [];
+  private tripRouteLines: (GeoJSON.Feature<GeoJSON.LineString> & { properties: { day: number; color: string } })[] = [];
   private areaSearchTerms = new Subject<string>();
 
   private hoverPopup: mapboxgl.Popup | null = null;
@@ -211,6 +224,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   // ── Trip planner ─────────────────────────────────────────────────────────
   togglePlanner(): void {
+    if (this.isPlannerOpen()) this.cancelPlanning();
     this.isPlannerOpen.set(!this.isPlannerOpen());
   }
 
@@ -225,39 +239,150 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   onPlannerCategoriesChange(categoryIds: string[]): void {
-    this.tripCategoryIds = categoryIds;
+    this.tripCategoryIds.set(categoryIds);
+  }
+
+  changeTripDays(delta: number): void {
+    this.tripDays.set(Math.min(MAX_TRIP_DAYS, Math.max(1, this.tripDays() + delta)));
   }
 
   runTripPlan(): void {
     const area = this.tripArea();
-    if (!area || !this.mapInstance) return;
+    if (!area || !this.mapInstance || !this.canPlanTrip()) return;
 
     this.isPlanning.set(true);
 
     // A bare country geocode has no parent country/city in context → search the whole country
     const isCountryResult = !area.city && !area.country;
-    const options = isCountryResult
-      ? { country: area.name, categoryIds: this.tripCategoryIds }
-      : { latitude: area.latitude, longitude: area.longitude, radiusKm: 300, categoryIds: this.tripCategoryIds };
-
-    this.flyToArea(area);
-
-    this.tripsService.getSuggestions(options).subscribe({
-      next: (response) => {
-        this.renderTrip(response.places || []);
+    this.planningSubscription = this.tripsService.getItinerary({
+      country: isCountryResult ? area.name : undefined,
+      latitude: area.latitude,
+      longitude: area.longitude,
+      radiusKm: isCountryResult ? undefined : 300,
+      categoryIds: this.tripCategoryIds(),
+      days: this.tripDays()
+    }).subscribe({
+      next: (itinerary) => {
+        this.planningSubscription = null;
         this.isPlanning.set(false);
         this.isPlannerOpen.set(false);
+        this.showItinerary(itinerary.days, area);
       },
-      error: () => this.isPlanning.set(false)
+      error: () => {
+        this.planningSubscription = null;
+        this.isPlanning.set(false);
+      }
     });
   }
 
+  cancelPlanning(): void {
+    this.planningSubscription?.unsubscribe();
+    this.planningSubscription = null;
+    this.isPlanning.set(false);
+  }
+
   clearTrip(): void {
+    this.cancelPlanning();
     this.tripActive.set(false);
-    this.tripStopCount.set(0);
-    this.clearTripMarkers();
-    this.removeRouteLayer();
-    this.renderPlaces(this.lastRenderedPlaces);
+    this.itinerary.set([]);
+    this.selectedTripDay.set(null);
+    this.hoverPopup?.remove();
+    this.tripStopPoints = [];
+    this.tripRouteLines = [];
+    this.setTripData([], []);
+    // Viewport reloads pause while a trip is shown, so the cached places may be stale by now
+    this.loadPlacesForViewport();
+  }
+
+  backToPlanner(): void {
+    this.clearTrip();
+    this.isPlannerOpen.set(true);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.tripActive()) {
+      this.clearTrip();
+    } else if (this.isPlannerOpen()) {
+      this.togglePlanner();
+    }
+  }
+
+  dayColor(dayNumber: number): string {
+    return TRIP_DAY_COLORS[(dayNumber - 1) % TRIP_DAY_COLORS.length];
+  }
+
+  focusTripDay(day: ItineraryDay): void {
+    if (!this.mapInstance || day.stops.length === 0) return;
+
+    this.selectedTripDay.set(day.dayNumber);
+    this.fitToStops(day.stops);
+    if (day.stops.length < 2) return;
+
+    // Road geometry is fetched per day on demand, so planning itself makes no routing calls
+    const coordinates = day.stops.map(stop => [stop.longitude, stop.latitude] as [number, number]);
+    this.directionsService.getRoute(coordinates).subscribe(roadCoordinates => {
+      if (!roadCoordinates || roadCoordinates.length < 2) return;
+      this.tripRouteLines = this.tripRouteLines.map(line =>
+        line.properties.day === day.dayNumber
+          ? { ...line, geometry: { type: 'LineString' as const, coordinates: roadCoordinates } }
+          : line);
+      this.setTripData(this.tripStopPoints, this.tripRouteLines);
+    });
+  }
+
+  focusTripStop(stop: PlaceSummaryDto, order: number): void {
+    if (!this.mapInstance || !this.hoverPopup) return;
+    this.mapInstance.flyTo({ center: [stop.longitude, stop.latitude], zoom: 13, duration: 900 });
+    this.hoverPopup
+      .setLngLat([stop.longitude, stop.latitude])
+      .setHTML(this.buildPlacePopupHtml(`${order}. ${stop.name}`, stop.city, stop.country, this.placeSubcategory(stop)))
+      .addTo(this.mapInstance);
+  }
+
+  private showItinerary(days: ItineraryDay[], area: GeocodeResult): void {
+    if (!this.mapInstance) return;
+
+    this.tripActive.set(true);
+    this.itinerary.set(days);
+    this.selectedTripDay.set(null);
+    this.setPlacesData([]);
+    this.clearEventMarkers();
+
+    let order = 0;
+    this.tripStopPoints = days.flatMap(day => day.stops.map(stop => ({
+      type: 'Feature' as const,
+      geometry: { type: 'Point' as const, coordinates: [stop.longitude, stop.latitude] },
+      properties: {
+        id: stop.id,
+        order: ++order,
+        color: this.dayColor(day.dayNumber),
+        name: stop.name,
+        city: stop.city ?? '',
+        country: stop.country ?? '',
+        category: this.placeSubcategory(stop) ?? ''
+      }
+    })));
+
+    this.tripRouteLines = days
+      .filter(day => day.stops.length >= 2)
+      .map(day => ({
+        type: 'Feature' as const,
+        geometry: {
+          type: 'LineString' as const,
+          coordinates: day.stops.map(stop => [stop.longitude, stop.latitude])
+        },
+        properties: { day: day.dayNumber, color: this.dayColor(day.dayNumber) }
+      }));
+
+    this.setTripData(this.tripStopPoints, this.tripRouteLines);
+
+    const allStops = days.flatMap(day => day.stops);
+    if (allStops.length > 0) {
+      this.fitToStops(allStops);
+    } else {
+      this.flyToArea(area);
+    }
   }
 
   private flyToArea(area: GeocodeResult): void {
@@ -271,144 +396,92 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private renderTrip(places: PlaceSummaryDto[]): void {
+  private fitToStops(stops: PlaceSummaryDto[]): void {
     if (!this.mapInstance) return;
-
-    this.tripActive.set(true);
-    this.setPlacesData([]);
-    this.clearEventMarkers();
-    this.clearTripMarkers();
-    this.removeRouteLayer();
-
-    const valid = places.filter(p =>
-      p.latitude >= -90 && p.latitude <= 90 && p.longitude >= -180 && p.longitude <= 180);
-
-    const ordered = this.orderByNearestNeighbor(valid);
-    this.tripStopCount.set(ordered.length);
-
-    ordered.forEach((place, index) => {
-      const marker = new mapboxgl.Marker({ element: this.buildTripStopElement(place, index + 1) })
-        .setLngLat([place.longitude, place.latitude])
-        .addTo(this.mapInstance!);
-      this.tripMarkers.push(marker);
-    });
-
-    if (ordered.length >= 2) {
-      this.drawRouteLine(ordered);
-      this.fitToStops(ordered);
-    } else if (ordered.length === 1) {
-      this.mapInstance.flyTo({ center: [ordered[0].longitude, ordered[0].latitude], zoom: 11, duration: 1000 });
+    if (stops.length === 1) {
+      this.mapInstance.flyTo({ center: [stops[0].longitude, stops[0].latitude], zoom: 12, duration: 1000 });
+      return;
     }
-  }
-
-  // Greedy nearest-neighbour gives a readable visiting order without a full TSP solve
-  private orderByNearestNeighbor(places: PlaceSummaryDto[]): PlaceSummaryDto[] {
-    if (places.length <= 2) return [...places];
-
-    const remaining = [...places];
-    const area = this.tripArea();
-    let current = area
-      ? this.takeNearest(remaining, area.longitude, area.latitude)
-      : remaining.shift()!;
-    const ordered = [current];
-
-    while (remaining.length > 0) {
-      current = this.takeNearest(remaining, current.longitude, current.latitude);
-      ordered.push(current);
-    }
-    return ordered;
-  }
-
-  private takeNearest(places: PlaceSummaryDto[], lng: number, lat: number): PlaceSummaryDto {
-    let nearestIndex = 0;
-    let nearestDistance = Number.POSITIVE_INFINITY;
-    for (let i = 0; i < places.length; i++) {
-      const dLng = places[i].longitude - lng;
-      const dLat = places[i].latitude - lat;
-      const distance = dLng * dLng + dLat * dLat;
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearestIndex = i;
-      }
-    }
-    return places.splice(nearestIndex, 1)[0];
-  }
-
-  private drawRouteLine(orderedPlaces: PlaceSummaryDto[]): void {
-    const straightCoordinates = orderedPlaces.map(p => [p.longitude, p.latitude] as [number, number]);
-
-    // Draw a straight connector immediately, then upgrade to the real road route when it arrives
-    this.renderRouteGeometry(straightCoordinates, false);
-
-    this.directionsService.getRoute(straightCoordinates).subscribe(roadCoordinates => {
-      if (roadCoordinates && roadCoordinates.length > 1) {
-        this.renderRouteGeometry(roadCoordinates, true);
-      }
-    });
-  }
-
-  private renderRouteGeometry(coordinates: [number, number][], isRoad: boolean): void {
-    if (!this.mapInstance) return;
-
-    const geojson: any = {
-      type: 'Feature',
-      geometry: { type: 'LineString', coordinates }
-    };
-
-    const existing = this.mapInstance.getSource('trip-route') as mapboxgl.GeoJSONSource | undefined;
-    if (existing) {
-      existing.setData(geojson);
-    } else {
-      this.mapInstance.addSource('trip-route', { type: 'geojson', data: geojson });
-      this.mapInstance.addLayer({
-        id: 'trip-route',
-        type: 'line',
-        source: 'trip-route',
-        layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: {
-          'line-color': '#00796b',
-          'line-width': 4,
-          'line-opacity': 0.85
-        }
-      });
-    }
-
-    // Straight fallback stays dashed; a real road route is drawn solid
-    this.mapInstance.setPaintProperty('trip-route', 'line-dasharray', isRoad ? [1, 0] : [2, 1.5]);
-  }
-
-  private fitToStops(orderedPlaces: PlaceSummaryDto[]): void {
     const bounds = new mapboxgl.LngLatBounds();
-    orderedPlaces.forEach(p => bounds.extend([p.longitude, p.latitude]));
-    this.mapInstance!.fitBounds(bounds, { padding: 80, duration: 1200, maxZoom: 12 });
+    stops.forEach(stop => bounds.extend([stop.longitude, stop.latitude]));
+    this.mapInstance.fitBounds(bounds, { padding: { top: 120, bottom: 60, left: 60, right: 400 }, duration: 1200, maxZoom: 13 });
   }
 
-  private buildTripStopElement(place: PlaceSummaryDto, order: number): HTMLElement {
-    const pin = document.createElement('div');
-    pin.className = 'trip-stop';
-    pin.title = place.name;
-    pin.textContent = String(order);
-    pin.addEventListener('click', (clickEvent) => {
-      clickEvent.stopPropagation();
-      this.router.navigate(['/places', place.id]);
+  private setTripData(stopPoints: GeoJSON.Feature[], routeLines: GeoJSON.Feature[]): void {
+    if (!this.mapInstance) return;
+    // The style reports "not loaded" mid-animation; retry once the map settles, using the latest trip state
+    if (!this.mapInstance.isStyleLoaded()) {
+      this.mapInstance.once('idle', () => this.setTripData(this.tripStopPoints, this.tripRouteLines));
+      return;
+    }
+    this.ensureTripLayers();
+    (this.mapInstance.getSource('trip-route') as mapboxgl.GeoJSONSource)
+      .setData({ type: 'FeatureCollection', features: routeLines });
+    (this.mapInstance.getSource('trip-stops') as mapboxgl.GeoJSONSource)
+      .setData({ type: 'FeatureCollection', features: stopPoints });
+  }
+
+  // Stops are WebGL layers (not DOM markers) so they move in lockstep with the map while zooming
+  private ensureTripLayers(): void {
+    const map = this.mapInstance!;
+    if (map.getSource('trip-stops')) return;
+
+    const emptyCollection: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
+    map.addSource('trip-route', { type: 'geojson', data: emptyCollection });
+    map.addSource('trip-stops', { type: 'geojson', data: emptyCollection });
+
+    map.addLayer({
+      id: 'trip-route',
+      type: 'line',
+      source: 'trip-route',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': ['get', 'color'], 'line-width': 4, 'line-opacity': 0.8 }
     });
 
-    this.attachHoverPopup(pin, place.longitude, place.latitude,
-      this.buildPlacePopupHtml(`${order}. ${place.name}`, place.city, place.country,
-        this.placeSubcategory(place), place.description));
+    map.addLayer({
+      id: 'trip-stop-circles',
+      type: 'circle',
+      source: 'trip-stops',
+      paint: {
+        'circle-color': ['get', 'color'],
+        'circle-radius': 12,
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#ffffff'
+      }
+    });
 
-    return pin;
-  }
+    map.addLayer({
+      id: 'trip-stop-labels',
+      type: 'symbol',
+      source: 'trip-stops',
+      layout: {
+        'text-field': ['to-string', ['get', 'order']],
+        'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
+        'text-size': 12,
+        'text-allow-overlap': true,
+        'text-ignore-placement': true
+      },
+      paint: { 'text-color': '#ffffff' }
+    });
 
-  private clearTripMarkers(): void {
-    this.tripMarkers.forEach(marker => marker.remove());
-    this.tripMarkers = [];
-  }
-
-  private removeRouteLayer(): void {
-    if (!this.mapInstance) return;
-    if (this.mapInstance.getLayer('trip-route')) this.mapInstance.removeLayer('trip-route');
-    if (this.mapInstance.getSource('trip-route')) this.mapInstance.removeSource('trip-route');
+    map.on('click', 'trip-stop-circles', (event) => {
+      const placeId = event.features?.[0]?.properties?.['id'];
+      if (placeId) this.zone.run(() => this.router.navigate(['/places', placeId]));
+    });
+    map.on('mouseenter', 'trip-stop-circles', (event) => {
+      map.getCanvas().style.cursor = 'pointer';
+      const feature = event.features?.[0];
+      if (!feature || !this.hoverPopup) return;
+      const props = feature.properties || {};
+      this.hoverPopup
+        .setLngLat((feature.geometry as GeoJSON.Point).coordinates as [number, number])
+        .setHTML(this.buildPlacePopupHtml(`${props['order']}. ${props['name']}`, props['city'], props['country'], props['category']))
+        .addTo(map);
+    });
+    map.on('mouseleave', 'trip-stop-circles', () => {
+      map.getCanvas().style.cursor = '';
+      this.hoverPopup?.remove();
+    });
   }
 
   private loadSavedPlaceIds(): void {

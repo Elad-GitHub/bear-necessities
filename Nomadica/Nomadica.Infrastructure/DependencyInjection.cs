@@ -25,6 +25,8 @@ using Nomadica.Application.UseCases.Groups.GetMyGroups;
 using Nomadica.Application.UseCases.Groups.JoinGroup;
 using Nomadica.Application.UseCases.Groups.LeaveGroup;
 using Nomadica.Application.UseCases.Trips.GetTripSuggestions;
+using Nomadica.Application.UseCases.Trips.PlanItinerary;
+using Nomadica.Application.Services.Trips;
 using Nomadica.Application.UseCases.Users.GetPendingMembers;
 using Nomadica.Application.UseCases.Users.ReviewMembership;
 using Nomadica.Application.UseCases.Events.GetPendingEvents;
@@ -177,6 +179,8 @@ public static class DependencyInjection
         services.AddScoped<GetPendingMembersHandler>();
         services.AddScoped<ReviewMembershipHandler>();
         services.AddScoped<GetTripSuggestionsHandler>();
+        services.AddScoped<PlanItineraryHandler>();
+        services.AddSingleton<IItineraryPlanner, NearestNeighborItineraryPlanner>();
         services.AddScoped<GetEventsByViewportHandler>();
         services.AddScoped<GetEventsByPlaceHandler>();
 

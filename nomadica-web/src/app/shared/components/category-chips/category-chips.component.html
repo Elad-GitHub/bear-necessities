@@ -1,4 +1,4 @@
-<div class="chips-outer" [class.can-left]="canScrollLeft()" [class.can-right]="canScrollRight()">
+<div class="chips-outer" [class.wrap]="wrap" [class.can-left]="canScrollLeft()" [class.can-right]="canScrollRight()">
   <button class="scroll-arrow left" *ngIf="canScrollLeft()" (click)="scrollChips(-1)" aria-label="Scroll categories left">
     <span class="material-icons">chevron_left</span>
   </button>
@@ -20,7 +20,8 @@
       </button>
 
       <div class="dropdown" *ngIf="isDropdownOpen(parent.id)"
-        [style.top.px]="dropdownTop()" [style.left.px]="dropdownLeft()">
+        [style.top.px]="dropdownTop()" [style.bottom.px]="dropdownBottom()"
+        [style.max-height.px]="dropdownMaxHeight()" [style.left.px]="dropdownLeft()">
         <button class="dropdown-item all-item"
           [class.checked]="isEntireParentSelected(parent)"
           (click)="toggleEntireParent(parent, $event)">

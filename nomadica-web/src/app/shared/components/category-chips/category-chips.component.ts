@@ -6,6 +6,9 @@ import { CategoryTreeDto } from '../../../core/models/category.model';
 import { CategoryIconsService } from '../../../core/services/category-icons.service';
 
 const DROPDOWN_WIDTH = 224;
+const DROPDOWN_MIN_HEIGHT = 200;
+const DROPDOWN_MAX_HEIGHT = 320;
+const DROPDOWN_EDGE_GAP = 12;
 
 @Component({
   selector: 'app-category-chips',
@@ -35,6 +38,9 @@ export class CategoryChipsComponent implements AfterViewInit {
     }
   }
 
+  // Narrow containers (e.g. the trip planner panel) wrap chips onto several lines so every category stays visible
+  @Input() wrap = false;
+
   @Output() selectionChange = new EventEmitter<string[]>();
 
   selectedCategoryIds = signal<string[]>([]);
@@ -42,7 +48,9 @@ export class CategoryChipsComponent implements AfterViewInit {
 
   // The dropdown is rendered with position:fixed so the horizontally-scrolling chip row
   // (overflow-x) can't clip it. Its screen position is computed from the clicked chip.
-  dropdownTop = signal(0);
+  dropdownTop = signal<number | null>(0);
+  dropdownBottom = signal<number | null>(null);
+  dropdownMaxHeight = signal(DROPDOWN_MIN_HEIGHT);
   dropdownLeft = signal(0);
 
   canScrollLeft = signal(false);
@@ -81,7 +89,14 @@ export class CategoryChipsComponent implements AfterViewInit {
       return;
     }
     const chip = (clickEvent.currentTarget as HTMLElement).getBoundingClientRect();
-    this.dropdownTop.set(chip.bottom + 6);
+    const spaceBelow = window.innerHeight - chip.bottom - DROPDOWN_EDGE_GAP;
+    const spaceAbove = chip.top - DROPDOWN_EDGE_GAP;
+    // Chips low on screen (e.g. inside the planner panel) open upward so the list never runs off the bottom
+    const opensUpward = spaceBelow < DROPDOWN_MIN_HEIGHT && spaceAbove > spaceBelow;
+    this.dropdownTop.set(opensUpward ? null : chip.bottom + 6);
+    this.dropdownBottom.set(opensUpward ? window.innerHeight - chip.top + 6 : null);
+    this.dropdownMaxHeight.set(
+      Math.min(DROPDOWN_MAX_HEIGHT, Math.max(DROPDOWN_MIN_HEIGHT, opensUpward ? spaceAbove : spaceBelow)));
     this.dropdownLeft.set(Math.max(8, Math.min(chip.left, window.innerWidth - DROPDOWN_WIDTH - 8)));
     this.openDropdownId.set(parentId);
   }
@@ -102,7 +117,7 @@ export class CategoryChipsComponent implements AfterViewInit {
 
   private updateScrollHints(): void {
     const element = this.scroller?.nativeElement;
-    if (!element) return;
+    if (!element || this.wrap) return;
     const maxScroll = element.scrollWidth - element.clientWidth;
     this.canScrollLeft.set(element.scrollLeft > 4);
     this.canScrollRight.set(element.scrollLeft < maxScroll - 4);

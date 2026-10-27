@@ -20,16 +20,45 @@
     <span class="fab-label">Plan a Trip</span>
   </button>
 
-  <!-- Active trip banner -->
-  <div class="trip-banner" *ngIf="tripActive()">
-    <span class="material-icons">route</span>
-    <span class="trip-banner-text">
-      Your route — {{ tripStopCount() }} {{ tripStopCount() === 1 ? 'stop' : 'stops' }}
+  <!-- Active trip: day-by-day itinerary -->
+  <div class="planner-panel trip-itinerary" *ngIf="tripActive()">
+    <div class="planner-header">
+      <h3><span class="material-icons">route</span> Your trip</h3>
+      <button class="trip-exit" (click)="clearTrip()" title="Exit trip (Esc)">
+        <span class="material-icons">close</span> Exit
+      </button>
+    </div>
+
+    <p class="trip-summary" *ngIf="itinerary().length > 0">
+      {{ itinerary().length }} {{ itinerary().length === 1 ? 'day' : 'days' }} ·
+      {{ tripStopCount() }} {{ tripStopCount() === 1 ? 'stop' : 'stops' }}
       <ng-container *ngIf="tripArea()"> around {{ tripArea()?.name }}</ng-container>
-    </span>
-    <button class="trip-banner-clear" (click)="clearTrip()">
-      <span class="material-icons">close</span> Exit
-    </button>
+    </p>
+
+    <div class="trip-empty" *ngIf="itinerary().length === 0">
+      <span class="material-icons">search_off</span>
+      <p>No places matched those categories in {{ tripArea()?.name || 'this area' }} yet.</p>
+      <button class="planner-go" (click)="backToPlanner()">
+        <span class="material-icons">tune</span> Change the plan
+      </button>
+    </div>
+
+    <div class="trip-day" *ngFor="let day of itinerary()" [class.selected]="selectedTripDay() === day.dayNumber">
+      <button class="trip-day-header" (click)="focusTripDay(day)">
+        <span class="trip-day-dot" [style.background]="dayColor(day.dayNumber)"></span>
+        <strong>Day {{ day.dayNumber }}</strong>
+        <span class="trip-day-meta">{{ day.stops.length }} stops<ng-container *ngIf="day.distanceKm > 0"> · {{ day.distanceKm | number:'1.0-1' }} km</ng-container></span>
+        <span class="material-icons">zoom_in_map</span>
+      </button>
+      <ol class="trip-stops">
+        <li *ngFor="let stop of day.stops; let stopIndex = index">
+          <button (click)="focusTripStop(stop, stopIndex + 1)">
+            <span class="trip-stop-name">{{ stop.name }}</span>
+            <span class="trip-stop-place" *ngIf="stop.city">{{ stop.city }}</span>
+          </button>
+        </li>
+      </ol>
+    </div>
   </div>
 
   <!-- Trip planner panel -->
@@ -55,15 +84,38 @@
       </div>
     </div>
 
-    <label class="planner-label">What are you into? <span class="planner-optional">(optional)</span></label>
+    <label class="planner-label">
+      What are you into?
+      <span class="planner-count" [class.met]="tripCategoryIds().length >= minTripCategories">
+        {{ tripCategoryIds().length }}/{{ minTripCategories }} picked
+      </span>
+    </label>
+    <p class="planner-hint">Pick at least {{ minTripCategories }} subcategories — open a category to choose.</p>
     <app-category-chips
+      [wrap]="true"
       [categories]="categoriesService.categories()"
+      [selectedIds]="tripCategoryIds()"
       (selectionChange)="onPlannerCategoriesChange($event)">
     </app-category-chips>
 
-    <button class="planner-go" [disabled]="!tripArea() || isPlanning()" (click)="runTripPlan()">
-      <span class="material-icons">{{ isPlanning() ? 'sync' : 'travel_explore' }}</span>
-      {{ isPlanning() ? 'Mapping your route...' : "Show me what's there" }}
+    <label class="planner-label">How many days?</label>
+    <div class="planner-days">
+      <button type="button" (click)="changeTripDays(-1)" [disabled]="tripDays() <= 1" aria-label="Fewer days">
+        <span class="material-icons">remove</span>
+      </button>
+      <span class="planner-days-value">{{ tripDays() }} {{ tripDays() === 1 ? 'day' : 'days' }}</span>
+      <button type="button" (click)="changeTripDays(1)" [disabled]="tripDays() >= maxTripDays" aria-label="More days">
+        <span class="material-icons">add</span>
+      </button>
+    </div>
+
+    <button class="planner-go" *ngIf="!isPlanning()" [disabled]="!canPlanTrip()" (click)="runTripPlan()">
+      <span class="material-icons">travel_explore</span>
+      Plan my trip
+    </button>
+    <button class="planner-go planner-cancel" *ngIf="isPlanning()" (click)="cancelPlanning()">
+      <span class="material-icons spin">sync</span>
+      Planning your days... (cancel)
     </button>
   </div>
 

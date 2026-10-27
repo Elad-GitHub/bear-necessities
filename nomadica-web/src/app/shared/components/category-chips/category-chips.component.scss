@@ -32,6 +32,19 @@ $text-muted: #757575;
   }
   &.can-left::before { opacity: 1; }
   &.can-right::after { opacity: 1; }
+
+  &.wrap {
+    border-bottom: none;
+
+    &::before,
+    &::after { display: none; }
+
+    .chips-container {
+      flex-wrap: wrap;
+      overflow: visible;
+      padding: 4px 0;
+    }
+  }
 }
 
 .chips-container {

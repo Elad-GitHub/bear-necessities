@@ -34,46 +34,6 @@ $planner-primary-dark: #004d40;
   &:hover { background: $planner-primary-dark; transform: translateY(-1px); }
 }
 
-.trip-banner {
-  position: absolute;
-  top: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 25;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  border-radius: 24px;
-  background: $planner-primary;
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
-
-  .material-icons { font-size: 19px; }
-
-  .trip-banner-clear {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    margin-left: 6px;
-    padding: 5px 10px;
-    border: none;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.22);
-    color: white;
-    font-size: 12.5px;
-    font-weight: 600;
-    font-family: inherit;
-    cursor: pointer;
-
-    .material-icons { font-size: 15px; }
-
-    &:hover { background: rgba(255, 255, 255, 0.35); }
-  }
-}
-
 .planner-panel {
   position: absolute;
   top: 92px;
@@ -125,7 +85,165 @@ $planner-primary-dark: #004d40;
   color: #212121;
   margin: 12px 0 6px;
 
-  .planner-optional { font-weight: 400; color: #9e9e9e; }
+  .planner-count {
+    float: right;
+    font-weight: 600;
+    font-size: 12px;
+    color: #c62828;
+
+    &.met { color: $planner-primary; }
+  }
+}
+
+.planner-hint {
+  margin: -2px 0 4px;
+  font-size: 12px;
+  color: #757575;
+}
+
+.planner-days {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 3px;
+
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 8px;
+    background: #e0f2f1;
+    color: $planner-primary;
+    cursor: pointer;
+
+    &:disabled { background: #f5f5f5; color: #bdbdbd; cursor: not-allowed; }
+  }
+
+  .planner-days-value {
+    min-width: 72px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+  }
+}
+
+.planner-cancel {
+  background: #616161;
+
+  &:hover { background: #424242 !important; }
+
+  .spin { animation: planner-spin 1s linear infinite; }
+}
+
+@keyframes planner-spin {
+  to { transform: rotate(360deg); }
+}
+
+.trip-itinerary {
+  top: 80px;
+
+  .trip-exit {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 16px;
+    background: #e0f2f1;
+    color: $planner-primary-dark;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+
+    .material-icons { font-size: 16px; }
+
+    &:hover { background: #b2dfdb; }
+  }
+
+  .trip-summary {
+    margin: -6px 0 10px;
+    font-size: 13px;
+    color: #616161;
+  }
+
+  .trip-empty {
+    text-align: center;
+    color: #616161;
+    font-size: 13.5px;
+
+    > .material-icons { font-size: 36px; color: #bdbdbd; }
+  }
+}
+
+.trip-day {
+  border: 1px solid #eeeeee;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
+
+  &.selected { border-color: $planner-primary; }
+
+  .trip-day-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 12px;
+    border: none;
+    background: #fafafa;
+    font-family: inherit;
+    font-size: 14px;
+    color: #212121;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover { background: #f1f8f7; }
+
+    .trip-day-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .trip-day-meta {
+      flex: 1;
+      font-size: 12.5px;
+      color: #757575;
+    }
+
+    .material-icons { font-size: 18px; color: #9e9e9e; }
+  }
+
+  .trip-stops {
+    margin: 0;
+    padding: 4px 12px 8px 34px;
+
+    li { font-size: 13px; color: #424242; }
+
+    button {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      padding: 4px 0;
+      border: none;
+      background: none;
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+
+      &:hover .trip-stop-name { color: $planner-primary; text-decoration: underline; }
+    }
+
+    .trip-stop-name { font-size: 13px; color: #212121; }
+    .trip-stop-place { font-size: 11.5px; color: #9e9e9e; }
+  }
 }
 
 .planner-area-field {
@@ -334,26 +452,6 @@ $planner-primary-dark: #004d40;
     }
   }
 
-  .trip-stop {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 2px solid #ffffff;
-    background: #00796b;
-    color: #ffffff;
-    font-size: 13px;
-    font-weight: 700;
-    font-family: 'Inter', sans-serif;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-    transition: transform 0.15s;
-
-    &:hover { transform: scale(1.15); z-index: 5; }
-  }
-
   .nomadica-popup {
     .mapboxgl-popup-content {
       padding: 10px 14px;
@@ -487,19 +585,10 @@ $planner-primary-dark: #004d40;
     }
   }
 
-  // Center banner sits below the toggle/FAB row so it never overlaps them.
-  .trip-banner {
-    top: 92px;
-    left: 12px;
-    right: 12px;
-    transform: none;
-    flex-wrap: wrap;
-    justify-content: center;
-    padding: 10px 14px;
-
-    .trip-banner-text { flex: 1 1 auto; min-width: 0; }
-
-    .trip-banner-clear { min-height: 36px; }
+  // On phones the itinerary is a bottom sheet so the route stays visible above it
+  .trip-itinerary {
+    top: auto;
+    max-height: 45vh;
   }
 }
 
@@ -524,10 +613,5 @@ $planner-primary-dark: #004d40;
       padding: 9px 11px;
       font-size: 12.5px;
     }
-  }
-
-  .trip-banner {
-    top: 92px;
-    font-size: 13px;
   }
 }

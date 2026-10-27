@@ -16,4 +16,21 @@ public sealed record Coordinates
 
         return new Coordinates { Latitude = latitude, Longitude = longitude };
     }
+
+    private const double EarthRadiusKm = 6371.0;
+
+    // Great-circle (haversine) distance — accurate enough for trip planning at any scale
+    public double DistanceKmTo(Coordinates other)
+    {
+        var latitudeDelta = ToRadians((double)(other.Latitude - Latitude));
+        var longitudeDelta = ToRadians((double)(other.Longitude - Longitude));
+        var startLatitude = ToRadians((double)Latitude);
+        var endLatitude = ToRadians((double)other.Latitude);
+
+        var haversine = Math.Sin(latitudeDelta / 2) * Math.Sin(latitudeDelta / 2)
+            + Math.Cos(startLatitude) * Math.Cos(endLatitude) * Math.Sin(longitudeDelta / 2) * Math.Sin(longitudeDelta / 2);
+        return 2 * EarthRadiusKm * Math.Asin(Math.Min(1, Math.Sqrt(haversine)));
+    }
+
+    private static double ToRadians(double degrees) => degrees * Math.PI / 180.0;
 }
