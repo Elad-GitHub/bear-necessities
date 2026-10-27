@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "Nomadica/Nomadica.API", "--launch-profile", "http"],
+      "port": 5130
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "nomadica-web", "start"],
+      "port": 4200
+    }
+  ]
+}
