@@ -1,0 +1,571 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  // Clear only the fixed 64px navbar; the category bar is in normal flow below it
+  padding-top: 64px;
+}
+
+$planner-primary: #00796b;
+$planner-primary-dark: #004d40;
+
+.planner-panel {
+  position: absolute;
+  top: 92px;
+  right: 12px;
+  z-index: 30;
+  width: 340px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.22);
+  padding: 18px;
+
+  .planner-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+
+    h3 {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin: 0;
+      font-size: 17px;
+      font-weight: 700;
+      color: #212121;
+
+      .material-icons { color: $planner-primary; }
+    }
+
+    .planner-close {
+      border: none;
+      background: none;
+      color: #757575;
+      cursor: pointer;
+      display: flex;
+
+      &:hover { color: #212121; }
+    }
+  }
+}
+
+.planner-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #212121;
+  margin: 12px 0 6px;
+
+  .planner-count {
+    float: right;
+    font-weight: 600;
+    font-size: 12px;
+    color: #c62828;
+
+    &.met { color: $planner-primary; }
+  }
+}
+
+.planner-hint {
+  margin: -2px 0 4px;
+  font-size: 12px;
+  color: #757575;
+}
+
+.planner-days {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 3px;
+
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 8px;
+    background: #e0f2f1;
+    color: $planner-primary;
+    cursor: pointer;
+
+    &:disabled { background: #f5f5f5; color: #bdbdbd; cursor: not-allowed; }
+  }
+
+  .planner-days-value {
+    min-width: 72px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+  }
+}
+
+.planner-cancel {
+  background: #616161;
+
+  &:hover { background: #424242 !important; }
+
+  .spin { animation: planner-spin 1s linear infinite; }
+}
+
+@keyframes planner-spin {
+  to { transform: rotate(360deg); }
+}
+
+.trip-itinerary {
+  top: 80px;
+
+  .trip-exit {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 16px;
+    background: #e0f2f1;
+    color: $planner-primary-dark;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+
+    .material-icons { font-size: 16px; }
+
+    &:hover { background: #b2dfdb; }
+  }
+
+  .trip-summary {
+    margin: -6px 0 10px;
+    font-size: 13px;
+    color: #616161;
+  }
+
+  .trip-empty {
+    text-align: center;
+    color: #616161;
+    font-size: 13.5px;
+
+    > .material-icons { font-size: 36px; color: #bdbdbd; }
+  }
+}
+
+.trip-day {
+  border: 1px solid #eeeeee;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
+
+  &.selected { border-color: $planner-primary; }
+
+  .trip-day-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 12px;
+    border: none;
+    background: #fafafa;
+    font-family: inherit;
+    font-size: 14px;
+    color: #212121;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover { background: #f1f8f7; }
+
+    .trip-day-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .trip-day-meta {
+      flex: 1;
+      font-size: 12.5px;
+      color: #757575;
+    }
+
+    .material-icons { font-size: 18px; color: #9e9e9e; }
+  }
+
+  .trip-stops {
+    margin: 0;
+    padding: 4px 12px 8px 34px;
+
+    li { font-size: 13px; color: #424242; }
+
+    button {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      padding: 4px 0;
+      border: none;
+      background: none;
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+
+      &:hover .trip-stop-name { color: $planner-primary; text-decoration: underline; }
+    }
+
+    .trip-stop-name { font-size: 13px; color: #212121; }
+    .trip-stop-place { font-size: 11.5px; color: #9e9e9e; }
+  }
+}
+
+.planner-area-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  transition: border-color 0.2s;
+
+  &:focus-within { border-color: $planner-primary; }
+
+  > .material-icons { color: #757575; font-size: 19px; }
+
+  input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    font-family: inherit;
+    background: none;
+    min-width: 0;
+  }
+}
+
+.planner-area-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
+  z-index: 5;
+  padding: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 10px;
+    border: none;
+    border-radius: 6px;
+    background: none;
+    font-size: 13.5px;
+    font-family: inherit;
+    color: #212121;
+    text-align: left;
+    cursor: pointer;
+
+    .material-icons { font-size: 16px; color: $planner-primary; }
+
+    &:hover { background: #e0f2f1; }
+  }
+}
+
+.planner-go {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: $planner-primary;
+  color: white;
+  font-size: 14.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  .material-icons { font-size: 19px; }
+
+  &:hover:not(:disabled) { background: $planner-primary-dark; }
+  &:disabled { background: #bdbdbd; cursor: not-allowed; }
+}
+
+.map-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.map-filters {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 30; // above the map-mode toggle so category dropdowns aren't covered
+  background: white;
+}
+
+.filters-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px 0;
+  background: white;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: #00796b;
+
+  .material-icons { font-size: 17px; }
+}
+
+.map-mode-toggle {
+  position: absolute;
+  top: 80px;
+  left: 12px;
+  z-index: 20;
+  display: flex;
+  background: white;
+  border-radius: 22px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  padding: 4px;
+  gap: 2px;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border: none;
+    border-radius: 18px;
+    background: none;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #757575;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    .material-icons { font-size: 16px; }
+
+    &:hover { color: #00796b; }
+
+    &.active {
+      background: #00796b;
+      color: white;
+    }
+  }
+}
+
+.map-container {
+  position: absolute;
+  top: 48px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+}
+
+::ng-deep {
+  .mapboxgl-canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  .map-pin {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: box-shadow 150ms ease;
+
+    .material-icons {
+      font-size: 17px;
+      color: #ffffff;
+    }
+
+    &:hover {
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+    }
+
+    &.map-pin--saved {
+      width: 34px;
+      height: 34px;
+
+      .material-icons { font-size: 19px; }
+    }
+
+    &.map-pin--dot {
+      width: 18px;
+      height: 18px;
+    }
+
+    &.map-pin--event {
+      background-color: #ef6c00;
+      border-radius: 8px;
+    }
+  }
+
+  .bear-necessities-popup {
+    .mapboxgl-popup-content {
+      padding: 10px 14px;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+      font-family: 'Inter', sans-serif;
+    }
+
+    .map-popup-title {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #212121;
+    }
+
+    .map-popup-loc {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      margin-top: 3px;
+      font-size: 12px;
+      color: #757575;
+
+      .material-icons { font-size: 13px; }
+    }
+
+    .map-popup-cat {
+      margin-top: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #00796b;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .map-popup-desc {
+      margin-top: 6px;
+      max-width: 240px;
+      font-size: 12.5px;
+      line-height: 1.45;
+      color: #424242;
+    }
+  }
+
+  .mapboxgl-ctrl {
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .mapboxgl-ctrl button {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+
+    &:hover {
+      background: #f5f5f5;
+    }
+  }
+}
+
+.marker-element {
+  cursor: pointer;
+
+  .marker-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #4db8a8;
+    box-shadow: 0 0 0 3px rgba(77, 184, 168, 0.2);
+    transition: all 200ms ease;
+
+    &:hover {
+      box-shadow: 0 0 0 5px rgba(77, 184, 168, 0.3);
+    }
+  }
+}
+
+// --- Mobile ---
+@media (max-width: 760px) {
+  // Trip planner becomes a full-width, bottom-anchored sheet
+  .planner-panel {
+    top: auto;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+    max-height: calc(100vh - 180px);
+    padding: 16px;
+
+    .planner-header {
+      flex-wrap: wrap;
+
+      h3 { font-size: 16px; }
+
+      .planner-close {
+        // Keep the close control a comfortable tap target
+        min-width: 40px;
+        min-height: 40px;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+  }
+
+  // Keep the area-search tap target tall enough
+  .planner-area-field {
+    padding: 12px;
+  }
+
+  .planner-go {
+    min-height: 44px;
+  }
+
+  .map-mode-toggle {
+    top: 92px;
+    left: 10px;
+
+    button {
+      padding: 9px 12px;
+      min-height: 40px;
+    }
+  }
+
+  // On phones the itinerary is a bottom sheet so the route stays visible above it
+  .trip-itinerary {
+    top: auto;
+    max-height: 45vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .map-mode-toggle {
+    top: 92px;
+    left: 10px;
+
+    button {
+      padding: 9px 11px;
+      font-size: 12.5px;
+    }
+  }
+}

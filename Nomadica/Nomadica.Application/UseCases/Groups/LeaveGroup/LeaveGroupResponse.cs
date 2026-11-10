@@ -1,3 +1,0 @@
-namespace Nomadica.Application.UseCases.Groups.LeaveGroup;
-
-public record LeaveGroupResponse(bool IsMember, int MemberCount);

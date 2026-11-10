@@ -4,13 +4,13 @@
     {
       "name": "api",
       "runtimeExecutable": "dotnet",
-      "runtimeArgs": ["run", "--project", "Nomadica/Nomadica.API", "--launch-profile", "http"],
+      "runtimeArgs": ["run", "--project", "BearNecessities/BearNecessities.API", "--launch-profile", "http"],
       "port": 5130
     },
     {
       "name": "web",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "nomadica-web", "start"],
+      "runtimeArgs": ["--prefix", "bear-necessities-web", "start"],
       "port": 4200
     }
   ]

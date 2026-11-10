@@ -1,0 +1,124 @@
+<nav class="navbar">
+  <div class="navbar-left">
+    <a routerLink="/" class="logo">
+      <img class="logo-mark" src="brand/icon-192.png" alt="" width="40" height="40">
+      <span class="logo-text">Bear Necessities</span>
+    </a>
+  </div>
+
+  <div class="navbar-center">
+    <div class="search-wrapper">
+      <mat-form-field class="search-field" appearance="outline">
+        <mat-label>Search places, events, communities...</mat-label>
+        <input matInput #searchInput placeholder="Try a city, a place, an event or a community"
+          (input)="onSearchInput(searchInput.value)"
+          (focus)="hasResults() && isSearchOpen.set(true)">
+        <mat-icon matSuffix *ngIf="!isSearching()">search</mat-icon>
+        <mat-icon matSuffix class="spinning" *ngIf="isSearching()">sync</mat-icon>
+      </mat-form-field>
+
+      <div class="search-dropdown" *ngIf="isSearchOpen() && hasResults()">
+        <ng-container *ngIf="placeResults().length > 0">
+          <div class="search-section-label">Places</div>
+          <button class="search-result" *ngFor="let result of placeResults()"
+            (click)="openSearchResult(result, searchInput)">
+            <mat-icon>place</mat-icon>
+            <span class="result-name">{{ result.name }}</span>
+            <span class="result-location" *ngIf="result.city || result.country">
+              {{ result.city }}<ng-container *ngIf="result.city && result.country">, </ng-container>{{ result.country }}
+            </span>
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="eventResults().length > 0">
+          <div class="search-section-label">Events</div>
+          <button class="search-result" *ngFor="let eventItem of eventResults()"
+            (click)="openEventResult(eventItem, searchInput)">
+            <mat-icon>celebration</mat-icon>
+            <span class="result-name">{{ eventItem.title }}</span>
+            <span class="result-location" *ngIf="eventItem.startAt">{{ eventItem.startAt | date:'MMM d' }}</span>
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="groupResults().length > 0">
+          <div class="search-section-label">Communities</div>
+          <button class="search-result" *ngFor="let group of groupResults()"
+            (click)="openGroupResult(group, searchInput)">
+            <mat-icon>groups</mat-icon>
+            <span class="result-name">{{ group.name }}</span>
+            <span class="result-location">
+              {{ group.city || group.country || '' }}<ng-container *ngIf="group.city || group.country"> · </ng-container>{{ group.memberCount }} {{ group.memberCount === 1 ? 'member' : 'members' }}
+            </span>
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="destinationResults().length > 0">
+          <div class="search-section-label">Destinations</div>
+          <button class="search-result" *ngFor="let destination of destinationResults()"
+            (click)="openDestination(destination, searchInput)">
+            <mat-icon>explore</mat-icon>
+            <span class="result-name">{{ destination.fullName }}</span>
+          </button>
+        </ng-container>
+      </div>
+
+      <div class="search-dropdown empty" *ngIf="isSearchOpen() && !hasResults() && searchInput.value.length >= 2 && !isSearching()">
+        <span class="no-results">Nothing found for "{{ searchInput.value }}"</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="navbar-right">
+    <button mat-button class="nav-link" (click)="openTripPlanner()" aria-label="Plan a Trip">
+      <mat-icon>explore</mat-icon>
+      <span class="nav-link-label">Plan a Trip</span>
+    </button>
+
+    <button mat-button class="nav-link" (click)="navigateTo('/groups')" aria-label="Communities">
+      <mat-icon>groups</mat-icon>
+      <span class="nav-link-label">Communities</span>
+    </button>
+
+    <ng-container *ngIf="!authService.isAuthenticated()">
+      <button mat-button (click)="navigateTo('/login')">Login</button>
+      <button mat-raised-button color="primary" (click)="navigateTo('/register')">Join</button>
+    </ng-container>
+
+    <ng-container *ngIf="authService.isAuthenticated()">
+      <button mat-icon-button [matMenuTriggerFor]="menu" class="avatar-button">
+        <div class="avatar">{{ getInitials() }}</div>
+      </button>
+      <mat-menu #menu="matMenu">
+        <button mat-menu-item (click)="navigateTo('/profile')">
+          <mat-icon>person</mat-icon>
+          <span>My Profile</span>
+        </button>
+        <button mat-menu-item (click)="navigateToProfileTab('rsvps')">
+          <mat-icon>event</mat-icon>
+          <span>My RSVPs</span>
+        </button>
+        <button mat-menu-item (click)="navigateToProfileTab('saved')">
+          <mat-icon>bookmark</mat-icon>
+          <span>Saved Places</span>
+        </button>
+        <button mat-menu-item (click)="navigateToProfileTab('listings')">
+          <mat-icon>storefront</mat-icon>
+          <span>My Listings</span>
+        </button>
+        <button mat-menu-item (click)="navigateTo('/submit')">
+          <mat-icon>add_location</mat-icon>
+          <span>Submit a Place</span>
+        </button>
+        <button mat-menu-item *ngIf="isAdmin()" (click)="navigateTo('/admin')">
+          <mat-icon>admin_panel_settings</mat-icon>
+          <span>Moderation Queue</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
+        </button>
+      </mat-menu>
+    </ng-container>
+  </div>
+</nav>
