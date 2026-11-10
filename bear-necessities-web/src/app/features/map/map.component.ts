@@ -17,6 +17,7 @@ import { PlaceDensityCell, PlaceSummaryDto } from '../../core/models/place.model
 import { EventSummaryDto } from '../../core/models/event.model';
 import { ItineraryDay, MAX_TRIP_DAYS, MIN_TRIP_CATEGORIES } from '../../core/models/trip.model';
 import { applyFestivalTheme, FESTIVAL_PALETTE } from '../../core/map/festival-map-theme';
+import { drawPawImage, measureSegments, PAW_IMAGE_ID, PawPrint, pawPrintCountFor, samplePawPrints, toPawFeatures } from '../../core/map/paw-trail';
 
 type MapMode = 'places' | 'events' | 'both';
 
@@ -31,6 +32,8 @@ const MOBILE_SHEET_HEIGHT_RATIO = 0.45;
 const BEAR_WALK_FRAMES =[1, 2, 3, 4].map(frame => `brand/bears/walk-${frame}.png`);
 const BEAR_ARRIVED_IMAGE = 'brand/bears/waving.png';
 const BEAR_WALK_FRAME_MS = 140;
+const TRIP_ROUTE_OPACITY = 0.8;
+const WALKED_ROUTE_OPACITY = 0.25;
 const BEAR_WALK_MIN_MS = 6000;
 const BEAR_WALK_MAX_MS = 14000;
 
@@ -376,10 +379,15 @@ export class MapComponent implements AfterViewInit, OnDestroy {
             : line);
         this.setTripData(this.tripStopPoints, this.tripRouteLines);
       }
-      // Only walk if the user is still looking at this day
-      if (this.selectedTripDay() === day.dayNumber) {
+      // Start once the camera has settled on the day (print spacing is measured on screen),
+      // and only if the user is still looking at this day
+      const walk = () => {
+        if (this.selectedTripDay() !== day.dayNumber) return;
         this.startBearWalk(hasRoad ? roadCoordinates! : coordinates);
-      }
+        this.highlightWalkedDay(day.dayNumber);
+      };
+      if (this.mapInstance?.isMoving()) this.mapInstance.once('moveend', walk);
+      else walk();
     });
   }
 
@@ -396,19 +404,25 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     element.appendChild(sprite);
     this.walkingBear = new mapboxgl.Marker({ element, anchor: 'bottom' }).setLngLat(path[0]).addTo(this.mapInstance);
 
+    const segmentLengths = measureSegments(path);
+    const map = this.mapInstance;
+    const routeLengthPixels = path.slice(1).reduce((sum, point, index) => {
+      const from = map.project(path[index]);
+      const to = map.project(point);
+      return sum + Math.hypot(to.x - from.x, to.y - from.y);
+    }, 0);
+    const pawPrints = samplePawPrints(path, segmentLengths, pawPrintCountFor(routeLengthPixels));
+
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) {
       this.walkingBear.setLngLat(path[path.length - 1]);
+      sprite.src = BEAR_ARRIVED_IMAGE;
+      this.setBearTrail(pawPrints);
       return;
     }
 
-    // Distances in degrees with longitude scaled by latitude: plenty for pacing an animation
-    const segmentLengths = path.slice(1).map((point, index) => {
-      const previous = path[index];
-      const longitudeScale = Math.cos((previous[1] * Math.PI) / 180);
-      return Math.hypot((point[0] - previous[0]) * longitudeScale, point[1] - previous[1]);
-    });
     const totalLength = segmentLengths.reduce((sum, length) => sum + length, 0) || 1;
+    let revealedPrints = 0;
     const durationMs = Math.min(BEAR_WALK_MAX_MS, Math.max(BEAR_WALK_MIN_MS, path.length * 120));
     const startedAt = performance.now();
 
@@ -416,7 +430,17 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       const step = (now: number) => {
         if (!this.walkingBear) return;
         const progress = Math.min(1, (now - startedAt) / durationMs);
-        let remaining = progress * totalLength;
+        const walked = progress * totalLength;
+
+        // Prints appear just behind the bear; the source only updates when a new print is due
+        let printsDue = revealedPrints;
+        while (printsDue < pawPrints.length && pawPrints[printsDue].distance <= walked) printsDue++;
+        if (printsDue !== revealedPrints) {
+          revealedPrints = printsDue;
+          this.setBearTrail(pawPrints.slice(0, revealedPrints));
+        }
+
+        let remaining = walked;
         let segment = 0;
         while (segment < segmentLengths.length - 1 && remaining > segmentLengths[segment]) {
           remaining -= segmentLengths[segment];
@@ -444,6 +468,21 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.walkAnimationFrame = null;
     this.walkingBear?.remove();
     this.walkingBear = null;
+    this.setBearTrail([]);
+    this.highlightWalkedDay(null);
+  }
+
+  private setBearTrail(prints: PawPrint[]): void {
+    const source = this.mapInstance?.getSource('bear-trail') as mapboxgl.GeoJSONSource | undefined;
+    source?.setData({ type: 'FeatureCollection', features: toPawFeatures(prints) });
+  }
+
+  // The walked day's line fades so its paw prints carry the route; other days keep their solid lines
+  private highlightWalkedDay(dayNumber: number | null): void {
+    if (!this.mapInstance?.getLayer('trip-route')) return;
+    this.mapInstance.setPaintProperty('trip-route', 'line-opacity', dayNumber === null
+      ? TRIP_ROUTE_OPACITY
+      : ['case', ['==', ['get', 'day'], dayNumber], WALKED_ROUTE_OPACITY, TRIP_ROUTE_OPACITY]);
   }
 
   focusTripStop(stop: PlaceSummaryDto, order: number): void {
@@ -561,7 +600,29 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       type: 'line',
       source: 'trip-route',
       layout: { 'line-join': 'round', 'line-cap': 'round' },
-      paint: { 'line-color': ['get', 'color'], 'line-width': 4, 'line-opacity': 0.8 }
+      paint: { 'line-color': ['get', 'color'], 'line-width': 4, 'line-opacity': TRIP_ROUTE_OPACITY }
+    });
+
+    if (!map.hasImage(PAW_IMAGE_ID)) {
+      const paw = drawPawImage();
+      if (paw) map.addImage(PAW_IMAGE_ID, paw, { pixelRatio: 2 });
+    }
+    map.addSource('bear-trail', { type: 'geojson', data: emptyCollection });
+    map.addLayer({
+      id: 'bear-trail',
+      type: 'symbol',
+      source: 'bear-trail',
+      layout: {
+        'icon-image': PAW_IMAGE_ID,
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.55, 14, 0.75, 17, 0.95],
+        // Prints face the walking direction and stay glued to the ground when the map rotates
+        'icon-rotate': ['get', 'bearing'],
+        'icon-rotation-alignment': 'map',
+        // Left and right feet sit either side of the route, like real tracks
+        'icon-offset': ['case', ['==', ['get', 'side'], 1], ['literal', [9, 0]], ['literal', [-9, 0]]],
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true
+      }
     });
 
     map.addLayer({
