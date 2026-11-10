@@ -16,6 +16,7 @@ import { DirectionsService } from '../../core/services/directions.service';
 import { PlaceSummaryDto } from '../../core/models/place.model';
 import { EventSummaryDto } from '../../core/models/event.model';
 import { ItineraryDay, MAX_TRIP_DAYS, MIN_TRIP_CATEGORIES } from '../../core/models/trip.model';
+import { applyFestivalTheme, FESTIVAL_PALETTE } from '../../core/map/festival-map-theme';
 
 type MapMode = 'places' | 'events' | 'both';
 
@@ -30,7 +31,6 @@ const SAVE_TYPE_COLORS: Record<string, string> = {
   Visited: '#5e35b1',
   VisitedLoved: '#e53935'
 };
-const DEFAULT_PIN_COLOR = '#00796b';
 
 @Component({
   selector: 'app-map',
@@ -568,6 +568,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.focusPopup = new mapboxgl.Popup({ offset: 22, className: 'nomadica-popup' });
 
     this.mapInstance.on('load', () => {
+      applyFestivalTheme(this.mapInstance!);
       this.registerCategoryIcons(this.mapInstance!);
       this.loadPlacesForViewport();
       if (this.pendingFocusId) {
@@ -740,6 +741,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           category: this.placeSubcategory(place) ?? '',
           // Multi-category places pin under their primary (first) category
           icon: this.categoryIcons.getEmojiForCategoryId(place.categoryId || place.categoryIds?.[0]),
+          pinColor: this.categoryIcons.getPinColorForCategoryId(place.categoryId || place.categoryIds?.[0]),
           saveType
         }
       };
@@ -768,12 +770,12 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       source: 'places-src',
       filter: ['has', 'point_count'],
       paint: {
-        'circle-color': ['step', ['get', 'point_count'], '#4db8a8', 25, '#1e9484', 100, '#00796b'],
+        'circle-color': ['step', ['get', 'point_count'], FESTIVAL_PALETTE.turquoise, 25, '#26A69A', 100, FESTIVAL_PALETTE.deepTeal],
         // Small, capped radii so even a 1000-count cluster stays compact and doesn't blanket the map
-        'circle-radius': ['step', ['get', 'point_count'], 12, 25, 15, 100, 18],
-        'circle-opacity': 0.82,
-        'circle-stroke-width': 1.5,
-        'circle-stroke-color': '#ffffff'
+        'circle-radius': ['step', ['get', 'point_count'], 13, 25, 16, 100, 19],
+        'circle-opacity': 0.92,
+        'circle-stroke-width': 3,
+        'circle-stroke-color': FESTIVAL_PALETTE.cream
       }
     });
 
@@ -784,10 +786,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       filter: ['has', 'point_count'],
       layout: {
         'text-field': ['get', 'point_count_abbreviated'],
-        'text-font': ['DIN Pro Medium', 'Arial Unicode MS Bold'],
-        'text-size': 11
+        'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
+        'text-size': 12
       },
-      paint: { 'text-color': '#ffffff' }
+      paint: { 'text-color': FESTIVAL_PALETTE.cream }
     });
 
     map.addLayer({
@@ -796,20 +798,23 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       source: 'places-src',
       filter: ['!', ['has', 'point_count']],
       paint: {
-        'circle-color': ['match', ['get', 'saveType'],
+        // Festival-style round pins: filled with the category colour, cream ring like the style board
+        'circle-color': ['get', 'pinColor'],
+        // Small dots when zoomed out so pins don't smother each other, growing into round badges that hold the emoji
+        'circle-radius': [
+          'interpolate', ['linear'], ['zoom'],
+          4, 4,
+          10, 7,
+          12, 12,
+          16, 15
+        ],
+        // Saved state (Want-to-go / Been-there / Loved) moves to a thicker ring so the category colour stays visible
+        'circle-stroke-color': ['match', ['get', 'saveType'],
           'WantToGo', SAVE_TYPE_COLORS['WantToGo'],
           'Visited', SAVE_TYPE_COLORS['Visited'],
           'VisitedLoved', SAVE_TYPE_COLORS['VisitedLoved'],
-          DEFAULT_PIN_COLOR],
-        // Small at low/medium zoom so pins don't smother each other, growing a touch when zoomed in.
-        // Saved pins (Want-to-go / Been-there / Loved) stay slightly larger to stand out — but still compact.
-        'circle-radius': [
-          'interpolate', ['linear'], ['zoom'],
-          9, ['case', ['==', ['get', 'saveType'], 'None'], 3.5, 5],
-          16, ['case', ['==', ['get', 'saveType'], 'None'], 6, 7.5]
-        ],
-        'circle-stroke-width': 1.5,
-        'circle-stroke-color': '#ffffff'
+          FESTIVAL_PALETTE.cream],
+        'circle-stroke-width': ['case', ['==', ['get', 'saveType'], 'None'], 2, 3.5]
       }
     });
 
@@ -820,10 +825,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       type: 'symbol',
       source: 'places-src',
       filter: ['!', ['has', 'point_count']],
-      minzoom: 10,
+      minzoom: 11,
       layout: {
         'icon-image': ['get', 'icon'],
-        'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.75, 16, 1.15],
+        // Sized to sit inside the round pin (emoji images are 32 CSS px at size 1)
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.5, 12, 0.62, 16, 0.78],
         'icon-allow-overlap': true,
         'icon-ignore-placement': true
       }

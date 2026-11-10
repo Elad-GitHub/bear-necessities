@@ -41,6 +41,26 @@ const PARENT_SLUG_EMOJI: Record<string, string> = {
 
 const DEFAULT_EMOJI = '📍';
 
+// Pin fill per parent category, drawn from the festival-map palette (darkened where white needs contrast)
+const PARENT_SLUG_PIN_COLOR: Record<string, string> = {
+  'movement': '#00796b',
+  'spirituality': '#00796b',
+  'events': '#F57C00',
+  'nature': '#F57C00',
+  'ceremonies': '#E65100',
+  'food': '#7CB342',
+  'volunteering': '#7CB342',
+  'wellness': '#26A69A',
+  'healing': '#26A69A',
+  'co-working': '#4DB6AC',
+  'music-sound': '#EC407A',
+  'sexuality': '#F06292',
+  'markets': '#F9A825',
+  'crafting': '#F9A825'
+};
+
+const DEFAULT_PIN_COLOR = '#00796b';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -48,6 +68,7 @@ export class CategoryIconsService {
   private categoryIdToIcon = new Map<string, string>();
   private categoryIdToName = new Map<string, string>();
   private categoryIdToEmoji = new Map<string, string>();
+  private categoryIdToPinColor = new Map<string, string>();
 
   getIconForParentSlug(slug: string | null | undefined): string {
     if (!slug) return DEFAULT_ICON;
@@ -69,18 +90,27 @@ export class CategoryIconsService {
     this.categoryIdToIcon.clear();
     this.categoryIdToName.clear();
     this.categoryIdToEmoji.clear();
+    this.categoryIdToPinColor.clear();
     for (const parent of parents) {
       const icon = this.getIconForParentSlug(parent.slug);
       const emoji = this.getEmojiForParentSlug(parent.slug);
+      const pinColor = PARENT_SLUG_PIN_COLOR[parent.slug?.toLowerCase() ?? ''] ?? DEFAULT_PIN_COLOR;
       this.categoryIdToIcon.set(parent.id, icon);
       this.categoryIdToName.set(parent.id, parent.name);
       this.categoryIdToEmoji.set(parent.id, emoji);
+      this.categoryIdToPinColor.set(parent.id, pinColor);
       for (const child of parent.children || []) {
         this.categoryIdToIcon.set(child.id, icon);
         this.categoryIdToName.set(child.id, child.name);
         this.categoryIdToEmoji.set(child.id, emoji);
+        this.categoryIdToPinColor.set(child.id, pinColor);
       }
     }
+  }
+
+  getPinColorForCategoryId(categoryId: string | null | undefined): string {
+    if (!categoryId) return DEFAULT_PIN_COLOR;
+    return this.categoryIdToPinColor.get(categoryId) ?? DEFAULT_PIN_COLOR;
   }
 
   getIconForCategoryId(categoryId: string | null | undefined): string {
