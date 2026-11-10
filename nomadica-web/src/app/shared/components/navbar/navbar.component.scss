@@ -20,6 +20,9 @@ $border-radius: 4px;
 }
 
 .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 22px;
   font-weight: 700;
   color: $primary;
@@ -27,7 +30,16 @@ $border-radius: 4px;
   cursor: pointer;
 
   &:hover {
-    opacity: 0.8;
+    opacity: 0.85;
+
+    .logo-mark { transform: rotate(-8deg) scale(1.05); }
+  }
+
+  .logo-mark {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
   }
 }
 
@@ -168,7 +180,9 @@ $border-radius: 4px;
 @media (max-width: 480px) {
   .navbar { gap: 8px; }
 
-  .logo { font-size: 16px; }
+  // On phones the bear alone carries the brand so the search keeps its width
+  .logo-text { display: none; }
+  .logo .logo-mark { width: 36px; height: 36px; }
 }
 
 .navbar-right {
