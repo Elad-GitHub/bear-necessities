@@ -1,8 +1,9 @@
+import type mapboxgl from 'mapbox-gl';
+import { loadMapImages } from './map-images';
+
 /** Paw prints the walking mascot leaves along a trip route. */
 
-export const PAW_IMAGE_ID = 'paw-print';
-const PAW_IMAGE_SIZE = 48;
-const PAW_COLOR = 'rgba(93, 64, 55, 0.85)';
+export const PAW_IMAGE_ID = 'paw-trail';
 // Spacing is set in screen pixels when the walk starts, so the trail reads as steps at any zoom
 const SCREEN_PIXELS_PER_PRINT = 26;
 const MIN_PRINTS = 6;
@@ -75,76 +76,7 @@ export function toPawFeatures(prints: PawPrint[]): GeoJSON.Feature[] {
   }));
 }
 
-/** A trail print: small, earthy brown, no outline. */
-export function drawPawImage(): ImageData | null {
-  return drawPaw({ size: PAW_IMAGE_SIZE, fill: PAW_COLOR });
-}
-
-// Bear-track geometry on a 48-unit grid, as [x, y, radiusX, radiusY, rotation radians].
-// Deliberately uneven: a wide bean-shaped heel pad and five toes of different sizes on a lopsided arc.
-type Ellipse = [number, number, number, number, number];
-const HEEL_PAD: Ellipse[] = [[20.5, 33.5, 9.5, 7.2, -0.12], [28, 32, 9, 7.8, 0.18], [24, 30.5, 8, 6, 0]];
-const TOES: Ellipse[] = [
-  [9.6, 21, 3.4, 4.3, -0.55],
-  [15.6, 14.6, 3.9, 4.9, -0.28],
-  [23.4, 11.6, 4.2, 5.1, 0.02],
-  [31, 13.2, 4, 4.9, 0.3],
-  [37.4, 19, 3.3, 4.2, 0.6]
-];
-// Claw marks sit just beyond each toe, along the toe's own direction
-const CLAWS: Ellipse[] = TOES.map(([x, y, , radiusY, rotation]) => {
-  const reach = radiusY + 3.2;
-  return [x + Math.sin(rotation) * reach, y - Math.cos(rotation) * reach, 1.1, 1.9, rotation];
-});
-const HEEL_CENTRE = { x: 24.3, y: 32.2 };
-
-/** Where the heel pad's centre lands relative to the image centre, as a share of the image size (for text on the pad). */
-export function pawHeelPadOffset(tiltDegrees: number): { x: number; y: number } {
-  const angle = (tiltDegrees * Math.PI) / 180;
-  const dx = HEEL_CENTRE.x - 24;
-  const dy = HEEL_CENTRE.y - 24;
-  return {
-    x: (dx * Math.cos(angle) - dy * Math.sin(angle)) / 48,
-    y: (dx * Math.sin(angle) + dy * Math.cos(angle)) / 48
-  };
-}
-
-/** A bear track pointing up; an optional outline makes it read on busy map backgrounds. */
-export function drawPaw(options: {
-  size: number;
-  fill: string;
-  outline?: string;
-  outlineWidth?: number;
-  withClaws?: boolean;
-  tiltDegrees?: number;
-}): ImageData | null {
-  const canvas = document.createElement('canvas');
-  canvas.width = options.size;
-  canvas.height = options.size;
-  const context = canvas.getContext('2d');
-  if (!context) return null;
-
-  const unit = options.size / 48;
-  if (options.tiltDegrees) {
-    context.translate(options.size / 2, options.size / 2);
-    context.rotate((options.tiltDegrees * Math.PI) / 180);
-    context.translate(-options.size / 2, -options.size / 2);
-  }
-
-  const shapes = [...HEEL_PAD, ...TOES, ...(options.withClaws ? CLAWS : [])];
-  const fillShapes = (grow: number) => {
-    for (const [x, y, radiusX, radiusY, rotation] of shapes) {
-      context.beginPath();
-      context.ellipse(x * unit, y * unit, (radiusX + grow) * unit, (radiusY + grow) * unit, rotation, 0, Math.PI * 2);
-      context.fill();
-    }
-  };
-
-  if (options.outline) {
-    context.fillStyle = options.outline;
-    fillShapes(options.outlineWidth ?? 1.5);
-  }
-  context.fillStyle = options.fill;
-  fillShapes(0);
-  return context.getImageData(0, 0, options.size, options.size);
+/** Trail prints come from design/generate-paws.js (the reference paw in earthy brown). */
+export function registerPawTrailImage(map: mapboxgl.Map): void {
+  loadMapImages(map, [[PAW_IMAGE_ID, `brand/paws/${PAW_IMAGE_ID}.png`]]);
 }

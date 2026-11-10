@@ -18,7 +18,8 @@ import { EventSummaryDto } from '../../core/models/event.model';
 import { ItineraryDay, MAX_TRIP_DAYS, MIN_TRIP_CATEGORIES } from '../../core/models/trip.model';
 import { applyFestivalTheme, FESTIVAL_PALETTE } from '../../core/map/festival-map-theme';
 import { PAW_CLUSTER_PAINT, pawClusterLayout, registerPawClusterImages } from '../../core/map/paw-clusters';
-import { drawPawImage, measureSegments, PAW_IMAGE_ID, PawPrint, pawPrintCountFor, samplePawPrints, toPawFeatures } from '../../core/map/paw-trail';
+import { measureSegments, PAW_IMAGE_ID, PawPrint, pawPrintCountFor, registerPawTrailImage, samplePawPrints, toPawFeatures } from '../../core/map/paw-trail';
+import { loadMapImages } from '../../core/map/map-images';
 
 type MapMode = 'places' | 'events' | 'both';
 
@@ -34,6 +35,7 @@ const MOBILE_SHEET_HEIGHT_RATIO = 0.45;
 const EVENT_RING_COLOR = '#FBC02D';
 const EVENT_FALLBACK_BEAR = 'bear-dancing';
 const POPUP_DESCRIPTION_LENGTH = 120;
+const UNDATED_EVENT_LABELS: Record<string, string> = { Recurring: 'Weekly', Permanent: 'Ongoing' };
 
 const BEAR_WALK_FRAMES = [1, 2, 3, 4].map(frame => `brand/bears/walk-${frame}.png`);
 const BEAR_ARRIVED_IMAGE = 'brand/bears/waving.png';
@@ -609,10 +611,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       paint: { 'line-color': ['get', 'color'], 'line-width': 4, 'line-opacity': TRIP_ROUTE_OPACITY }
     });
 
-    if (!map.hasImage(PAW_IMAGE_ID)) {
-      const paw = drawPawImage();
-      if (paw) map.addImage(PAW_IMAGE_ID, paw, { pixelRatio: 2 });
-    }
+    registerPawTrailImage(map);
     map.addSource('bear-trail', { type: 'geojson', data: emptyCollection });
     map.addLayer({
       id: 'bear-trail',
@@ -845,7 +844,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           category: this.categoryIcons.getNameForCategoryId(categoryId) ?? 'Event',
           pinColor: this.categoryIcons.getPinColorForCategoryId(categoryId),
           bear: this.categoryIcons.getBearImageIdForCategoryId(categoryId) || EVENT_FALLBACK_BEAR,
-          dateLabel: this.formatEventDate(eventItem.startAt)
+          dateLabel: this.formatEventDate(eventItem.startAt, eventItem.eventType)
         }
       };
     });
@@ -853,8 +852,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       .setData({ type: 'FeatureCollection', features });
   }
 
-  private formatEventDate(startAt: string | undefined): string {
-    if (!startAt) return '';
+  // Recurring and ongoing events have no single start date, so they get a word instead of a date
+  private formatEventDate(startAt: string | undefined, eventType: string | undefined): string {
+    if (!startAt) return UNDATED_EVENT_LABELS[eventType ?? ''] ?? '';
     const date = new Date(startAt);
     return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   }
@@ -1238,13 +1238,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   // Pins fall back to emoji until each pose image arrives, then Mapbox redraws them with the bear
   private registerBearImages(map: mapboxgl.Map): void {
-    for (const [imageId, url] of this.categoryIcons.getAllBearPinImages()) {
-      if (map.hasImage(imageId)) continue;
-      map.loadImage(url, (error, image) => {
-        if (error || !image || map.hasImage(imageId)) return;
-        map.addImage(imageId, image, { pixelRatio: 2 });
-      });
-    }
+    loadMapImages(map, this.categoryIcons.getAllBearPinImages());
   }
 
   onCategoryChange(categoryIds: string[]): void {
