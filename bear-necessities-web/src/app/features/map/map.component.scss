@@ -152,7 +152,7 @@ $planner-primary-dark: #004d40;
     color: #616161;
     font-size: 13.5px;
 
-    > .material-icons { font-size: 36px; color: #bdbdbd; }
+    .trip-empty-bear { display: block; height: 120px; width: auto; margin: 4px auto 0; }
   }
 }
 
@@ -424,6 +424,17 @@ $planner-primary-dark: #004d40;
     &.map-pin--event {
       background-color: #ef6c00;
       border-radius: 8px;
+    }
+  }
+
+  // Walking mascot on a trip route (a Mapbox marker, so it lives outside the component's view encapsulation)
+  .walking-bear {
+    pointer-events: none;
+
+    img {
+      display: block;
+      height: 64px;
+      filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.3));
     }
   }
 

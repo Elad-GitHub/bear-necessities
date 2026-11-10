@@ -30,7 +30,7 @@
     </p>
 
     <div class="trip-empty" *ngIf="itinerary().length === 0">
-      <span class="material-icons">search_off</span>
+      <img class="trip-empty-bear" src="brand/bears/hiking-large.webp" alt="" width="77" height="120">
       <p>No places matched those categories in {{ tripArea()?.name || 'this area' }} yet.</p>
       <button class="planner-go" (click)="backToPlanner()">
         <span class="material-icons">tune</span> Change the plan

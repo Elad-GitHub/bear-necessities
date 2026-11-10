@@ -61,6 +61,26 @@ const PARENT_SLUG_PIN_COLOR: Record<string, string> = {
 
 const DEFAULT_PIN_COLOR = '#00796b';
 
+// Mascot pose per parent category; files live in public/brand/bears/<pose>.png
+const PARENT_SLUG_BEAR_POSE: Record<string, string> = {
+  'movement': 'yoga',
+  'spirituality': 'meditation',
+  'food': 'food',
+  'music-sound': 'music',
+  'nature': 'hiking',
+  'markets': 'market',
+  'healing': 'healing',
+  'wellness': 'hot-spring',
+  'crafting': 'painting',
+  'volunteering': 'planting',
+  'co-working': 'laptop',
+  'ceremonies': 'campfire',
+  'sexuality': 'heart',
+  'events': 'dancing'
+};
+
+const BEAR_IMAGE_PREFIX = 'bear-';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -69,6 +89,7 @@ export class CategoryIconsService {
   private categoryIdToName = new Map<string, string>();
   private categoryIdToEmoji = new Map<string, string>();
   private categoryIdToPinColor = new Map<string, string>();
+  private categoryIdToBearPose = new Map<string, string>();
 
   getIconForParentSlug(slug: string | null | undefined): string {
     if (!slug) return DEFAULT_ICON;
@@ -91,21 +112,34 @@ export class CategoryIconsService {
     this.categoryIdToName.clear();
     this.categoryIdToEmoji.clear();
     this.categoryIdToPinColor.clear();
+    this.categoryIdToBearPose.clear();
     for (const parent of parents) {
+      const slug = parent.slug?.toLowerCase() ?? '';
       const icon = this.getIconForParentSlug(parent.slug);
       const emoji = this.getEmojiForParentSlug(parent.slug);
-      const pinColor = PARENT_SLUG_PIN_COLOR[parent.slug?.toLowerCase() ?? ''] ?? DEFAULT_PIN_COLOR;
-      this.categoryIdToIcon.set(parent.id, icon);
-      this.categoryIdToName.set(parent.id, parent.name);
-      this.categoryIdToEmoji.set(parent.id, emoji);
-      this.categoryIdToPinColor.set(parent.id, pinColor);
-      for (const child of parent.children || []) {
-        this.categoryIdToIcon.set(child.id, icon);
-        this.categoryIdToName.set(child.id, child.name);
-        this.categoryIdToEmoji.set(child.id, emoji);
-        this.categoryIdToPinColor.set(child.id, pinColor);
+      const pinColor = PARENT_SLUG_PIN_COLOR[slug] ?? DEFAULT_PIN_COLOR;
+      const bearPose = PARENT_SLUG_BEAR_POSE[slug];
+      for (const categoryId of [parent.id, ...(parent.children || []).map(child => child.id)]) {
+        this.categoryIdToIcon.set(categoryId, icon);
+        this.categoryIdToEmoji.set(categoryId, emoji);
+        this.categoryIdToPinColor.set(categoryId, pinColor);
+        if (bearPose) this.categoryIdToBearPose.set(categoryId, bearPose);
       }
+      this.categoryIdToName.set(parent.id, parent.name);
+      for (const child of parent.children || []) this.categoryIdToName.set(child.id, child.name);
     }
+  }
+
+  /** Map image id of the mascot pose for a category, or '' when the category has no pose (emoji is used instead). */
+  getBearImageIdForCategoryId(categoryId: string | null | undefined): string {
+    const pose = categoryId ? this.categoryIdToBearPose.get(categoryId) : undefined;
+    return pose ? BEAR_IMAGE_PREFIX + pose : '';
+  }
+
+  /** Every pose used on the map, as [map image id, image url] pairs for one-time registration. */
+  getAllBearPinImages(): [string, string][] {
+    return [...new Set(Object.values(PARENT_SLUG_BEAR_POSE))]
+      .map(pose => [BEAR_IMAGE_PREFIX + pose, `brand/bears/${pose}.png`]);
   }
 
   getPinColorForCategoryId(categoryId: string | null | undefined): string {

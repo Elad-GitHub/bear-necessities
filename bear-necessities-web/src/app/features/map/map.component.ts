@@ -24,6 +24,19 @@ type MapMode = 'places' | 'events' | 'both';
 // so the totals cover every place rather than one 1000-place page
 const DENSITY_MAX_ZOOM = 9;
 
+// Matches the SCSS breakpoint where the itinerary becomes a bottom sheet capped at 45vh
+const MOBILE_BREAKPOINT_PX = 760;
+const MOBILE_SHEET_HEIGHT_RATIO = 0.45;
+
+const BEAR_WALK_FRAMES =[1, 2, 3, 4].map(frame => `brand/bears/walk-${frame}.png`);
+const BEAR_ARRIVED_IMAGE = 'brand/bears/waving.png';
+const BEAR_WALK_FRAME_MS = 140;
+const BEAR_WALK_MIN_MS = 6000;
+const BEAR_WALK_MAX_MS = 14000;
+
+// Mapbox expression: true for pins whose category has a mascot pose (see CategoryIconsService)
+const HAS_BEAR_POSE: mapboxgl.ExpressionSpecification = ['!=', ['get', 'bear'], ''];
+
 // "Gatherings" holds event types (festival, retreat, ceremony…), so it only makes sense when events are on the map
 const EVENTS_ONLY_CATEGORY_SLUG = 'events';
 
@@ -77,6 +90,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   canPlanTrip = computed(() =>
     !!this.tripArea() && this.tripCategoryIds().length >= MIN_TRIP_CATEGORIES && !this.isPlanning());
   private planningSubscription: Subscription | null = null;
+  private walkingBear: mapboxgl.Marker | null = null;
+  private walkAnimationFrame: number | null = null;
   private tripStopPoints: GeoJSON.Feature[] = [];
   private tripRouteLines: (GeoJSON.Feature<GeoJSON.LineString> & { properties: { day: number; color: string } })[] = [];
   private areaSearchTerms = new Subject<string>();
@@ -312,6 +327,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   clearTrip(): void {
     this.cancelPlanning();
+    this.stopBearWalk();
     this.tripActive.set(false);
     this.itinerary.set([]);
     this.selectedTripDay.set(null);
@@ -346,18 +362,88 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     this.selectedTripDay.set(day.dayNumber);
     this.fitToStops(day.stops);
+    this.stopBearWalk();
     if (day.stops.length < 2) return;
 
     // Road geometry is fetched per day on demand, so planning itself makes no routing calls
     const coordinates = day.stops.map(stop => [stop.longitude, stop.latitude] as [number, number]);
     this.directionsService.getRoute(coordinates).subscribe(roadCoordinates => {
-      if (!roadCoordinates || roadCoordinates.length < 2) return;
-      this.tripRouteLines = this.tripRouteLines.map(line =>
-        line.properties.day === day.dayNumber
-          ? { ...line, geometry: { type: 'LineString' as const, coordinates: roadCoordinates } }
-          : line);
-      this.setTripData(this.tripStopPoints, this.tripRouteLines);
+      const hasRoad = !!roadCoordinates && roadCoordinates.length > 1;
+      if (hasRoad) {
+        this.tripRouteLines = this.tripRouteLines.map(line =>
+          line.properties.day === day.dayNumber
+            ? { ...line, geometry: { type: 'LineString' as const, coordinates: roadCoordinates! } }
+            : line);
+        this.setTripData(this.tripStopPoints, this.tripRouteLines);
+      }
+      // Only walk if the user is still looking at this day
+      if (this.selectedTripDay() === day.dayNumber) {
+        this.startBearWalk(hasRoad ? roadCoordinates! : coordinates);
+      }
     });
+  }
+
+  // The mascot walks the day's route stop to stop: one DOM marker, frames swapped while it moves
+  private startBearWalk(path: [number, number][]): void {
+    if (!this.mapInstance || path.length < 2) return;
+    this.stopBearWalk();
+
+    const element = document.createElement('div');
+    element.className = 'walking-bear';
+    const sprite = document.createElement('img');
+    sprite.src = BEAR_WALK_FRAMES[0];
+    sprite.alt = '';
+    element.appendChild(sprite);
+    this.walkingBear = new mapboxgl.Marker({ element, anchor: 'bottom' }).setLngLat(path[0]).addTo(this.mapInstance);
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      this.walkingBear.setLngLat(path[path.length - 1]);
+      return;
+    }
+
+    // Distances in degrees with longitude scaled by latitude: plenty for pacing an animation
+    const segmentLengths = path.slice(1).map((point, index) => {
+      const previous = path[index];
+      const longitudeScale = Math.cos((previous[1] * Math.PI) / 180);
+      return Math.hypot((point[0] - previous[0]) * longitudeScale, point[1] - previous[1]);
+    });
+    const totalLength = segmentLengths.reduce((sum, length) => sum + length, 0) || 1;
+    const durationMs = Math.min(BEAR_WALK_MAX_MS, Math.max(BEAR_WALK_MIN_MS, path.length * 120));
+    const startedAt = performance.now();
+
+    this.zone.runOutsideAngular(() => {
+      const step = (now: number) => {
+        if (!this.walkingBear) return;
+        const progress = Math.min(1, (now - startedAt) / durationMs);
+        let remaining = progress * totalLength;
+        let segment = 0;
+        while (segment < segmentLengths.length - 1 && remaining > segmentLengths[segment]) {
+          remaining -= segmentLengths[segment];
+          segment++;
+        }
+        const from = path[segment];
+        const to = path[segment + 1];
+        const fraction = segmentLengths[segment] ? Math.min(1, remaining / segmentLengths[segment]) : 1;
+        this.walkingBear.setLngLat([from[0] + (to[0] - from[0]) * fraction, from[1] + (to[1] - from[1]) * fraction]);
+
+        // Sprites face right; mirror when heading west
+        sprite.style.transform = to[0] < from[0] ? 'scaleX(-1)' : '';
+        sprite.src = progress < 1
+          ? BEAR_WALK_FRAMES[Math.floor((now - startedAt) / BEAR_WALK_FRAME_MS) % BEAR_WALK_FRAMES.length]
+          : BEAR_ARRIVED_IMAGE;
+
+        if (progress < 1) this.walkAnimationFrame = requestAnimationFrame(step);
+      };
+      this.walkAnimationFrame = requestAnimationFrame(step);
+    });
+  }
+
+  private stopBearWalk(): void {
+    if (this.walkAnimationFrame !== null) cancelAnimationFrame(this.walkAnimationFrame);
+    this.walkAnimationFrame = null;
+    this.walkingBear?.remove();
+    this.walkingBear = null;
   }
 
   focusTripStop(stop: PlaceSummaryDto, order: number): void {
@@ -433,7 +519,18 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     }
     const bounds = new mapboxgl.LngLatBounds();
     stops.forEach(stop => bounds.extend([stop.longitude, stop.latitude]));
-    this.mapInstance.fitBounds(bounds, { padding: { top: 120, bottom: 60, left: 60, right: 400 }, duration: 1200, maxZoom: 13 });
+    this.mapInstance.fitBounds(bounds, { padding: this.tripPanelPadding(), duration: 1200, maxZoom: 13 });
+  }
+
+  // Keep stops clear of the itinerary panel: beside it on wide screens, above the bottom sheet on phones.
+  // A fixed 400px right margin is wider than a phone screen, which made fitBounds silently do nothing.
+  private tripPanelPadding(): mapboxgl.PaddingOptions {
+    const canvas = this.mapInstance!.getCanvas();
+    if (canvas.clientWidth > MOBILE_BREAKPOINT_PX) {
+      return { top: 120, bottom: 60, left: 60, right: 400 };
+    }
+    const sheetHeight = Math.round(window.innerHeight * MOBILE_SHEET_HEIGHT_RATIO);
+    return { top: 140, bottom: Math.min(sheetHeight + 20, canvas.clientHeight / 2), left: 40, right: 40 };
   }
 
   private setTripData(stopPoints: GeoJSON.Feature[], routeLines: GeoJSON.Feature[]): void {
@@ -527,6 +624,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopBearWalk();
     if (this.loadPlacesTimeout) {
       clearTimeout(this.loadPlacesTimeout);
     }
@@ -571,6 +669,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.mapInstance.on('load', () => {
       applyFestivalTheme(this.mapInstance!);
       this.registerCategoryIcons(this.mapInstance!);
+      this.registerBearImages(this.mapInstance!);
       this.loadPlacesForViewport();
       if (this.pendingFocusId) {
         this.focusPlace(this.pendingFocusId);
@@ -856,6 +955,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           // Multi-category places pin under their primary (first) category
           icon: this.categoryIcons.getEmojiForCategoryId(place.categoryId || place.categoryIds?.[0]),
           pinColor: this.categoryIcons.getPinColorForCategoryId(place.categoryId || place.categoryIds?.[0]),
+          bear: this.categoryIcons.getBearImageIdForCategoryId(place.categoryId || place.categoryIds?.[0]),
           saveType
         }
       };
@@ -914,13 +1014,15 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       paint: {
         // Festival-style round pins: filled with the category colour, cream ring like the style board
         'circle-color': ['get', 'pinColor'],
-        // Small dots when zoomed out so pins don't smother each other, growing into round badges that hold the emoji
+        // Small dots when zoomed out; zoomed in, a mascot pin shrinks its dot to a "ground spot" the bear stands on,
+        // while emoji-only categories grow into round badges that hold the emoji
         'circle-radius': [
           'interpolate', ['linear'], ['zoom'],
           4, 4,
           10, 7,
-          12, 12,
-          16, 15
+          11.9, 9,
+          12, ['case', HAS_BEAR_POSE, 5, 12],
+          16, ['case', HAS_BEAR_POSE, 6, 15]
         ],
         // Saved state (Want-to-go / Been-there / Loved) moves to a thicker ring so the category colour stays visible
         'circle-stroke-color': ['match', ['get', 'saveType'],
@@ -939,11 +1041,15 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       type: 'symbol',
       source: 'places-src',
       filter: ['!', ['has', 'point_count']],
-      minzoom: 11,
+      minzoom: 12,
       layout: {
-        'icon-image': ['get', 'icon'],
-        // Sized to sit inside the round pin (emoji images are 32 CSS px at size 1)
-        'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.5, 12, 0.62, 16, 0.78],
+        // The bear pose when the category has one (and its image has loaded), otherwise the category emoji
+        'icon-image': ['coalesce', ['image', ['get', 'bear']], ['image', ['get', 'icon']]],
+        // Bears (48 CSS px tall at size 1) stand on the dot; emoji (32 px) sit inside the round badge
+        'icon-size': ['interpolate', ['linear'], ['zoom'],
+          12, ['case', HAS_BEAR_POSE, 0.75, 0.62],
+          16, ['case', HAS_BEAR_POSE, 1.1, 0.78]],
+        'icon-anchor': ['case', HAS_BEAR_POSE, 'bottom', 'center'],
         'icon-allow-overlap': true,
         'icon-ignore-placement': true
       }
@@ -1013,6 +1119,17 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       context.fillText(emoji, pixelSize / 2, pixelSize / 2 + pixelSize * 0.04);
       const image = context.getImageData(0, 0, pixelSize, pixelSize);
       if (!map.hasImage(emoji)) map.addImage(emoji, image, { pixelRatio: 2 });
+    }
+  }
+
+  // Pins fall back to emoji until each pose image arrives, then Mapbox redraws them with the bear
+  private registerBearImages(map: mapboxgl.Map): void {
+    for (const [imageId, url] of this.categoryIcons.getAllBearPinImages()) {
+      if (map.hasImage(imageId)) continue;
+      map.loadImage(url, (error, image) => {
+        if (error || !image || map.hasImage(imageId)) return;
+        map.addImage(imageId, image, { pixelRatio: 2 });
+      });
     }
   }
 
