@@ -11,7 +11,7 @@ $planner-primary-dark: #004d40;
 
 .planner-panel {
   position: absolute;
-  top: 92px;
+  top: 67px;
   right: 12px;
   z-index: 30;
   width: 340px;
@@ -120,7 +120,7 @@ $planner-primary-dark: #004d40;
 }
 
 .trip-itinerary {
-  top: 80px;
+  top: 55px;
 
   .trip-exit {
     display: inline-flex;
@@ -320,23 +320,9 @@ $planner-primary-dark: #004d40;
   background: white;
 }
 
-.filters-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px 0;
-  background: white;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-  color: #00796b;
-
-  .material-icons { font-size: 17px; }
-}
-
 .map-mode-toggle {
   position: absolute;
-  top: 80px;
+  top: 55px;
   left: 12px;
   z-index: 20;
   display: flex;
@@ -553,7 +539,7 @@ $planner-primary-dark: #004d40;
   }
 
   .map-mode-toggle {
-    top: 92px;
+    top: 67px;
     left: 10px;
 
     button {
@@ -571,7 +557,7 @@ $planner-primary-dark: #004d40;
 
 @media (max-width: 480px) {
   .map-mode-toggle {
-    top: 92px;
+    top: 67px;
     left: 10px;
 
     button {
