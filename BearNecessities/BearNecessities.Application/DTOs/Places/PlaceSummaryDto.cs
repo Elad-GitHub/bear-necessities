@@ -17,4 +17,5 @@ public record PlaceSummaryDto(
     string? ThumbnailUrl,
     bool IsPermanent,
     string? RejectionReason = null,
-    string? Description = null);
+    string? Description = null,
+    string? Address = null);

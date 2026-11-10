@@ -1,3 +1,4 @@
+using BearNecessities.Application.Common;
 using BearNecessities.Application.DTOs;
 using BearNecessities.Application.DTOs.Places;
 using BearNecessities.Application.Interfaces;
@@ -59,7 +60,8 @@ public sealed class GetPlacesByViewportHandler
                 CategoryIds: p.Categories.Select(c => c.Id.Value).ToList(),
                 ThumbnailUrl: thumbnailByPlaceId.GetValueOrDefault(p.Id.Value),
                 IsPermanent: p.IsPermanent,
-                Description: p.Description))
+                Description: TextShortening.Shorten(p.Description),
+                Address: p.Address))
             .ToList();
 
         var nextCursor = places.Count == request.PageSize

@@ -6,6 +6,13 @@ import { ProfileService } from '../../core/services/profile.service';
 import { ToastService } from '../../core/services/toast.service';
 import { EventDetailDto, RsvpStatus } from '../../core/models/event.model';
 
+// The API sends enum names; badges show them the way people say them
+const EVENT_TYPE_LABELS: Record<string, string> = {
+  OneTime: 'One-time',
+  Recurring: 'Recurring',
+  Permanent: 'Ongoing'
+};
+
 @Component({
   selector: 'app-event-detail',
   templateUrl: './event-detail.component.html',
@@ -132,6 +139,15 @@ export class EventDetailComponent implements OnInit {
   goToPlace(): void {
     const placeId = this.event()?.placeId;
     if (placeId) this.router.navigate(['/places', placeId]);
+  }
+
+  // One "Recurring" badge whether the event is typed Recurring or simply carries a recurrence rule
+  isRecurring(eventDetail: EventDetailDto): boolean {
+    return eventDetail.eventType === 'Recurring' || !!eventDetail.rRule;
+  }
+
+  getEventTypeLabel(eventType: string | undefined): string {
+    return EVENT_TYPE_LABELS[eventType ?? ''] ?? eventType ?? '';
   }
 
   getPriceLabel(): string {

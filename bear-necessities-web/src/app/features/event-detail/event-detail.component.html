@@ -15,9 +15,9 @@
       <div class="hero-content">
         <div class="hero-info">
           <div class="badges">
-            <span class="badge type-badge">{{ eventDetail.eventType }}</span>
+            <span class="badge type-badge" *ngIf="!isRecurring(eventDetail)">{{ getEventTypeLabel(eventDetail.eventType) }}</span>
             <span class="badge price-badge">{{ getPriceLabel() }}</span>
-            <span class="badge recurring-badge" *ngIf="eventDetail.rRule">
+            <span class="badge recurring-badge" *ngIf="isRecurring(eventDetail)">
               <span class="material-icons">repeat</span> Recurring
             </span>
           </div>

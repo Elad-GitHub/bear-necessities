@@ -1,3 +1,4 @@
+using BearNecessities.Application.Common;
 using BearNecessities.Application.DTOs.Places;
 using BearNecessities.Application.Exceptions;
 using BearNecessities.Domain.Entities;
@@ -43,7 +44,9 @@ public static class TripCandidateSearch
         ReviewCount: 0,
         CategoryIds: place.Categories.Select(category => category.Id.Value).ToList(),
         ThumbnailUrl: null,
-        IsPermanent: place.IsPermanent);
+        IsPermanent: place.IsPermanent,
+        Description: TextShortening.Shorten(place.Description),
+        Address: place.Address);
 
     private static async Task<List<Place>> FindInAreaAsync(
         IUnitOfWork unitOfWork,

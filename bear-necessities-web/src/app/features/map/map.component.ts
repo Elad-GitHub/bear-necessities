@@ -17,6 +17,7 @@ import { PlaceDensityCell, PlaceSummaryDto } from '../../core/models/place.model
 import { EventSummaryDto } from '../../core/models/event.model';
 import { ItineraryDay, MAX_TRIP_DAYS, MIN_TRIP_CATEGORIES } from '../../core/models/trip.model';
 import { applyFestivalTheme, FESTIVAL_PALETTE } from '../../core/map/festival-map-theme';
+import { PAW_CLUSTER_PAINT, pawClusterLayout, registerPawClusterImages } from '../../core/map/paw-clusters';
 import { drawPawImage, measureSegments, PAW_IMAGE_ID, PawPrint, pawPrintCountFor, samplePawPrints, toPawFeatures } from '../../core/map/paw-trail';
 
 type MapMode = 'places' | 'events' | 'both';
@@ -29,7 +30,12 @@ const DENSITY_MAX_ZOOM = 9;
 const MOBILE_BREAKPOINT_PX = 760;
 const MOBILE_SHEET_HEIGHT_RATIO = 0.45;
 
-const BEAR_WALK_FRAMES =[1, 2, 3, 4].map(frame => `brand/bears/walk-${frame}.png`);
+// Mustard from the festival palette: events wear it as a ring so they read differently from cream-ringed places
+const EVENT_RING_COLOR = '#FBC02D';
+const EVENT_FALLBACK_BEAR = 'bear-dancing';
+const POPUP_DESCRIPTION_LENGTH = 120;
+
+const BEAR_WALK_FRAMES = [1, 2, 3, 4].map(frame => `brand/bears/walk-${frame}.png`);
 const BEAR_ARRIVED_IMAGE = 'brand/bears/waving.png';
 const BEAR_WALK_FRAME_MS = 140;
 const TRIP_ROUTE_OPACITY = 0.8;
@@ -69,7 +75,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.mapMode() === 'places' ? this.placeCategories() : this.categoriesService.categories());
   // Spinner only for the very first load — viewport reloads on pan/zoom stay silent (no flicker)
   showInitialSpinner = signal(true);
-  private eventMarkers: mapboxgl.Marker[] = [];
+  private lastEvents: EventSummaryDto[] = [];
   private loadPlacesTimeout: any = null;
   private savedPlaceTypes = new Map<string, string>();
   private lastRenderedPlaces: PlaceSummaryDto[] = [];
@@ -157,7 +163,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.renderPlaceLayers();
 
     if (mode === 'places') {
-      this.clearEventMarkers();
+      this.renderEventLayers();
     } else {
       this.loadEventsForViewport();
     }
@@ -501,7 +507,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.itinerary.set(days);
     this.selectedTripDay.set(null);
     this.hidePlaceLayers();
-    this.clearEventMarkers();
+    this.renderEventLayers();
 
     let order = 0;
     this.tripStopPoints = days.flatMap(day => day.stops.map(stop => ({
@@ -808,48 +814,121 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   private renderEvents(events: EventSummaryDto[]): void {
-    if (!this.mapInstance || this.mapMode() === 'places') return;
-
-    this.clearEventMarkers();
-
-    for (const eventItem of events) {
-      if (eventItem.latitude == null || eventItem.longitude == null) continue;
-
-      const marker = new mapboxgl.Marker({ element: this.buildEventPinElement(eventItem) })
-        .setLngLat([eventItem.longitude, eventItem.latitude])
-        .addTo(this.mapInstance);
-      this.eventMarkers.push(marker);
-    }
+    this.lastEvents = events.filter(eventItem => eventItem.latitude != null && eventItem.longitude != null);
+    this.renderEventLayers();
   }
 
-  private buildEventPinElement(eventItem: EventSummaryDto): HTMLElement {
-    const pin = document.createElement('div');
-    pin.className = 'map-pin map-pin--event';
-    pin.title = eventItem.title;
+  // Events share the place pin language (bear on a dot) but wear a gold ring and a date, so they read as "happening"
+  private renderEventLayers(): void {
+    if (!this.mapInstance) return;
+    if (!this.mapInstance.isStyleLoaded()) {
+      this.mapInstance.once('idle', () => this.renderEventLayers());
+      return;
+    }
+    const showsEvents = this.mapMode() !== 'places' && !this.tripActive();
+    this.setEventsData(showsEvents ? this.lastEvents : []);
+  }
 
-    const iconElement = document.createElement('span');
-    iconElement.className = 'material-icons';
-    iconElement.textContent = 'celebration';
-    pin.appendChild(iconElement);
+  private setEventsData(events: EventSummaryDto[]): void {
+    if (!this.mapInstance) return;
+    this.ensureEventLayers();
 
-    pin.addEventListener('click', (clickEvent) => {
-      clickEvent.stopPropagation();
-      this.router.navigate(['/events', eventItem.id]);
+    const features = events.map(eventItem => {
+      const categoryId = eventItem.categoryIds?.[0];
+      return {
+        type: 'Feature' as const,
+        geometry: { type: 'Point' as const, coordinates: [eventItem.longitude!, eventItem.latitude!] },
+        properties: {
+          id: eventItem.id,
+          title: eventItem.title,
+          description: this.truncate(eventItem.description, POPUP_DESCRIPTION_LENGTH) ?? '',
+          category: this.categoryIcons.getNameForCategoryId(categoryId) ?? 'Event',
+          pinColor: this.categoryIcons.getPinColorForCategoryId(categoryId),
+          bear: this.categoryIcons.getBearImageIdForCategoryId(categoryId) || EVENT_FALLBACK_BEAR,
+          dateLabel: this.formatEventDate(eventItem.startAt)
+        }
+      };
+    });
+    (this.mapInstance.getSource('events-src') as mapboxgl.GeoJSONSource)
+      .setData({ type: 'FeatureCollection', features });
+  }
+
+  private formatEventDate(startAt: string | undefined): string {
+    if (!startAt) return '';
+    const date = new Date(startAt);
+    return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+
+  private ensureEventLayers(): void {
+    const map = this.mapInstance!;
+    if (map.getSource('events-src')) return;
+
+    map.addSource('events-src', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+
+    map.addLayer({
+      id: 'event-dots',
+      type: 'circle',
+      source: 'events-src',
+      paint: {
+        'circle-color': ['get', 'pinColor'],
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 4, 4.5, 10, 7.5, 11.9, 9.5, 12, 6, 16, 7],
+        'circle-stroke-color': EVENT_RING_COLOR,
+        'circle-stroke-width': 3
+      }
     });
 
-    if (eventItem.latitude != null && eventItem.longitude != null) {
-      this.attachHoverPopup(pin, eventItem.longitude, eventItem.latitude,
-        this.buildPlacePopupHtml(eventItem.title, undefined, undefined,
-          this.categoryIcons.getNameForCategoryId(eventItem.categoryIds?.[0]) || 'Event',
-          eventItem.description));
+    map.addLayer({
+      id: 'event-icons',
+      type: 'symbol',
+      source: 'events-src',
+      minzoom: 12,
+      layout: {
+        'icon-image': ['coalesce', ['image', ['get', 'bear']], ['image', EVENT_FALLBACK_BEAR]],
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 12, 0.75, 16, 1.1],
+        'icon-anchor': 'bottom',
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
+        // The date hangs under the dot like a little ticket stub
+        'text-field': ['get', 'dateLabel'],
+        'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
+        'text-size': 11,
+        'text-anchor': 'top',
+        'text-offset': [0, 0.7],
+        'text-allow-overlap': true
+      },
+      paint: {
+        'text-color': FESTIVAL_PALETTE.darkTeal,
+        'text-halo-color': EVENT_RING_COLOR,
+        'text-halo-width': 2
+      }
+    });
+
+    const openEvent = (event: mapboxgl.MapLayerMouseEvent) => {
+      const eventId = event.features?.[0]?.properties?.['id'];
+      if (eventId) this.zone.run(() => this.router.navigate(['/events', eventId]));
+    };
+    const showEventPopup = (event: mapboxgl.MapLayerMouseEvent) => {
+      const feature = event.features?.[0];
+      if (!feature || !this.hoverPopup) return;
+      const props = feature.properties || {};
+      const heading = props['dateLabel'] ? `${props['title']} · ${props['dateLabel']}` : props['title'];
+      this.hoverPopup
+        .setLngLat((feature.geometry as GeoJSON.Point).coordinates as [number, number])
+        .setHTML(this.buildPlacePopupHtml(heading, undefined, undefined, props['category'], props['description']))
+        .addTo(map);
+    };
+    for (const layerId of ['event-dots', 'event-icons']) {
+      map.on('click', layerId, openEvent);
+      map.on('mouseenter', layerId, (event) => {
+        map.getCanvas().style.cursor = 'pointer';
+        showEventPopup(event);
+      });
+      map.on('mousemove', layerId, showEventPopup);
+      map.on('mouseleave', layerId, () => {
+        map.getCanvas().style.cursor = '';
+        this.hoverPopup?.remove();
+      });
     }
-
-    return pin;
-  }
-
-  private clearEventMarkers(): void {
-    this.eventMarkers.forEach(marker => marker.remove());
-    this.eventMarkers = [];
   }
 
   private isValidBbox(bbox: MapBbox): boolean {
@@ -953,30 +1032,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     map.addSource('density-src', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
 
+    registerPawClusterImages(map);
     map.addLayer({
       id: 'density-cells',
-      type: 'circle',
-      source: 'density-src',
-      paint: {
-        'circle-color': ['step', ['get', 'count'], FESTIVAL_PALETTE.turquoise, 25, '#26A69A', 100, FESTIVAL_PALETTE.deepTeal],
-        'circle-radius': ['step', ['get', 'count'], 13, 25, 16, 100, 19, 1000, 23],
-        'circle-opacity': 0.92,
-        'circle-stroke-width': 3,
-        'circle-stroke-color': FESTIVAL_PALETTE.cream
-      }
-    });
-
-    map.addLayer({
-      id: 'density-count',
       type: 'symbol',
       source: 'density-src',
-      layout: {
-        'text-field': ['get', 'label'],
-        'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
-        'text-size': 12,
-        'text-allow-overlap': true
-      },
-      paint: { 'text-color': FESTIVAL_PALETTE.cream }
+      layout: pawClusterLayout(['get', 'count'], ['get', 'label']),
+      paint: PAW_CLUSTER_PAINT
     });
 
     // Zoom straight to where the cell's places actually are (like Mapbox's cluster expansion), so a
@@ -1017,6 +1079,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           icon: this.categoryIcons.getEmojiForCategoryId(place.categoryId || place.categoryIds?.[0]),
           pinColor: this.categoryIcons.getPinColorForCategoryId(place.categoryId || place.categoryIds?.[0]),
           bear: this.categoryIcons.getBearImageIdForCategoryId(place.categoryId || place.categoryIds?.[0]),
+          description: this.truncate(place.description, POPUP_DESCRIPTION_LENGTH) ?? '',
+          address: place.address ?? '',
           saveType
         }
       };
@@ -1039,32 +1103,15 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       clusterMaxZoom: 14
     });
 
+    registerPawClusterImages(map);
+    // Clusters are bear paws that grow and darken with their count, the number sitting on the main pad
     map.addLayer({
       id: 'place-clusters',
-      type: 'circle',
-      source: 'places-src',
-      filter: ['has', 'point_count'],
-      paint: {
-        'circle-color': ['step', ['get', 'point_count'], FESTIVAL_PALETTE.turquoise, 25, '#26A69A', 100, FESTIVAL_PALETTE.deepTeal],
-        // Small, capped radii so even a 1000-count cluster stays compact and doesn't blanket the map
-        'circle-radius': ['step', ['get', 'point_count'], 13, 25, 16, 100, 19],
-        'circle-opacity': 0.92,
-        'circle-stroke-width': 3,
-        'circle-stroke-color': FESTIVAL_PALETTE.cream
-      }
-    });
-
-    map.addLayer({
-      id: 'place-cluster-count',
       type: 'symbol',
       source: 'places-src',
       filter: ['has', 'point_count'],
-      layout: {
-        'text-field': ['get', 'point_count_abbreviated'],
-        'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
-        'text-size': 12
-      },
-      paint: { 'text-color': FESTIVAL_PALETTE.cream }
+      layout: pawClusterLayout(['get', 'point_count'], ['get', 'point_count_abbreviated']),
+      paint: PAW_CLUSTER_PAINT
     });
 
     map.addLayer({
@@ -1142,7 +1189,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       const geometry = feature.geometry as GeoJSON.Point;
       this.hoverPopup
         .setLngLat(geometry.coordinates as [number, number])
-        .setHTML(this.buildPlacePopupHtml(props['name'], props['city'], props['country'], props['category']))
+        // A street address (when OSM has one) is more useful than "City, Country"; the city then follows it
+        .setHTML(this.buildPlacePopupHtml(
+          props['name'],
+          props['address'] || props['city'],
+          props['address'] ? props['city'] : props['country'],
+          props['category'],
+          props['description']))
         .addTo(map);
     };
 
@@ -1192,14 +1245,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         map.addImage(imageId, image, { pixelRatio: 2 });
       });
     }
-  }
-
-  private attachHoverPopup(element: HTMLElement, lng: number, lat: number, html: string): void {
-    element.addEventListener('mouseenter', () => {
-      if (!this.mapInstance || !this.hoverPopup) return;
-      this.hoverPopup.setLngLat([lng, lat]).setHTML(html).addTo(this.mapInstance);
-    });
-    element.addEventListener('mouseleave', () => this.hoverPopup?.remove());
   }
 
   onCategoryChange(categoryIds: string[]): void {
