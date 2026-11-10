@@ -125,6 +125,8 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             (5, 504, "jewelry-making",      "Jewelry Making"),
             (5, 505, "painting",            "Painting"),
             (5, 506, "natural-building",    "Natural Building"),
+            // Workshops to learn macramé; buying finished pieces lives under Markets → "Jewelry & Macramé"
+            (5, 507, "macrame-fiber-arts",  "Macramé & Fiber Arts"),
 
             // Healing (parent 6)
             (6, 601, "sound-healing",       "Sound Healing"),

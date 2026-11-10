@@ -29,7 +29,8 @@ public sealed class OsmImportService
         "nwr[\"shop\"=\"health_food\"](area.a);",
         "nwr[\"tourism\"=\"camp_site\"](area.a);",
         "nwr[\"natural\"=\"hot_spring\"](area.a);",
-        "nwr[\"amenity\"=\"marketplace\"](area.a);"
+        "nwr[\"amenity\"=\"marketplace\"](area.a);",
+        "nwr[\"leisure\"=\"garden\"][\"garden:type\"=\"community\"](area.a);"
     ];
 
     private readonly HttpClient _http;
@@ -50,7 +51,7 @@ public sealed class OsmImportService
         int maxResults = 1500,
         CancellationToken cancellationToken = default)
     {
-        var query = BuildQuery(isoCountryCode, maxResults);
+        var query = BuildQuery(CountryAreaSelector(isoCountryCode), maxResults);
         _logger.LogInformation("Querying Overpass for {Iso}...", isoCountryCode);
 
         var json = await FetchWithFailoverAsync(query, isoCountryCode, cancellationToken);
@@ -61,6 +62,108 @@ public sealed class OsmImportService
         _logger.LogInformation("Overpass returned {Count} usable POIs for {Iso}", places.Count, isoCountryCode);
         return await _importer.ImportAsync(places, autoApprove, cancellationToken);
     }
+
+    /// <summary>
+    /// Imports a country one administrative region at a time. Big countries time out as a single Overpass
+    /// query and also hit the per-query result cap, so splitting fixes both.
+    /// </summary>
+    public async Task<ImportReport> ImportCountryByRegionAsync(
+        string isoCountryCode,
+        string? countryName,
+        bool autoApprove,
+        int maxResultsPerRegion = 1500,
+        CancellationToken cancellationToken = default)
+    {
+        var iso = isoCountryCode.ToUpperInvariant();
+        var regions = await FindRegionsAsync(iso, cancellationToken);
+        if (regions.Count == 0)
+            return new ImportReport(0, 0, 0, [$"No administrative regions found for {iso}."]);
+
+        _logger.LogInformation("Importing {Iso} across {Count} regions", iso, regions.Count);
+        var reports = new List<ImportReport>();
+        for (var index = 0; index < regions.Count; index++)
+        {
+            var region = regions[index];
+            var label = $"{iso}/{region.Name}";
+            var json = await FetchWithFailoverAsync(
+                BuildQuery(RegionAreaSelector(region.RelationId), maxResultsPerRegion), label, cancellationToken);
+
+            if (json is null)
+            {
+                reports.Add(new ImportReport(0, 0, 0, [$"{region.Name}: Overpass unavailable after retries."]));
+                continue;
+            }
+
+            var report = await _importer.ImportAsync(ParseElements(json, iso, countryName), autoApprove, cancellationToken);
+            reports.Add(report);
+            _logger.LogInformation("[{Index}/{Total}] {Region}: {Report}", index + 1, regions.Count, region.Name, report);
+
+            // Public Overpass mirrors rate-limit bursts; a short pause keeps us under the radar
+            await Task.Delay(RegionPause, cancellationToken);
+        }
+
+        return ImportReport.Combine(reports);
+    }
+
+    private sealed record AdminRegion(long RelationId, string Name);
+
+    // Region tiers differ by country (states, provinces, regions); level 4 is the most common first tier
+    private static readonly int[] RegionAdminLevels = [4, 3, 5];
+    private const int MinimumUsefulRegionCount = 2;
+    private const long OverpassAreaIdOffset = 3_600_000_000;
+    private static readonly TimeSpan RegionPause = TimeSpan.FromSeconds(5);
+
+    private async Task<List<AdminRegion>> FindRegionsAsync(string iso, CancellationToken cancellationToken)
+    {
+        foreach (var adminLevel in RegionAdminLevels)
+        {
+            var query = $"""
+                [out:json][timeout:90];
+                {CountryAreaSelector(iso)}
+                rel(area.a)["boundary"="administrative"]["admin_level"="{adminLevel}"];
+                out tags;
+                """;
+            var json = await FetchWithFailoverAsync(query, $"{iso} regions (level {adminLevel})", cancellationToken);
+            if (json is null)
+                continue;
+
+            var regions = ParseRegions(json, iso);
+            _logger.LogInformation("{Iso}: {Count} regions at admin level {Level}", iso, regions.Count, adminLevel);
+            if (regions.Count >= MinimumUsefulRegionCount)
+                return regions;
+        }
+
+        return [];
+    }
+
+    // rel(area) also returns neighbouring regions that touch the border, so keep only this country's ISO 3166-2 codes
+    private static List<AdminRegion> ParseRegions(string json, string iso)
+    {
+        using var document = JsonDocument.Parse(json);
+        if (!document.RootElement.TryGetProperty("elements", out var elements))
+            return [];
+
+        var regions = new List<AdminRegion>();
+        foreach (var element in elements.EnumerateArray())
+        {
+            if (!element.TryGetProperty("tags", out var tags) || !element.TryGetProperty("id", out var idProperty))
+                continue;
+
+            var subdivisionCode = GetTag(tags, "ISO3166-2");
+            if (subdivisionCode is null || !subdivisionCode.StartsWith($"{iso}-", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var name = GetTag(tags, "name:en") ?? GetTag(tags, "name") ?? subdivisionCode;
+            regions.Add(new AdminRegion(idProperty.GetInt64(), name));
+        }
+        return regions;
+    }
+
+    private static string CountryAreaSelector(string iso) =>
+        $"area[\"ISO3166-1\"=\"{iso.ToUpperInvariant()}\"][admin_level=2]->.a;";
+
+    private static string RegionAreaSelector(long relationId) =>
+        $"area(id:{OverpassAreaIdOffset + relationId})->.a;";
 
     // Tries each mirror with backoff; treats 429/504/timeout as retryable rather than fatal
     private async Task<string?> FetchWithFailoverAsync(string query, string iso, CancellationToken cancellationToken)
@@ -95,11 +198,11 @@ public sealed class OsmImportService
         return null;
     }
 
-    private static string BuildQuery(string iso, int maxResults)
+    private static string BuildQuery(string areaSelector, int maxResults)
     {
         var builder = new StringBuilder();
         builder.AppendLine("[out:json][timeout:120];");
-        builder.AppendLine($"area[\"ISO3166-1\"=\"{iso.ToUpperInvariant()}\"][admin_level=2]->.a;");
+        builder.AppendLine(areaSelector);
         builder.AppendLine("(");
         foreach (var filter in CandidateFilters)
             builder.AppendLine("  " + filter);
@@ -169,6 +272,9 @@ public sealed class OsmImportService
             return "hot-springs";
         if (string.Equals(GetTag(tags, "amenity"), "marketplace", StringComparison.OrdinalIgnoreCase))
             return "farmers-market";
+        if (string.Equals(GetTag(tags, "leisure"), "garden", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(GetTag(tags, "garden:type"), "community", StringComparison.OrdinalIgnoreCase))
+            return "community-garden";
 
         return null;
     }

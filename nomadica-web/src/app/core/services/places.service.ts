@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
-import { PlaceSummaryDto, PlaceDetailDto } from '../models/place.model';
+import { PlaceSummaryDto, PlaceDetailDto, PlaceDensityResponse } from '../models/place.model';
 import { ApiService } from './api.service';
 
 export interface MapBbox {
@@ -43,6 +43,15 @@ export class PlacesService {
         this.isLoading.set(false);
       })
     );
+  }
+
+  /** Server-side place counts per grid cell; used when zoomed out so every place is counted, not just one page. */
+  getDensity(bbox: MapBbox, zoom: number, categoryIds?: string[]): Observable<PlaceDensityResponse> {
+    const params: Record<string, any> = { ...bbox, zoom: Math.floor(zoom) };
+    if (categoryIds && categoryIds.length > 0) {
+      params['categoryIds'] = categoryIds;
+    }
+    return this.api.get<PlaceDensityResponse>('/places/density', params);
   }
 
   getById(id: string): Observable<PlaceDetailDto> {

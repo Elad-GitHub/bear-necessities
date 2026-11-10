@@ -12,6 +12,17 @@ export interface ReviewDto {
   createdAt: string;
 }
 
+export interface PlaceDensityCell {
+  latitude: number;
+  longitude: number;
+  count: number;
+}
+
+export interface PlaceDensityResponse {
+  cells: PlaceDensityCell[];
+  totalCount: number;
+}
+
 export interface PlaceSummaryDto {
   id: string;
   name: string;

@@ -65,6 +65,7 @@ using Nomadica.Application.UseCases.Places.GetMyPlaces;
 using Nomadica.Application.UseCases.Places.GetPendingPlaces;
 using Nomadica.Application.UseCases.Places.GetPlaceById;
 using Nomadica.Application.UseCases.Places.GetPlacesByViewport;
+using Nomadica.Application.UseCases.Places.GetPlaceDensity;
 using Nomadica.Application.UseCases.Places.RejectPlace;
 using Nomadica.Application.UseCases.Places.SearchPlaces;
 using Nomadica.Application.UseCases.Places.UpdatePlace;
@@ -145,6 +146,7 @@ public static class DependencyInjection
         services.AddHostedService<OccurrenceRefreshBackgroundService>();
 
         services.AddScoped<GetPlacesByViewportHandler>();
+        services.AddScoped<GetPlaceDensityHandler>();
         services.AddScoped<GetPlaceByIdHandler>();
         services.AddScoped<GetCategoriesTreeHandler>();
         services.AddScoped<CreatePlaceHandler>();

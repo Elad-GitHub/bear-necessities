@@ -104,7 +104,7 @@ using (var scope = app.Services.CreateAsyncScope())
 }
 
 // Console import commands (run instead of the web host), e.g.:
-//   dotnet run --project Nomadica.API -- import-osm --iso GR --country Greece
+//   dotnet run --project Nomadica.API -- import-osm --iso GR --country Greece [--by-region]
 //   dotnet run --project Nomadica.API -- import-csv --file ./places.csv --approve
 if (args.Length > 0 && (args[0] == "import-osm" || args[0] == "import-csv"))
 {
@@ -123,7 +123,10 @@ if (args.Length > 0 && (args[0] == "import-osm" || args[0] == "import-csv"))
         var country = ArgValue(args, "--country");
         var autoApprove = !args.Contains("--pending");
         var osm = services.GetRequiredService<Nomadica.Infrastructure.Imports.OsmImportService>();
-        var report = await osm.ImportCountryAsync(iso, country, autoApprove);
+        // --by-region splits big countries (GR, ES, IN, ID...) into one Overpass query per region
+        var report = args.Contains("--by-region")
+            ? await osm.ImportCountryByRegionAsync(iso, country, autoApprove)
+            : await osm.ImportCountryAsync(iso, country, autoApprove);
         Console.WriteLine($"OSM import [{iso}] -> {report}");
     }
     else

@@ -7,6 +7,7 @@ using Nomadica.Application.UseCases.Places.GetMyPlaces;
 using Nomadica.Application.UseCases.Places.GetPendingPlaces;
 using Nomadica.Application.UseCases.Places.GetPlaceById;
 using Nomadica.Application.UseCases.Places.GetPlacesByViewport;
+using Nomadica.Application.UseCases.Places.GetPlaceDensity;
 using Nomadica.Application.UseCases.Places.RejectPlace;
 using Nomadica.Application.UseCases.Places.SearchPlaces;
 using Nomadica.Application.UseCases.Places.UpdatePlace;
@@ -16,6 +17,7 @@ namespace Nomadica.API.Controllers;
 public class PlacesController : BaseApiController
 {
     private readonly GetPlacesByViewportHandler _viewportHandler;
+    private readonly GetPlaceDensityHandler _densityHandler;
     private readonly GetPlaceByIdHandler _byIdHandler;
     private readonly CreatePlaceHandler _createHandler;
     private readonly UpdatePlaceHandler _updateHandler;
@@ -28,6 +30,7 @@ public class PlacesController : BaseApiController
 
     public PlacesController(
         GetPlacesByViewportHandler viewportHandler,
+        GetPlaceDensityHandler densityHandler,
         GetPlaceByIdHandler byIdHandler,
         CreatePlaceHandler createHandler,
         UpdatePlaceHandler updateHandler,
@@ -39,6 +42,7 @@ public class PlacesController : BaseApiController
         GetMyPlacesHandler myPlacesHandler)
     {
         _viewportHandler = viewportHandler;
+        _densityHandler = densityHandler;
         _byIdHandler = byIdHandler;
         _createHandler = createHandler;
         _updateHandler = updateHandler;
@@ -86,6 +90,21 @@ public class PlacesController : BaseApiController
 
         var response = await _viewportHandler.HandleAsync(request, cancellationToken);
         return Ok(response);
+    }
+
+    [HttpGet("density")]
+    public async Task<IActionResult> GetDensity(
+        [FromQuery] decimal northEastLat,
+        [FromQuery] decimal northEastLng,
+        [FromQuery] decimal southWestLat,
+        [FromQuery] decimal southWestLng,
+        [FromQuery] double zoom,
+        [FromQuery] Guid[]? categoryIds,
+        CancellationToken cancellationToken = default)
+    {
+        var request = new GetPlaceDensityRequest(
+            northEastLat, northEastLng, southWestLat, southWestLng, zoom, categoryIds?.ToList());
+        return Ok(await _densityHandler.HandleAsync(request, cancellationToken));
     }
 
     [HttpGet("pending")]

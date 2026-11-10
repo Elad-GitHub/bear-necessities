@@ -13,12 +13,16 @@ import { EventsService } from '../../core/services/events.service';
 import { TripsService } from '../../core/services/trips.service';
 import { GeocodingService, GeocodeResult } from '../../core/services/geocoding.service';
 import { DirectionsService } from '../../core/services/directions.service';
-import { PlaceSummaryDto } from '../../core/models/place.model';
+import { PlaceDensityCell, PlaceSummaryDto } from '../../core/models/place.model';
 import { EventSummaryDto } from '../../core/models/event.model';
 import { ItineraryDay, MAX_TRIP_DAYS, MIN_TRIP_CATEGORIES } from '../../core/models/trip.model';
 import { applyFestivalTheme, FESTIVAL_PALETTE } from '../../core/map/festival-map-theme';
 
 type MapMode = 'places' | 'events' | 'both';
+
+// Below this zoom (roughly a whole country in view) the server sends per-cell counts instead of individual places,
+// so the totals cover every place rather than one 1000-place page
+const DENSITY_MAX_ZOOM = 9;
 
 // "Gatherings" holds event types (festival, retreat, ceremony…), so it only makes sense when events are on the map
 const EVENTS_ONLY_CATEGORY_SLUG = 'events';
@@ -53,6 +57,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private loadPlacesTimeout: any = null;
   private savedPlaceTypes = new Map<string, string>();
   private lastRenderedPlaces: PlaceSummaryDto[] = [];
+  private lastDensityCells: PlaceDensityCell[] = [];
+  private isDensityView = false;
+  private isPlaceRenderPending = false;
 
   // Trip planner state
   readonly minTripCategories = MIN_TRIP_CATEGORIES;
@@ -129,11 +136,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private refreshForMode(): void {
     const mode = this.mapMode();
 
-    if (mode === 'events') {
-      this.setPlacesData([]);
-    } else {
-      this.renderPlaces(this.lastRenderedPlaces);
-    }
+    this.renderPlaceLayers();
 
     if (mode === 'places') {
       this.clearEventMarkers();
@@ -372,7 +375,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.tripActive.set(true);
     this.itinerary.set(days);
     this.selectedTripDay.set(null);
-    this.setPlacesData([]);
+    this.hidePlaceLayers();
     this.clearEventMarkers();
 
     let order = 0;
@@ -518,9 +521,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         this.savedPlaceTypes = new Map(
           (response.items || []).map(item => [item.targetId, item.saveType])
         );
-        if (this.lastRenderedPlaces.length > 0) {
-          this.renderPlaces(this.lastRenderedPlaces);
-        }
+        this.renderPlaceLayers();
       }
     });
   }
@@ -608,14 +609,28 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   private loadPlacesForViewport(): void {
     const bbox = this.getCurrentBbox();
-    if (!bbox) return;
+    if (!bbox || !this.mapInstance) return;
 
-    const categoryIds = this.placesService.selectedCategories();
-    this.placesService.getByViewport(bbox, categoryIds.length > 0 ? categoryIds : undefined)
-      .subscribe({
+    const selected = this.placesService.selectedCategories();
+    const categoryFilter = selected.length > 0 ? selected : undefined;
+    const zoom = this.mapInstance.getZoom();
+
+    if (zoom < DENSITY_MAX_ZOOM) {
+      this.placesService.getDensity(bbox, zoom, categoryFilter).subscribe({
+        next: (density) => {
+          this.isDensityView = true;
+          this.lastDensityCells = density.cells || [];
+          this.renderPlaceLayers();
+          this.showInitialSpinner.set(false);
+        },
+        error: () => console.error('Failed to load place density')
+      });
+    } else {
+      this.placesService.getByViewport(bbox, categoryFilter).subscribe({
         next: (places) => this.refreshMarkers(places),
         error: () => console.error('Failed to load places')
       });
+    }
 
     if (this.mapMode() !== 'places') {
       this.loadEventsForViewport();
@@ -700,31 +715,114 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       places = response.places;
     }
 
+    this.isDensityView = false;
     this.lastRenderedPlaces = places;
-    this.renderPlaces(places);
+    this.renderPlaceLayers();
     this.showInitialSpinner.set(false);
   }
 
-  private renderPlaces(places: PlaceSummaryDto[]): void {
+  // Single place to decide what the place layers show: density cells (zoomed out), pins (zoomed in) or nothing
+  private renderPlaceLayers(): void {
     if (!this.mapInstance) return;
     if (this.tripActive()) return;
-
-    if (this.mapMode() === 'events') {
-      this.setPlacesData([]);
+    // Mapbox reports the style as not loaded while tiles stream in (e.g. right after a jump);
+    // dropping the update then left the map empty, so redraw from the latest state once it settles
+    if (!this.mapInstance.isStyleLoaded()) {
+      if (!this.isPlaceRenderPending) {
+        this.isPlaceRenderPending = true;
+        this.mapInstance.once('idle', () => {
+          this.isPlaceRenderPending = false;
+          this.renderPlaceLayers();
+        });
+      }
       return;
     }
 
-    const validPlaces = places.filter(place =>
+    const showsPlaces = this.mapMode() !== 'events';
+    const validPlaces = this.lastRenderedPlaces.filter(place =>
       place.latitude >= -90 && place.latitude <= 90 &&
       place.longitude >= -180 && place.longitude <= 180
     );
 
-    this.setPlacesData(validPlaces);
+    this.setDensityData(showsPlaces && this.isDensityView ? this.lastDensityCells : []);
+    this.setPlacesData(showsPlaces && !this.isDensityView ? validPlaces : []);
+  }
+
+  private hidePlaceLayers(): void {
+    if (!this.mapInstance) return;
+    if (!this.mapInstance.isStyleLoaded()) {
+      this.mapInstance.once('idle', () => this.hidePlaceLayers());
+      return;
+    }
+    this.setPlacesData([]);
+    this.setDensityData([]);
+  }
+
+  // Callers check readiness once up front: adding one source flips isStyleLoaded() to false, which would
+  // otherwise make the next layer update in the same pass bail out
+  private setDensityData(cells: PlaceDensityCell[]): void {
+    if (!this.mapInstance) return;
+    this.ensureDensityLayers();
+
+    const features = cells.map(cell => ({
+      type: 'Feature' as const,
+      geometry: { type: 'Point' as const, coordinates: [cell.longitude, cell.latitude] },
+      properties: { count: cell.count, label: this.abbreviateCount(cell.count) }
+    }));
+    (this.mapInstance.getSource('density-src') as mapboxgl.GeoJSONSource)
+      .setData({ type: 'FeatureCollection', features });
+  }
+
+  private abbreviateCount(count: number): string {
+    if (count < 1000) return String(count);
+    return `${(count / 1000).toFixed(count < 10000 ? 1 : 0).replace(/\.0$/, '')}k`;
+  }
+
+  // Density cells look like clusters but carry exact server-side counts for the whole viewport
+  private ensureDensityLayers(): void {
+    const map = this.mapInstance!;
+    if (map.getSource('density-src')) return;
+
+    map.addSource('density-src', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+
+    map.addLayer({
+      id: 'density-cells',
+      type: 'circle',
+      source: 'density-src',
+      paint: {
+        'circle-color': ['step', ['get', 'count'], FESTIVAL_PALETTE.turquoise, 25, '#26A69A', 100, FESTIVAL_PALETTE.deepTeal],
+        'circle-radius': ['step', ['get', 'count'], 13, 25, 16, 100, 19, 1000, 23],
+        'circle-opacity': 0.92,
+        'circle-stroke-width': 3,
+        'circle-stroke-color': FESTIVAL_PALETTE.cream
+      }
+    });
+
+    map.addLayer({
+      id: 'density-count',
+      type: 'symbol',
+      source: 'density-src',
+      layout: {
+        'text-field': ['get', 'label'],
+        'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
+        'text-size': 12,
+        'text-allow-overlap': true
+      },
+      paint: { 'text-color': FESTIVAL_PALETTE.cream }
+    });
+
+    map.on('click', 'density-cells', (event) => {
+      const geometry = event.features?.[0]?.geometry as GeoJSON.Point | undefined;
+      if (!geometry) return;
+      map.easeTo({ center: geometry.coordinates as [number, number], zoom: Math.min(map.getZoom() + 2.5, DENSITY_MAX_ZOOM + 0.5) });
+    });
+    map.on('mouseenter', 'density-cells', () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'density-cells', () => { map.getCanvas().style.cursor = ''; });
   }
 
   // Places render as a clustered GeoJSON layer so the map scales to thousands of pins.
   private setPlacesData(places: PlaceSummaryDto[]): void {
-    if (!this.mapInstance || !this.mapInstance.isStyleLoaded()) return;
+    if (!this.mapInstance) return;
 
     this.ensurePlacesLayers();
 
@@ -919,9 +1017,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.categoriesService.loadCategories().subscribe({
       next: () => {
         this.categoryIcons.buildIndex(this.categoriesService.categories());
-        if (this.lastRenderedPlaces.length > 0) {
-          this.renderPlaces(this.lastRenderedPlaces);
-        }
+        this.renderPlaceLayers();
       },
       error: () => this.categoriesService.categories.set([])
     });

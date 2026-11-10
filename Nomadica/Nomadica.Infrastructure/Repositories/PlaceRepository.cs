@@ -99,23 +99,30 @@ public class PlaceRepository : BaseRepository<Place, PlaceId>, IPlaceRepository
         int pageSize,
         CancellationToken cancellationToken = default)
     {
-        var allItems = await Context.Places
-            .Include(p => p.Categories)
-            .Where(p => p.Status == ListingStatus.Live
+        var inViewport = WhereInAnyCategory(
+            Context.Places.Where(p => p.Status == ListingStatus.Live
                 && p.Latitude >= viewport.SouthWest.Latitude
                 && p.Latitude <= viewport.NorthEast.Latitude
                 && p.Longitude >= viewport.SouthWest.Longitude
-                && p.Longitude <= viewport.NorthEast.Longitude)
-            .ToListAsync(cancellationToken);
+                && p.Longitude <= viewport.NorthEast.Longitude),
+            categoryIds?.Select(c => c.Value).ToList());
 
-        // Category filter runs in memory: c.Id.Value (value-object member) cannot be
-        // translated to SQL by EF Core 8 inside an Any subquery.
-        var categoryGuids = categoryIds?.Select(c => c.Value).ToHashSet();
-        var filtered = categoryGuids is { Count: > 0 }
-            ? allItems.Where(p => p.Categories.Any(c => categoryGuids.Contains(c.Id.Value))).ToList()
-            : allItems;
+        // First page (the map's case): count and page in SQL instead of loading the whole viewport
+        if (!cursor.HasValue)
+        {
+            var totalCount = await inViewport.CountAsync(cancellationToken);
+            var firstPage = await inViewport
+                .Include(p => p.Categories)
+                .OrderBy(p => p.CreatedAt)
+                .ThenBy(p => p.Id)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+            return (firstPage, totalCount);
+        }
 
-        var ordered = filtered
+        var allItems = await inViewport.Include(p => p.Categories).ToListAsync(cancellationToken);
+
+        var ordered = allItems
             .OrderBy(p => p.CreatedAt)
             .ThenBy(p => p.Id.Value)
             .ToList();
@@ -129,6 +136,48 @@ public class PlaceRepository : BaseRepository<Place, PlaceId>, IPlaceRepository
         }
 
         return (page.Take(pageSize).ToList(), ordered.Count);
+    }
+
+    // Filters through the PlaceCategories join table: EF Core 8 can't translate c.Id.Value on the
+    // value-converted key inside Categories.Any(), but it can translate a join-table subquery.
+    private IQueryable<Place> WhereInAnyCategory(IQueryable<Place> query, IReadOnlyCollection<Guid>? categoryIds)
+    {
+        if (categoryIds is not { Count: > 0 })
+            return query;
+
+        var categoryKeys = categoryIds.Select(id => new CategoryId(id)).ToList();
+        var placeIdsInCategories = Context.Set<Dictionary<string, object>>("PlaceCategories")
+            .Where(link => categoryKeys.Contains(EF.Property<CategoryId>(link, "CategoryId")))
+            .Select(link => EF.Property<PlaceId>(link, "PlaceId"));
+        return query.Where(p => placeIdsInCategories.Contains(p.Id));
+    }
+
+    public async Task<IReadOnlyList<PlaceDensityCell>> GetDensityAsync(
+        GeoViewport viewport,
+        IReadOnlyCollection<Guid>? categoryIds,
+        decimal cellSizeDegrees,
+        CancellationToken cancellationToken = default)
+    {
+        var query = Context.Places.Where(p => p.Status == ListingStatus.Live
+            && p.Latitude >= viewport.SouthWest.Latitude
+            && p.Latitude <= viewport.NorthEast.Latitude
+            && p.Longitude >= viewport.SouthWest.Longitude
+            && p.Longitude <= viewport.NorthEast.Longitude);
+
+        query = WhereInAnyCategory(query, categoryIds);
+
+        // GROUP BY runs in SQL Server: one row per occupied cell instead of one per place
+        return await query
+            .GroupBy(p => new
+            {
+                Row = Math.Floor(p.Latitude / cellSizeDegrees),
+                Column = Math.Floor(p.Longitude / cellSizeDegrees)
+            })
+            .Select(cell => new PlaceDensityCell(
+                cell.Average(p => p.Latitude),
+                cell.Average(p => p.Longitude),
+                cell.Count()))
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<Place?> GetByIdWithRelationsAsync(

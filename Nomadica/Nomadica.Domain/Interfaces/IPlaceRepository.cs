@@ -22,6 +22,13 @@ public interface IPlaceRepository : IRepository<Place, PlaceId>
         int pageSize,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Counts live places per square grid cell in the database, so zoomed-out maps never load every place.</summary>
+    Task<IReadOnlyList<PlaceDensityCell>> GetDensityAsync(
+        GeoViewport viewport,
+        IReadOnlyCollection<Guid>? categoryIds,
+        decimal cellSizeDegrees,
+        CancellationToken cancellationToken = default);
+
     Task<Place?> GetByIdWithRelationsAsync(PlaceId id, CancellationToken cancellationToken = default);
     Task<List<Place>> SearchByTextAsync(string query, int limit, CancellationToken cancellationToken = default);
     Task<List<Place>> GetByOwnerAsync(UserId ownerId, CancellationToken cancellationToken = default);
