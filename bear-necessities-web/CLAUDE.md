@@ -97,7 +97,7 @@ npm test -- map.component.spec.ts  # Glob match
 - Query params are passed as `Record<string, any>` and serialized by `HttpParams.set()`.
 
 ### Auth Token Storage & Expiry
-- Tokens stored in `localStorage` under key `auth_token`. User DTO stored as `auth_user` (JSON string).
+- Tokens stored in `localStorage` under keys `access_token` and `refresh_token`. User DTO stored as `auth_user` (JSON string).
 - No automatic refresh token mechanism—assumes backend issues long-lived tokens or frontend handles 401 gracefully.
 - `AuthService.loadFromStorage()` runs on app init; if parsing fails, logs out to avoid stale state.
 

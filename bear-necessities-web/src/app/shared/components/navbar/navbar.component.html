@@ -69,6 +69,12 @@
   </div>
 
   <div class="navbar-right">
+    <!-- Open to everyone: signed-out visitors are sent to login and brought back to the form -->
+    <button class="nav-add" (click)="navigateTo('/submit')" aria-label="Add a place or event" title="Add a place or event">
+      <mat-icon>add</mat-icon>
+      <span class="nav-link-label">Add</span>
+    </button>
+
     <button mat-button class="nav-link" (click)="openTripPlanner()" aria-label="Plan a Trip">
       <mat-icon>explore</mat-icon>
       <span class="nav-link-label">Plan a Trip</span>
@@ -107,7 +113,7 @@
         </button>
         <button mat-menu-item (click)="navigateTo('/submit')">
           <mat-icon>add_location</mat-icon>
-          <span>Submit a Place</span>
+          <span>Add a place or event</span>
         </button>
         <button mat-menu-item *ngIf="isAdmin()" (click)="navigateTo('/admin')">
           <mat-icon>admin_panel_settings</mat-icon>

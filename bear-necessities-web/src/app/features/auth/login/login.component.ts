@@ -1,7 +1,8 @@
 import { Component, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { isSafeReturnUrl, RETURN_URL_PARAM } from '../../../core/guards/auth.guard';
 
 @Component({
   selector: 'app-login',
@@ -18,7 +19,8 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -39,7 +41,8 @@ export class LoginComponent {
 
     this.authService.login(this.loginForm.value).subscribe({
       next: () => {
-        this.router.navigate(['/map']);
+        const returnUrl = this.route.snapshot.queryParamMap.get(RETURN_URL_PARAM);
+        this.router.navigateByUrl(isSafeReturnUrl(returnUrl) ? returnUrl : '/map');
       },
       error: (err) => {
         console.error('Login error:', err);

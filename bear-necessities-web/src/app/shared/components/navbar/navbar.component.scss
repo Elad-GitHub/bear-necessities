@@ -175,6 +175,13 @@ $border-radius: 4px;
     min-width: 0;
     padding: 0 8px;
   }
+
+  // Label hidden: the add action becomes a round "+" button
+  .nav-add {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 480px) {
@@ -199,6 +206,30 @@ $border-radius: 4px;
   white-space: nowrap;
 
   mat-icon { font-size: 20px; }
+}
+
+// The one filled action in the bar: contributing is the community's core loop
+.nav-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  padding: 0 14px 0 10px;
+  border: none;
+  border-radius: 18px;
+  background: #00796b;
+  color: white;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+  &:hover { background: #004d40; }
+  &:focus-visible { outline: 2px solid #004d40; outline-offset: 2px; }
 }
 
 .avatar-button {
