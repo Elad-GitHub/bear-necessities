@@ -21,6 +21,11 @@ export interface LoginResponse {
   user: AuthUserDto;
 }
 
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
 export interface AuthUserDto {
   id: string;
   email: string;

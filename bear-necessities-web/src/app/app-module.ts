@@ -38,14 +38,15 @@ import { TelemetryErrorHandler } from './core/telemetry/telemetry-error-handler'
       deps: [CategoriesService],
       multi: true
     },
+    // Error handling wraps auth so a 401 only logs out after AuthInterceptor failed to refresh the token
     {
       provide: HTTP_INTERCEPTORS,
-      useClass: AuthInterceptor,
+      useClass: ErrorInterceptor,
       multi: true
     },
     {
       provide: HTTP_INTERCEPTORS,
-      useClass: ErrorInterceptor,
+      useClass: AuthInterceptor,
       multi: true
     },
     // Telemetry: the default HTTP sink now; add another sink (e.g. Sentry) here later

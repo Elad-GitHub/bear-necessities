@@ -1,7 +1,9 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, finalize, map, shareReplay, tap } from 'rxjs';
 import { ApiService } from './api.service';
-import { AuthUserDto, LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from '../models/auth.model';
+import {
+  AuthUserDto, LoginRequest, LoginResponse, RefreshTokenResponse, RegisterRequest, RegisterResponse
+} from '../models/auth.model';
 import { Router } from '@angular/router';
 
 @Injectable({
@@ -14,6 +16,8 @@ export class AuthService {
 
   currentUser = signal<AuthUserDto | null>(null);
   isAuthenticated = computed(() => this.currentUser() !== null);
+
+  private pendingRefresh: Observable<string> | null = null;
 
   constructor(private api: ApiService, private router: Router) {
     this.loadFromStorage();
@@ -47,6 +51,22 @@ export class AuthService {
 
     this.clearStorage();
     this.router.navigate(['/map']);
+  }
+
+  /** Trades the refresh token for a new access token; parallel 401s share one refresh call. */
+  refreshAccessToken(): Observable<string> {
+    if (!this.pendingRefresh) {
+      this.pendingRefresh = this.api.post<RefreshTokenResponse>('/auth/refresh', { refreshToken: this.getRefreshToken() }).pipe(
+        tap(response => {
+          localStorage.setItem(this.TOKEN_KEY, response.accessToken);
+          localStorage.setItem(this.REFRESH_TOKEN_KEY, response.refreshToken);
+        }),
+        map(response => response.accessToken),
+        finalize(() => this.pendingRefresh = null),
+        shareReplay(1)
+      );
+    }
+    return this.pendingRefresh;
   }
 
   getToken(): string | null {
