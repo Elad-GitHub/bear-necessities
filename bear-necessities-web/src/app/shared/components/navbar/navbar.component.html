@@ -1,21 +1,38 @@
 <nav class="navbar">
-  <div class="navbar-left">
-    <a routerLink="/" class="logo">
-      <img class="logo-mark" src="brand/icon-192.png" alt="" width="40" height="40">
-      <span class="logo-text">Bear Necessities</span>
-    </a>
+  <a routerLink="/" class="logo">
+    <img class="logo-mark" src="brand/icon-192.png" alt="" width="40" height="40">
+    <span class="logo-text">Bear Necessities</span>
+  </a>
+
+  <div class="nav-actions">
+    <!-- Open to everyone: signed-out visitors are sent to login and brought back to the form -->
+    <button class="nav-pill primary" (click)="navigateTo('/submit')" aria-label="Add a place or event"
+      title="Know a great spot? Leave your paw print on the map">
+      <app-bear-icon name="paw" [size]="20"></app-bear-icon>
+      <span class="nav-label">Drop a paw</span>
+    </button>
+
+    <button class="nav-pill" (click)="openTripPlanner()" aria-label="Plan a trip" title="Plan a trip: pick an area and dates, we'll sniff out the stops">
+      <app-bear-icon name="trail" [size]="20"></app-bear-icon>
+      <span class="nav-label">Plan a Trek</span>
+    </button>
+
+    <button class="nav-pill" (click)="navigateTo('/groups')" aria-label="Communities" title="Communities: find your people, or start a den of your own">
+      <app-bear-icon name="community" [size]="22"></app-bear-icon>
+      <span class="nav-label">Find your Den</span>
+    </button>
   </div>
 
-  <div class="navbar-center">
+  <div class="nav-end">
     <div class="search-wrapper">
-      <mat-form-field class="search-field" appearance="outline">
-        <mat-label>Search places, events, communities...</mat-label>
-        <input matInput #searchInput placeholder="Try a city, a place, an event or a community"
+      <label class="search-box">
+        <mat-icon class="search-icon" *ngIf="!isSearching()">search</mat-icon>
+        <mat-icon class="search-icon spinning" *ngIf="isSearching()">sync</mat-icon>
+        <input #searchInput type="search" placeholder="Search places, events, communities..."
+          aria-label="Search places, events, communities and destinations"
           (input)="onSearchInput(searchInput.value)"
           (focus)="hasResults() && isSearchOpen.set(true)">
-        <mat-icon matSuffix *ngIf="!isSearching()">search</mat-icon>
-        <mat-icon matSuffix class="spinning" *ngIf="isSearching()">sync</mat-icon>
-      </mat-form-field>
+      </label>
 
       <div class="search-dropdown" *ngIf="isSearchOpen() && hasResults()">
         <ng-container *ngIf="placeResults().length > 0">
@@ -44,7 +61,7 @@
           <div class="search-section-label">Communities</div>
           <button class="search-result" *ngFor="let group of groupResults()"
             (click)="openGroupResult(group, searchInput)">
-            <mat-icon>groups</mat-icon>
+            <app-bear-icon name="community" [size]="18"></app-bear-icon>
             <span class="result-name">{{ group.name }}</span>
             <span class="result-location">
               {{ group.city || group.country || '' }}<ng-container *ngIf="group.city || group.country"> · </ng-container>{{ group.memberCount }} {{ group.memberCount === 1 ? 'member' : 'members' }}
@@ -66,65 +83,60 @@
         <span class="no-results">Nothing found for "{{ searchInput.value }}"</span>
       </div>
     </div>
-  </div>
-
-  <div class="navbar-right">
-    <!-- Open to everyone: signed-out visitors are sent to login and brought back to the form -->
-    <button class="nav-add" (click)="navigateTo('/submit')" aria-label="Add a place or event" title="Know a great spot? Leave your paw print on the map">
-      <mat-icon>pets</mat-icon>
-      <span class="nav-link-label">Drop a paw</span>
-    </button>
-
-    <button mat-button class="nav-link" (click)="openTripPlanner()" aria-label="Plan a Trip">
-      <mat-icon>explore</mat-icon>
-      <span class="nav-link-label">Plan a Trip</span>
-    </button>
-
-    <button mat-button class="nav-link" (click)="navigateTo('/groups')" aria-label="Communities">
-      <mat-icon>groups</mat-icon>
-      <span class="nav-link-label">Communities</span>
-    </button>
 
     <ng-container *ngIf="!authService.isAuthenticated()">
-      <button mat-button (click)="navigateTo('/login')">Login</button>
-      <button mat-raised-button color="primary" (click)="navigateTo('/register')">Join</button>
+      <button class="nav-pill" (click)="navigateTo('/login')">Log in</button>
+      <button class="nav-pill primary" (click)="navigateTo('/register')">Join</button>
     </ng-container>
 
-    <ng-container *ngIf="authService.isAuthenticated()">
-      <button mat-icon-button [matMenuTriggerFor]="menu" class="avatar-button">
-        <div class="avatar">{{ getInitials() }}</div>
-      </button>
-      <mat-menu #menu="matMenu">
-        <button mat-menu-item (click)="navigateTo('/profile')">
-          <mat-icon>person</mat-icon>
-          <span>My Profile</span>
-        </button>
-        <button mat-menu-item (click)="navigateToProfileTab('rsvps')">
-          <mat-icon>event</mat-icon>
-          <span>My RSVPs</span>
-        </button>
-        <button mat-menu-item (click)="navigateToProfileTab('saved')">
-          <mat-icon>bookmark</mat-icon>
-          <span>Saved Places</span>
-        </button>
-        <button mat-menu-item (click)="navigateToProfileTab('listings')">
-          <mat-icon>storefront</mat-icon>
-          <span>My Listings</span>
-        </button>
-        <button mat-menu-item (click)="navigateTo('/submit')">
-          <mat-icon>add_location</mat-icon>
-          <span>Add a place or event</span>
-        </button>
-        <button mat-menu-item *ngIf="isAdmin()" (click)="navigateTo('/admin')">
-          <mat-icon>admin_panel_settings</mat-icon>
-          <span>Moderation Queue</span>
-        </button>
-        <mat-divider></mat-divider>
-        <button mat-menu-item (click)="logout()">
-          <mat-icon>logout</mat-icon>
-          <span>Logout</span>
-        </button>
-      </mat-menu>
-    </ng-container>
+    <button class="avatar-button" *ngIf="authService.isAuthenticated()" (click)="openPanel()"
+      aria-label="Open your menu" [attr.aria-expanded]="isPanelOpen()">
+      <span class="avatar">{{ getInitials() }}</span>
+    </button>
   </div>
 </nav>
+
+<!-- Your menu: slides in from the right edge -->
+<ng-container *ngIf="authService.isAuthenticated()">
+  <div class="panel-backdrop" [class.open]="isPanelOpen()" (click)="closePanel()"></div>
+  <aside class="side-panel" [class.open]="isPanelOpen()" role="dialog" aria-label="Your menu" [attr.aria-hidden]="!isPanelOpen()">
+    <header class="panel-header">
+      <span class="avatar large">{{ getInitials() }}</span>
+      <div class="panel-user">
+        <strong>{{ authService.currentUser()?.displayName }}</strong>
+        <span>{{ authService.currentUser()?.email }}</span>
+      </div>
+      <button class="panel-close" (click)="closePanel()" aria-label="Close menu">
+        <mat-icon>close</mat-icon>
+      </button>
+    </header>
+
+    <nav class="panel-links">
+      <button class="panel-link" (click)="navigateTo('/profile')">
+        <app-bear-icon name="profile" [size]="24"></app-bear-icon>
+        <span class="link-text"><strong>My profile</strong><small>Your name, photo and details</small></span>
+      </button>
+      <button class="panel-link" (click)="navigateToProfileTab('rsvps')">
+        <app-bear-icon name="going" [size]="24"></app-bear-icon>
+        <span class="link-text"><strong>Events I'm going to</strong><small>Events you said you'd join</small></span>
+      </button>
+      <button class="panel-link" (click)="navigateToProfileTab('saved')">
+        <app-bear-icon name="saved" [size]="24"></app-bear-icon>
+        <span class="link-text"><strong>Saved places</strong><small>Places you want to visit, visited or loved</small></span>
+      </button>
+      <button class="panel-link" (click)="navigateToProfileTab('listings')">
+        <app-bear-icon name="added" [size]="24"></app-bear-icon>
+        <span class="link-text"><strong>Places I've added</strong><small>Your places and events, ready to edit</small></span>
+      </button>
+      <button class="panel-link" *ngIf="isAdmin()" (click)="navigateTo('/admin')">
+        <app-bear-icon name="approvals" [size]="24"></app-bear-icon>
+        <span class="link-text"><strong>Approvals</strong><small>New places, suggested edits and members</small></span>
+      </button>
+    </nav>
+
+    <button class="panel-link logout" (click)="logout()">
+      <app-bear-icon name="logout" [size]="24"></app-bear-icon>
+      <span class="link-text"><strong>Log out</strong></span>
+    </button>
+  </aside>
+</ng-container>

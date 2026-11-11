@@ -17,6 +17,7 @@ import { CategoryChipsComponent } from './components/category-chips/category-chi
 import { PlaceCardComponent } from './components/place-card/place-card.component';
 import { LoadingSpinnerComponent } from './components/loading-spinner/loading-spinner.component';
 import { PhotoCreditComponent } from './components/photo-credit/photo-credit.component';
+import { BearIconComponent } from './components/bear-icon/bear-icon.component';
 
 @NgModule({
   declarations: [
@@ -26,7 +27,8 @@ import { PhotoCreditComponent } from './components/photo-credit/photo-credit.com
     CategoryChipsComponent,
     PlaceCardComponent,
     LoadingSpinnerComponent,
-    PhotoCreditComponent
+    PhotoCreditComponent,
+    BearIconComponent
   ],
   imports: [
     CommonModule,
@@ -47,7 +49,8 @@ import { PhotoCreditComponent } from './components/photo-credit/photo-credit.com
     CategoryChipsComponent,
     PlaceCardComponent,
     LoadingSpinnerComponent,
-    PhotoCreditComponent
+    PhotoCreditComponent,
+    BearIconComponent
   ],
   providers: [DatePipe]
 })

@@ -1,5 +1,12 @@
-$primary: #4db8a8;
-$border-radius: 4px;
+$primary: #00796b;
+$primary-dark: #004d40;
+$primary-light: #e0f2f1;
+$brand-teal: #4db8a8;
+$pill-border: #cfe5e1;
+$text: #212121;
+$text-muted: #757575;
+$control-height: 40px;
+$panel-width: 320px;
 
 .navbar {
   position: fixed;
@@ -10,22 +17,19 @@ $border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
-  padding: 0 24px;
+  padding: 0 20px;
   z-index: 1000;
-  gap: 24px;
-}
-
-.navbar-left {
-  flex-shrink: 0;
+  gap: 20px;
 }
 
 .logo {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
   font-size: 22px;
   font-weight: 700;
-  color: $primary;
+  color: $brand-teal;
   text-decoration: none;
   cursor: pointer;
 
@@ -43,27 +47,110 @@ $border-radius: 4px;
   }
 }
 
-.navbar-center {
-  flex: 1;
-  max-width: 400px;
+// Every button in the bar shares this pill; "primary" is the one filled call to action
+.nav-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: $control-height;
+  padding: 0 16px 0 12px;
+  border: 1.5px solid $pill-border;
+  border-radius: $control-height / 2;
+  background: white;
+  color: $primary-dark;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+
+  app-bear-icon { color: $primary; }
+
+  &:hover { background: $primary-light; border-color: $primary-light; }
+  &:focus-visible { outline: 2px solid $primary-dark; outline-offset: 2px; }
+
+  &.primary {
+    background: $primary;
+    border-color: $primary;
+    color: white;
+
+    app-bear-icon { color: white; }
+
+    &:hover { background: $primary-dark; border-color: $primary-dark; }
+  }
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+// Search and your menu sit together at the right edge
+.nav-end {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  min-width: 0;
 }
 
 .search-wrapper {
   position: relative;
+  width: 340px;
+  min-width: 0;
 }
 
-.search-field {
-  width: 100%;
-  max-width: 400px;
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: $control-height;
+  padding: 0 14px;
+  border: 1.5px solid $pill-border;
+  border-radius: $control-height / 2;
+  background: #f7fbfa;
+  cursor: text;
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &:focus-within {
+    border-color: $primary;
+    background: white;
+  }
+
+  .search-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: $primary;
+    flex-shrink: 0;
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: none;
+    font-family: inherit;
+    font-size: 14px;
+    color: $text;
+
+    &::placeholder { color: #8a9a97; }
+    &::-webkit-search-cancel-button { cursor: pointer; }
+  }
 }
 
 .search-dropdown {
   position: absolute;
-  top: calc(100% - 14px);
+  top: calc(100% + 6px);
   left: 0;
   right: 0;
+  min-width: 300px;
   background: white;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid #e0e0e0;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.16);
   z-index: 1100;
@@ -97,7 +184,7 @@ $border-radius: 4px;
   background: none;
   font-size: 14px;
   font-family: inherit;
-  color: #212121;
+  color: $text;
   text-align: left;
   cursor: pointer;
   transition: background 150ms ease;
@@ -106,9 +193,10 @@ $border-radius: 4px;
     font-size: 18px;
     width: 18px;
     height: 18px;
-    color: #00796b;
     flex-shrink: 0;
   }
+
+  mat-icon, app-bear-icon { color: $primary; }
 
   .result-name {
     font-weight: 500;
@@ -120,18 +208,16 @@ $border-radius: 4px;
   .result-location {
     margin-left: auto;
     font-size: 12px;
-    color: #757575;
+    color: $text-muted;
     flex-shrink: 0;
   }
 
-  &:hover {
-    background: #f0f7f6;
-  }
+  &:hover { background: #f0f7f6; }
 }
 
 .no-results {
   font-size: 13px;
-  color: #757575;
+  color: $text-muted;
 }
 
 @keyframes spin {
@@ -143,109 +229,226 @@ $border-radius: 4px;
   animation: spin 1s linear infinite;
 }
 
-// Tablet & phone: tighten spacing and drop nav-link labels to icons
-@media (max-width: 760px) {
-  .navbar {
-    padding: 0 12px;
-    gap: 10px;
-  }
-
-  .logo { font-size: 18px; }
-
-  // Let the search shrink instead of shoving the nav buttons off-screen.
-  // Material's form-field infix defaults to a fixed 180px, which is the real culprit.
-  .navbar-center {
-    max-width: none;
-    min-width: 0;
-  }
-
-  .search-field {
-    width: 100%;
-    min-width: 0;
-
-    ::ng-deep .mat-mdc-form-field-infix {
-      width: auto;
-      min-width: 0;
-    }
-  }
-
-  .nav-link-label { display: none; }
-
-  .nav-link {
-    min-width: 0;
-    padding: 0 8px;
-  }
-
-  // Label hidden: the add action becomes a round "+" button
-  .nav-add {
-    width: 36px;
-    padding: 0;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .navbar { gap: 8px; }
-
-  // On phones the bear alone carries the brand so the search keeps its width
-  .logo-text { display: none; }
-  .logo .logo-mark { width: 36px; height: 36px; }
-}
-
-.navbar-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.nav-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-
-  mat-icon { font-size: 20px; }
-}
-
-// The one filled action in the bar: contributing is the community's core loop
-.nav-add {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  height: 36px;
-  padding: 0 14px 0 10px;
-  border: none;
-  border-radius: 18px;
-  background: #00796b;
-  color: white;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background 0.2s ease;
-
-  mat-icon { font-size: 20px; width: 20px; height: 20px; }
-
-  &:hover { background: #004d40; }
-  &:focus-visible { outline: 2px solid #004d40; outline-offset: 2px; }
-}
-
 .avatar-button {
-  padding: 0 !important;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+
+  &:focus-visible { outline: 2px solid $primary-dark; outline-offset: 2px; }
+  &:hover .avatar { box-shadow: 0 0 0 3px $primary-light; }
 }
 
 .avatar {
-  width: 38px;
-  height: 38px;
+  width: $control-height;
+  height: $control-height;
   border-radius: 50%;
-  background: $primary;
+  background: $brand-teal;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
   font-size: 14px;
+  transition: box-shadow 0.2s ease;
+
+  &.large {
+    width: 48px;
+    height: 48px;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+}
+
+// Side panel
+.panel-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 32, 28, 0.32);
+  z-index: 1200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+
+  &.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.side-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: $panel-width;
+  max-width: 88vw;
+  background: white;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.18);
+  z-index: 1201;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  visibility: hidden;
+  transition: transform 0.28s ease, visibility 0s linear 0.28s;
+
+  &.open {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform 0.28s ease;
+  }
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 16px 18px 20px;
+  border-bottom: 1px solid #edf3f2;
+  background: linear-gradient(180deg, #f2faf8 0%, white 100%);
+}
+
+.panel-user {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+
+  strong {
+    font-size: 16px;
+    color: $text;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  span {
+    font-size: 12px;
+    color: $text-muted;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.panel-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: $text-muted;
   cursor: pointer;
+
+  &:hover { background: #f0f4f3; color: $text; }
+}
+
+.panel-links {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 8px;
+  gap: 2px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.panel-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 150ms ease;
+
+  app-bear-icon { color: $primary; }
+
+  .link-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+
+    strong {
+      font-size: 15px;
+      font-weight: 600;
+      color: $text;
+    }
+
+    small {
+      font-size: 12px;
+      color: $text-muted;
+    }
+  }
+
+  &:hover { background: #f0f7f6; }
+  &:focus-visible { outline: 2px solid $primary; outline-offset: -2px; }
+
+  &.logout {
+    margin: 0 8px 14px;
+    width: auto;
+    border-top: 1px solid #edf3f2;
+    border-radius: 0 0 12px 12px;
+    padding-top: 16px;
+
+    app-bear-icon { color: $text-muted; }
+  }
+}
+
+// Tablet: action buttons become round icons so the search keeps room
+@media (max-width: 1100px) {
+  .nav-actions .nav-label { display: none; }
+
+  .nav-actions .nav-pill {
+    width: $control-height;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .search-wrapper { width: 280px; }
+}
+
+@media (max-width: 760px) {
+  .navbar {
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .logo-text { display: none; }
+  .logo .logo-mark { width: 36px; height: 36px; }
+
+  .nav-actions { gap: 6px; }
+
+  .nav-end {
+    flex: 1;
+    gap: 8px;
+  }
+
+  .search-wrapper {
+    flex: 1;
+    width: auto;
+  }
+
+  .search-box { padding: 0 10px; }
+
+  .search-dropdown {
+    position: fixed;
+    top: 60px;
+    left: 8px;
+    right: 8px;
+    min-width: 0;
+  }
+
+  .nav-end .nav-pill { padding: 0 12px; }
 }

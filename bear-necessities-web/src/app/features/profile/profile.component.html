@@ -1,3 +1,5 @@
+<app-navbar></app-navbar>
+
 <div class="profile-page">
 
   <!-- Header -->
@@ -32,18 +34,18 @@
   <div class="tabs-container">
     <div class="tabs">
       <button class="tab" [class.active]="activeTab() === 'rsvps'" (click)="setTab('rsvps')">
-        <span class="material-icons">event_available</span>
-        My RSVPs
+        <app-bear-icon name="going" [size]="20"></app-bear-icon>
+        Events I'm going to
         <span class="count-badge" *ngIf="rsvps().length">{{ rsvps().length }}</span>
       </button>
       <button class="tab" [class.active]="activeTab() === 'saved'" (click)="setTab('saved')">
-        <span class="material-icons">bookmark</span>
-        Saved
+        <app-bear-icon name="saved" [size]="20"></app-bear-icon>
+        Saved places
         <span class="count-badge" *ngIf="savedItems().length">{{ savedItems().length }}</span>
       </button>
       <button class="tab" [class.active]="activeTab() === 'listings'" (click)="setTab('listings')">
-        <span class="material-icons">storefront</span>
-        My Listings
+        <app-bear-icon name="added" [size]="20"></app-bear-icon>
+        Places I've added
         <span class="count-badge" *ngIf="totalListings()">{{ totalListings() }}</span>
       </button>
     </div>
@@ -55,13 +57,13 @@
     <!-- RSVPs -->
     <ng-container *ngIf="activeTab() === 'rsvps'">
       <div class="loading-state" *ngIf="isLoadingRsvps()">
-        <span class="material-icons spinning">sync</span> Loading your RSVPs...
+        <span class="material-icons spinning">sync</span> Loading your events...
       </div>
 
       <div class="empty-state" *ngIf="!isLoadingRsvps() && rsvps().length === 0">
         <span class="material-icons">event_busy</span>
-        <h3>No RSVPs yet</h3>
-        <p>Find an event on the map and RSVP to see it here.</p>
+        <h3>No events yet</h3>
+        <p>Find an event on the map and tap "Going" to see it here.</p>
         <button class="btn-primary" routerLink="/map">Explore the Map</button>
       </div>
 

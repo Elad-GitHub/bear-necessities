@@ -81,7 +81,7 @@
       <!-- Places grouped by category -->
       <section class="results-section" *ngFor="let group of groupedPlaces()">
         <h2 class="results-title">
-          <span class="material-icons">{{ group.icon }}</span>
+          <app-bear-icon [name]="group.icon" [size]="22"></app-bear-icon>
           {{ group.parentName }} ({{ group.places.length }})
         </h2>
         <div class="result-grid">

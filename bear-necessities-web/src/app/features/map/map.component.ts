@@ -20,12 +20,16 @@ import { applyFestivalTheme, FESTIVAL_PALETTE } from '../../core/map/festival-ma
 import { PAW_CLUSTER_PAINT, pawClusterLayout, registerPawClusterImages } from '../../core/map/paw-clusters';
 import { measureSegments, PAW_IMAGE_ID, PawPrint, pawPrintCountFor, registerPawTrailImage, samplePawPrints, toPawFeatures } from '../../core/map/paw-trail';
 import { loadMapImages } from '../../core/map/map-images';
+import { MapViewStateService } from '../../core/map/map-view-state.service';
 
 type MapMode = 'places' | 'events' | 'both';
 
 // Below this zoom (roughly a whole country in view) the server sends per-cell counts instead of individual places,
 // so the totals cover every place rather than one 1000-place page
 const DENSITY_MAX_ZOOM = 9;
+// First visit: a world view centred between the Americas and Asia
+const DEFAULT_CENTER: [number, number] = [20, 15];
+const DEFAULT_ZOOM = 2.5;
 
 // Matches the SCSS breakpoint where the itinerary becomes a bottom sheet capped at 45vh
 const MOBILE_BREAKPOINT_PX = 760;
@@ -125,7 +129,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     private directionsService: DirectionsService,
     private zone: NgZone,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private mapViewState: MapViewStateService
   ) {
     this.areaSearchTerms.pipe(
       debounceTime(300),
@@ -700,13 +705,16 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   private initMap(): void {
+    const lastView = this.mapViewState.get();
     this.mapInstance = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/mapbox/light-v11',
       projection: 'mercator',
-      zoom: 2.5,
+      zoom: lastView?.zoom ?? DEFAULT_ZOOM,
       minZoom: 1.5,
-      center: [20, 15],
+      center: lastView?.center ?? DEFAULT_CENTER,
+      bearing: lastView?.bearing ?? 0,
+      pitch: lastView?.pitch ?? 0,
       renderWorldCopies: false
     });
 
@@ -749,9 +757,21 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     // Reload listings for the new viewport as the user pans/zooms (debounced)
     this.mapInstance.on('moveend', () => {
+      this.rememberView();
       if (this.tripActive()) return;
       if (this.loadPlacesTimeout) clearTimeout(this.loadPlacesTimeout);
       this.loadPlacesTimeout = setTimeout(() => this.loadPlacesForViewport(), 400);
+    });
+  }
+
+  private rememberView(): void {
+    if (!this.mapInstance) return;
+    const center = this.mapInstance.getCenter();
+    this.mapViewState.save({
+      center: [center.lng, center.lat],
+      zoom: this.mapInstance.getZoom(),
+      bearing: this.mapInstance.getBearing(),
+      pitch: this.mapInstance.getPitch()
     });
   }
 

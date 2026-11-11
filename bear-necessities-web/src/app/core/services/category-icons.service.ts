@@ -1,24 +1,11 @@
 import { Injectable } from '@angular/core';
 import { CategoryTreeDto } from '../models/category.model';
+import { CATEGORY_BEAR_ICONS } from '../../shared/components/bear-icon/bear-icons';
 
-const PARENT_SLUG_ICONS: Record<string, string> = {
-  'movement': 'directions_run',
-  'events': 'event',
-  'volunteering': 'volunteer_activism',
-  'co-working': 'laptop',
-  'crafting': 'palette',
-  'healing': 'medical_services',
-  'music-sound': 'music_note',
-  'sexuality': 'favorite',
-  'spirituality': 'self_improvement',
-  'wellness': 'ac_unit',
-  'nature': 'forest',
-  'ceremonies': 'local_fire_department',
-  'markets': 'storefront',
-  'food': 'restaurant'
-};
+// Bear icon (see shared/components/bear-icon) per parent category
+const PARENT_SLUG_ICONS = CATEGORY_BEAR_ICONS;
 
-const DEFAULT_ICON = 'place';
+const DEFAULT_ICON = 'paw';
 
 // Emoji used for map pins (rendered to Mapbox images). Kept parallel to the Material
 // icon map so both share one source of truth for "what does this category look like".

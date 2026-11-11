@@ -110,7 +110,8 @@ $text-muted: #757575;
   transition: all 200ms ease;
   white-space: nowrap;
 
-  .chip-icon { font-size: 14px; }
+  .chip-icon { color: $primary; }
+  &.selected .chip-icon { color: inherit; }
 
   .arrow {
     font-size: 15px;

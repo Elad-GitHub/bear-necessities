@@ -33,6 +33,7 @@ export class NavbarComponent {
   groupResults = signal<GroupSummaryDto[]>([]);
   isSearchOpen = signal(false);
   isSearching = signal(false);
+  isPanelOpen = signal(false);
 
   private searchTerms = new Subject<string>();
 
@@ -97,6 +98,7 @@ export class NavbarComponent {
   @HostListener('document:keydown.escape')
   onEscape(): void {
     this.isSearchOpen.set(false);
+    this.isPanelOpen.set(false);
   }
 
   onSearchInput(term: string): void {
@@ -139,7 +141,16 @@ export class NavbarComponent {
     this.groupResults.set([]);
   }
 
+  openPanel(): void {
+    this.isPanelOpen.set(true);
+  }
+
+  closePanel(): void {
+    this.isPanelOpen.set(false);
+  }
+
   navigateTo(path: string): void {
+    this.closePanel();
     this.router.navigate([path]);
   }
 
@@ -148,11 +159,12 @@ export class NavbarComponent {
   }
 
   navigateToProfileTab(tab: 'rsvps' | 'saved' | 'listings'): void {
+    this.closePanel();
     this.router.navigate(['/profile'], { queryParams: { tab } });
   }
 
   isAdmin(): boolean {
-    return (this.authService.currentUser()?.roles || []).includes('Admin');
+    return this.authService.isAdmin();
   }
 
   getInitials(): string {
@@ -163,6 +175,7 @@ export class NavbarComponent {
   }
 
   logout(): void {
+    this.closePanel();
     this.authService.logout();
   }
 }
