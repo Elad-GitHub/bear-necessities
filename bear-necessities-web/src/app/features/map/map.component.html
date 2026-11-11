@@ -130,5 +130,17 @@
     </div>
   </div>
 
+  <!-- How many places match the filter anywhere on the map, with a jump to them -->
+  <div class="found-chip" *ngIf="foundSummary() as found" role="status">
+    <span class="found-dot"></span>
+    <ng-container *ngIf="found.count > 0">
+      <strong>{{ found.label }}</strong> · {{ found.count }} found
+      <button (click)="showFound()">Show me</button>
+    </ng-container>
+    <ng-container *ngIf="found.count === 0">
+      No <strong>{{ found.label }}</strong> on the map yet
+    </ng-container>
+  </div>
+
   <app-loading-spinner *ngIf="showInitialSpinner()"></app-loading-spinner>
 </div>

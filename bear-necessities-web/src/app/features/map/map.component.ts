@@ -19,6 +19,7 @@ import { PAW_CLUSTER_PAINT, pawClusterLayout, registerPawClusterImages } from '.
 import { measureSegments, PAW_IMAGE_ID, PawPrint, pawPrintCountFor, registerPawTrailImage, samplePawPrints, toPawFeatures } from '../../core/map/paw-trail';
 import { loadMapImages } from '../../core/map/map-images';
 import { MapViewStateService } from '../../core/map/map-view-state.service';
+import { FilterPulse, PulsePoint } from '../../core/map/filter-pulse';
 
 type WhenOption = 'anytime' | 'week' | 'month' | 'custom';
 
@@ -40,6 +41,17 @@ const ONGOING_EVENT_LABEL = 'Ongoing';
 const DAYS_IN_WEEK = 7;
 const DAYS_IN_MONTH = 30;
 const MS_PER_DAY = 86_400_000;
+// The whole map, for counting every match of a filter wherever it is
+const WORLD_BBOX: MapBbox = { northEastLat: 85, northEastLng: 180, southWestLat: -85, southWestLng: -180 };
+const WORLD_DENSITY_ZOOM = 2;
+const SHOW_FOUND_MAX_ZOOM = 13;
+
+/** How many places match the active filter across the whole map, and where they are. */
+interface FoundSummary {
+  label: string;
+  count: number;
+  bounds: [number, number, number, number] | null;
+}
 
 const BEAR_WALK_FRAMES = [1, 2, 3, 4].map(frame => `brand/bears/walk-${frame}.png`);
 const BEAR_ARRIVED_IMAGE = 'brand/bears/waving.png';
@@ -79,6 +91,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   isDatePickerOpen = signal(false);
   customFrom = signal('');
   customTo = signal('');
+  foundSummary = signal<FoundSummary | null>(null);
+  private filterPulse: FilterPulse | null = null;
+  private foundRequestId = 0;
   // Spinner only for the very first load — viewport reloads on pan/zoom stay silent (no flicker)
   showInitialSpinner = signal(true);
   private loadPlacesTimeout: any = null;
@@ -151,6 +166,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       ? { from: this.toIsoDate(today), to: this.toIsoDate(new Date(today.getTime() + (days - 1) * MS_PER_DAY)) }
       : null);
     this.loadPlacesForViewport();
+    this.updateFilterHighlight();
   }
 
   toggleDatePicker(): void {
@@ -166,6 +182,68 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.isDatePickerOpen.set(false);
     this.placesService.selectedDates.set(from <= to ? { from, to } : { from: to, to: from });
     this.loadPlacesForViewport();
+    this.updateFilterHighlight();
+  }
+
+  /** Flies the map so every place matching the filter is in view. */
+  showFound(): void {
+    const bounds = this.foundSummary()?.bounds;
+    if (!bounds || !this.mapInstance) return;
+    const [west, south, east, north] = bounds;
+    if (east - west < 0.001 && north - south < 0.001) {
+      this.mapInstance.flyTo({ center: [west, south], zoom: SHOW_FOUND_MAX_ZOOM, duration: 1400 });
+      return;
+    }
+    this.mapInstance.fitBounds([[west, south], [east, north]], { padding: 90, maxZoom: SHOW_FOUND_MAX_ZOOM, duration: 1400 });
+  }
+
+  // While a category filter is on, matches pulse on the map and a chip says how many there are in total
+  private updateFilterHighlight(): void {
+    const selected = this.placesService.selectedCategories();
+    this.updatePulses();
+    if (selected.length === 0 || this.tripActive()) {
+      this.foundSummary.set(null);
+      return;
+    }
+
+    const label = this.describeSelection(selected);
+    const requestId = ++this.foundRequestId;
+    this.placesService.getDensity(WORLD_BBOX, WORLD_DENSITY_ZOOM, selected).subscribe({
+      next: (density) => {
+        if (requestId !== this.foundRequestId) return;
+        const cells = density.cells || [];
+        const bounds = cells.length === 0 ? null : cells.reduce<[number, number, number, number]>(
+          (union, cell) => [
+            Math.min(union[0], cell.bounds[0]), Math.min(union[1], cell.bounds[1]),
+            Math.max(union[2], cell.bounds[2]), Math.max(union[3], cell.bounds[3])
+          ], [...cells[0].bounds]);
+        this.foundSummary.set({ label, count: density.totalCount, bounds });
+      }
+    });
+  }
+
+  // Ring whatever the map currently shows for the filter: the paws when zoomed out, the pins when zoomed in
+  private updatePulses(): void {
+    if (!this.filterPulse) return;
+    if (this.placesService.selectedCategories().length === 0 || this.tripActive()) {
+      this.filterPulse.hide();
+      return;
+    }
+    const points: PulsePoint[] = this.isDensityView
+      ? this.lastDensityCells.map(cell => ({ longitude: cell.longitude, latitude: cell.latitude, isLarge: true }))
+      : this.lastRenderedPlaces.map(place => ({ longitude: place.longitude, latitude: place.latitude, isLarge: false }));
+    this.filterPulse.show(points);
+  }
+
+  // One subcategory reads by name ("Retreat"); a whole category by its parent ("Healing")
+  private describeSelection(selectedIds: string[]): string {
+    if (selectedIds.length === 1) return this.categoryIcons.getNameForCategoryId(selectedIds[0]) ?? 'Your filter';
+    const selected = new Set(selectedIds);
+    const wholeParent = this.categoriesService.categories().find(parent => {
+      const childIds = (parent.children || []).map(child => child.id);
+      return childIds.length === selected.size && childIds.every(id => selected.has(id));
+    });
+    return wholeParent?.name ?? `${selectedIds.length} categories`;
   }
 
   customDatesLabel(): string {
@@ -359,6 +437,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.setTripData([], []);
     // Viewport reloads pause while a trip is shown, so the cached places may be stale by now
     this.loadPlacesForViewport();
+    this.updateFilterHighlight();
   }
 
   backToPlanner(): void {
@@ -701,6 +780,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopBearWalk();
+    this.filterPulse?.hide();
     if (this.loadPlacesTimeout) {
       clearTimeout(this.loadPlacesTimeout);
     }
@@ -749,7 +829,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       applyFestivalTheme(this.mapInstance!);
       this.registerCategoryIcons(this.mapInstance!);
       this.registerBearImages(this.mapInstance!);
+      this.filterPulse = new FilterPulse(this.mapInstance!);
       this.loadPlacesForViewport();
+      // A filter chosen before leaving the map is still on when coming back
+      this.updateFilterHighlight();
       if (this.pendingFocusId) {
         this.focusPlace(this.pendingFocusId);
         this.pendingFocusId = null;
@@ -883,6 +966,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     this.setDensityData(this.isDensityView ? this.lastDensityCells : []);
     this.setPlacesData(!this.isDensityView ? validPlaces : []);
+    this.updatePulses();
   }
 
   private hidePlaceLayers(): void {
@@ -1156,6 +1240,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   onCategoryChange(categoryIds: string[]): void {
     this.placesService.selectedCategories.set(categoryIds);
     this.loadPlacesForViewport();
+    this.updateFilterHighlight();
   }
 
   private loadCategories(): void {
