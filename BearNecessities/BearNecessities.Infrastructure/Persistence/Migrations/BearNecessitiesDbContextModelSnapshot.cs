@@ -1170,6 +1170,49 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                     b.ToTable("ConversationParticipants", (string)null);
                 });
 
+            modelBuilder.Entity("BearNecessities.Domain.Entities.EditSuggestion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ProposedChanges")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ReviewedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SuggestedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TargetType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TargetType", "TargetId");
+
+                    b.ToTable("EditSuggestions", (string)null);
+                });
+
             modelBuilder.Entity("BearNecessities.Domain.Entities.Event", b =>
                 {
                     b.Property<Guid>("Id")

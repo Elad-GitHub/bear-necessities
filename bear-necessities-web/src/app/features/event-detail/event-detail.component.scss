@@ -368,7 +368,7 @@ $background: #f5f7f5;
   }
 }
 
-.venue-link, .online-link {
+.venue-link, .online-link, .edit-listing-btn {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -454,7 +454,8 @@ $background: #f5f7f5;
 
   .calendar-btn,
   .venue-link,
-  .online-link {
+  .online-link,
+  .edit-listing-btn {
     min-height: 44px;
   }
 

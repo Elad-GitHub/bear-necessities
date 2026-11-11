@@ -140,6 +140,10 @@
                 <mat-icon>directions</mat-icon>
                 Get Directions
               </a>
+              <button mat-stroked-button class="full-width edit-listing-btn" (click)="editPlace()">
+                <mat-icon>edit</mat-icon>
+                {{ authService.isAdmin() ? 'Edit this place' : 'Suggest an edit' }}
+              </button>
             </mat-card-content>
           </mat-card>
 

@@ -141,12 +141,21 @@ export class EventDetailComponent implements OnInit {
     if (placeId) this.router.navigate(['/places', placeId]);
   }
 
-  // One "Recurring" badge whether the event is typed Recurring or simply carries a recurrence rule
+  // Anyone may suggest an edit; the form sends it to review unless an admin is editing
+  editEvent(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.router.navigate(['/submit'], { queryParams: { editEvent: this.eventId } });
+  }
+
   // The event's own uploaded image, otherwise the photo of the place it's at
   getHeroImageUrl(eventDetail: EventDetailDto): string {
     return eventDetail.thumbnailUrl ?? eventDetail.photoUrl ?? '';
   }
 
+  // One "Recurring" badge whether the event is typed Recurring or simply carries a recurrence rule
   isRecurring(eventDetail: EventDetailDto): boolean {
     return eventDetail.eventType === 'Recurring' || !!eventDetail.rRule;
   }

@@ -16,6 +16,7 @@ export class AuthService {
 
   currentUser = signal<AuthUserDto | null>(null);
   isAuthenticated = computed(() => this.currentUser() !== null);
+  isAdmin = computed(() => (this.currentUser()?.roles || []).includes('Admin'));
 
   private pendingRefresh: Observable<string> | null = null;
 

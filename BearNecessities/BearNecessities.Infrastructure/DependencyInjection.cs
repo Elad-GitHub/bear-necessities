@@ -69,6 +69,7 @@ using BearNecessities.Application.UseCases.Places.GetPlaceDensity;
 using BearNecessities.Application.UseCases.Places.RejectPlace;
 using BearNecessities.Application.UseCases.Places.SearchPlaces;
 using BearNecessities.Application.UseCases.Places.UpdatePlace;
+using BearNecessities.Application.UseCases.EditSuggestions;
 using BearNecessities.Domain.Interfaces;
 using BearNecessities.Infrastructure.Persistence;
 using BearNecessities.Infrastructure.Repositories;
@@ -124,6 +125,7 @@ public static class DependencyInjection
         services.AddScoped<IListingChangeLogRepository, ListingChangeLogRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<IReportRepository, ReportRepository>();
+        services.AddScoped<IEditSuggestionRepository, EditSuggestionRepository>();
         services.AddScoped<IRsvpRepository, RsvpRepository>();
         services.AddScoped<IConversationRepository, ConversationRepository>();
         services.AddScoped<ISavedItemRepository, SavedItemRepository>();
@@ -157,6 +159,8 @@ public static class DependencyInjection
         services.AddScoped<CreatePlaceHandler>();
         services.AddScoped<UpdatePlaceHandler>();
         services.AddScoped<ApprovePlaceHandler>();
+        services.AddScoped<GetPendingEditSuggestionsHandler>();
+        services.AddScoped<ReviewEditSuggestionHandler>();
         services.AddScoped<RejectPlaceHandler>();
         services.AddScoped<DeletePlaceHandler>();
         services.AddScoped<GetPendingPlacesHandler>();

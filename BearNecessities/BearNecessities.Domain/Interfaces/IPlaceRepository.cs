@@ -36,4 +36,5 @@ public interface IPlaceRepository : IRepository<Place, PlaceId>
     Task<List<Place>> GetPendingAsync(int pageSize, Guid? cursor, CancellationToken cancellationToken = default);
     Task ReplaceExternalLinksAsync(PlaceId placeId, IEnumerable<PlaceExternalLink> newLinks, CancellationToken cancellationToken = default);
     Task<List<Place>> GetByIdsAsync(IEnumerable<PlaceId> ids, CancellationToken cancellationToken = default);
+    Task<List<Place>> GetByIdsWithRelationsAsync(IEnumerable<PlaceId> ids, CancellationToken cancellationToken = default);
 }

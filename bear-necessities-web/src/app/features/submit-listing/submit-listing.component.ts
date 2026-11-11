@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { CategoriesService } from '../../core/services/categories.service';
 import { ToastService } from '../../core/services/toast.service';
+import { AuthService } from '../../core/services/auth.service';
 import { CategoryTreeDto } from '../../core/models/category.model';
 import { EventsService } from '../../core/services/events.service';
 import { GeocodingService, GeocodeResult } from '../../core/services/geocoding.service';
@@ -62,7 +63,8 @@ export class SubmitListingComponent implements OnInit, AfterViewInit, OnDestroy 
     private eventsService: EventsService,
     private geocodingService: GeocodingService,
     private mediaService: MediaService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    public authService: AuthService
   ) {
     this.geocodeSearchTerms.pipe(
       debounceTime(350),
@@ -453,7 +455,7 @@ export class SubmitListingComponent implements OnInit, AfterViewInit, OnDestroy 
       next: (response) => {
         this.isSubmitting.set(false);
         this.toastService.success(editId
-          ? 'Your changes were saved! Major edits may require a new review.'
+          ? this.getEditedMessage(response?.requiresReview)
           : this.getCreatedMessage('listing', response?.status));
         const placeId = editId || response?.placeId || response?.id;
         if (placeId) {
@@ -512,7 +514,7 @@ export class SubmitListingComponent implements OnInit, AfterViewInit, OnDestroy 
       next: (response) => {
         this.isSubmitting.set(false);
         this.toastService.success(editEventId
-          ? 'Your event was updated!'
+          ? this.getEditedMessage(response?.requiresReview)
           : this.getCreatedMessage('event', response?.status));
         const eventId = editEventId || response?.eventId || response?.id;
         this.router.navigate(eventId ? ['/events', eventId] : ['/map']);
@@ -526,6 +528,12 @@ export class SubmitListingComponent implements OnInit, AfterViewInit, OnDestroy 
     return status === 'Live'
       ? `Your ${kind} is live on the map! 🐾`
       : `Your ${kind} was submitted for review! 🎉`;
+  }
+
+  private getEditedMessage(requiresReview: boolean | undefined): string {
+    return requiresReview
+      ? 'Thanks! Your edit is waiting for a quick review 🐾'
+      : 'Changes saved!';
   }
 
   private buildRRule(recurrence: string, startAt: string): string | null {

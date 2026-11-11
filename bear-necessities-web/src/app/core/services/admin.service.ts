@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { PlaceSummaryDto } from '../models/place.model';
+import { EditSuggestionDto } from '../models/edit-suggestion.model';
 
 export interface PendingPlacesResponse {
   items: PlaceSummaryDto[];
@@ -36,6 +37,18 @@ export class AdminService {
 
   rejectEvent(eventId: string, reason: string): Observable<any> {
     return this.api.post<any>(`/events/${eventId}/reject`, { reason });
+  }
+
+  getPendingEdits(): Observable<{ items: EditSuggestionDto[] }> {
+    return this.api.get<{ items: EditSuggestionDto[] }>('/editsuggestions/pending');
+  }
+
+  approveEdit(suggestionId: string): Observable<any> {
+    return this.api.post<any>(`/editsuggestions/${suggestionId}/approve`, {});
+  }
+
+  rejectEdit(suggestionId: string): Observable<any> {
+    return this.api.post<any>(`/editsuggestions/${suggestionId}/reject`, {});
   }
 
   getPendingMembers(): Observable<{ items: any[] }> {

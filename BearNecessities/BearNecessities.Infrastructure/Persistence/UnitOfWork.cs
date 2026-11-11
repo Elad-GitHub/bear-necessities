@@ -20,7 +20,8 @@ public class UnitOfWork : IUnitOfWork
         IRsvpRepository rsvps,
         IConversationRepository conversations,
         ISavedItemRepository savedItems,
-        IGroupRepository groups)
+        IGroupRepository groups,
+        IEditSuggestionRepository editSuggestions)
     {
         _context = context;
         Places = places;
@@ -36,6 +37,7 @@ public class UnitOfWork : IUnitOfWork
         Conversations = conversations;
         SavedItems = savedItems;
         Groups = groups;
+        EditSuggestions = editSuggestions;
     }
 
     public IPlaceRepository Places { get; }
@@ -51,6 +53,7 @@ public class UnitOfWork : IUnitOfWork
     public IConversationRepository Conversations { get; }
     public ISavedItemRepository SavedItems { get; }
     public IGroupRepository Groups { get; }
+    public IEditSuggestionRepository EditSuggestions { get; }
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         => _context.SaveChangesAsync(cancellationToken);

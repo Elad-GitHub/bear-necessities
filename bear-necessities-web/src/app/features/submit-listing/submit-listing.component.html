@@ -5,9 +5,10 @@
         <span class="material-icons">arrow_back</span>
       </button>
       <div class="header-text">
-        <h1>{{ isEditMode() ? 'Edit Listing' : 'Submit a Listing' }}</h1>
+        <h1>{{ isEditMode() ? (authService.isAdmin() ? 'Edit Listing' : 'Suggest an Edit') : 'Submit a Listing' }}</h1>
         <p *ngIf="!isEditMode()">Share a place or gathering with the Bear Necessities community. All submissions are reviewed before going live.</p>
-        <p *ngIf="isEditMode()">Minor edits go live immediately. Changing the name, location or categories sends the listing back for review.</p>
+        <p *ngIf="isEditMode() && authService.isAdmin()">Your changes go live as soon as you save.</p>
+        <p *ngIf="isEditMode() && !authService.isAdmin()">Spotted something off? Fix it here. A moderator checks every edit; until then the listing stays as it is.</p>
       </div>
     </div>
   </div>

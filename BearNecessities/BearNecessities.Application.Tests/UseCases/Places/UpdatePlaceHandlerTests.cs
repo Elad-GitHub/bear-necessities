@@ -38,55 +38,41 @@ public class UpdatePlaceHandlerTests
         decimal? latitude = null, decimal? longitude = null, string? countryCode = null, List<Guid>? categoryIds = null) =>
         new(placeId, name, description, latitude, longitude, null, null, null, countryCode, null, null, categoryIds, null);
 
-    [Fact]
-    public async Task HandleAsync_MinorEditOnLivePlace_ShouldStayLive()
-    {
-        var place = GivenPlace(ListingStatus.Live);
-
-        var response = await _handler.HandleAsync(Request(place.Id.Value, description: "New description"));
-
-        response.Status.Should().Be("Live");
-        response.RequiresReview.Should().BeFalse();
-        place.Description.Should().Be("New description");
-        _mockUnitOfWork.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
+    private void GivenAdmin() => _mockCurrentUser.Setup(x => x.HasRole(UserRole.Admin)).Returns(true);
 
     [Fact]
-    public async Task HandleAsync_RenameLivePlace_ShouldSendBackToReview()
+    public async Task HandleAsync_OwnerEditsLivePlace_ShouldSuggestAndLeavePlaceAsIs()
     {
         var place = GivenPlace(ListingStatus.Live);
+        EditSuggestion? saved = null;
+        Mock.Get(_mockUnitOfWork.Object.EditSuggestions)
+            .Setup(x => x.AddAsync(It.IsAny<EditSuggestion>(), It.IsAny<CancellationToken>()))
+            .Callback<EditSuggestion, CancellationToken>((suggestion, _) => saved = suggestion);
 
         var response = await _handler.HandleAsync(Request(place.Id.Value, name: "Renamed Place"));
 
         response.RequiresReview.Should().BeTrue();
-        response.Status.Should().Be("PendingReview");
-        place.Name.Should().Be("Renamed Place");
+        response.Status.Should().Be("Live");
+        place.Name.Should().NotBe("Renamed Place");
+        saved!.TargetId.Should().Be(place.Id.Value);
+        saved.ProposedChanges.Should().Contain("Renamed Place");
     }
 
     [Fact]
-    public async Task HandleAsync_MoveLivePlace_ShouldSendBackToReview()
+    public async Task HandleAsync_StrangerEditsLivePlace_ShouldSuggest()
     {
-        var place = GivenPlace(ListingStatus.Live);
+        var place = GivenPlace(ListingStatus.Live, new UserId(Guid.NewGuid()));
 
-        var response = await _handler.HandleAsync(Request(place.Id.Value, latitude: 39.0m, longitude: 22.0m));
+        var response = await _handler.HandleAsync(Request(place.Id.Value, description: "Better description"));
 
         response.RequiresReview.Should().BeTrue();
-        place.Latitude.Should().Be(39.0m);
-        place.Longitude.Should().Be(22.0m);
+        place.Description.Should().NotBe("Better description");
+        Mock.Get(_mockUnitOfWork.Object.EditSuggestions)
+            .Verify(x => x.AddAsync(It.IsAny<EditSuggestion>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task HandleAsync_SameNameOnLivePlace_ShouldNotRequireReview()
-    {
-        var place = GivenPlace(ListingStatus.Live);
-
-        var response = await _handler.HandleAsync(Request(place.Id.Value, name: place.Name));
-
-        response.RequiresReview.Should().BeFalse();
-    }
-
-    [Fact]
-    public async Task HandleAsync_RenamePendingPlace_ShouldNotFlagReviewAgain()
+    public async Task HandleAsync_OwnerEditsPendingPlace_ShouldApplyDirectly()
     {
         var place = GivenPlace(ListingStatus.PendingReview);
 
@@ -94,22 +80,39 @@ public class UpdatePlaceHandlerTests
 
         response.RequiresReview.Should().BeFalse();
         response.Status.Should().Be("PendingReview");
+        place.Name.Should().Be("Renamed Place");
     }
 
     [Fact]
-    public async Task HandleAsync_ByStranger_ShouldThrowForbidden()
+    public async Task HandleAsync_StrangerEditsPendingPlace_ShouldSuggest()
     {
-        var place = GivenPlace(ListingStatus.Live, new UserId(Guid.NewGuid()));
+        var place = GivenPlace(ListingStatus.PendingReview, new UserId(Guid.NewGuid()));
 
-        var action = () => _handler.HandleAsync(Request(place.Id.Value, description: "x"));
+        var response = await _handler.HandleAsync(Request(place.Id.Value, name: "Renamed Place"));
 
-        await action.Should().ThrowAsync<ForbiddenException>();
+        response.RequiresReview.Should().BeTrue();
+        place.Name.Should().NotBe("Renamed Place");
+    }
+
+    [Fact]
+    public async Task HandleAsync_AdminMovesLivePlace_ShouldApplyAndStayLive()
+    {
+        GivenAdmin();
+        var place = GivenPlace(ListingStatus.Live);
+
+        var response = await _handler.HandleAsync(Request(place.Id.Value, latitude: 39.0m, longitude: 22.0m));
+
+        response.RequiresReview.Should().BeFalse();
+        response.Status.Should().Be("Live");
+        place.Latitude.Should().Be(39.0m);
+        place.Longitude.Should().Be(22.0m);
+        _mockUnitOfWork.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task HandleAsync_AdminEditingOthersPlace_ShouldSucceed()
     {
-        _mockCurrentUser.Setup(x => x.HasRole(UserRole.Admin)).Returns(true);
+        GivenAdmin();
         var place = GivenPlace(ListingStatus.Live, new UserId(Guid.NewGuid()));
 
         var response = await _handler.HandleAsync(Request(place.Id.Value, description: "Admin fix"));
@@ -162,6 +165,7 @@ public class UpdatePlaceHandlerTests
     [Fact]
     public async Task HandleAsync_UnknownCategory_ShouldThrowValidation()
     {
+        GivenAdmin();
         var place = GivenPlace(ListingStatus.Live);
         Mock.Get(_mockUnitOfWork.Object.Categories)
             .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
@@ -173,8 +177,9 @@ public class UpdatePlaceHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_NewCategories_ShouldReplaceAndRequireReview()
+    public async Task HandleAsync_AdminSetsCategories_ShouldReplaceThem()
     {
+        GivenAdmin();
         var place = GivenPlace(ListingStatus.Live);
         var category = Category.Create("yoga", "Yoga");
         Mock.Get(_mockUnitOfWork.Object.Categories)
@@ -184,6 +189,6 @@ public class UpdatePlaceHandlerTests
         var response = await _handler.HandleAsync(Request(place.Id.Value, categoryIds: new List<Guid> { category.Id.Value }));
 
         place.Categories.Should().ContainSingle().Which.Should().Be(category);
-        response.RequiresReview.Should().BeTrue();
+        response.RequiresReview.Should().BeFalse();
     }
 }

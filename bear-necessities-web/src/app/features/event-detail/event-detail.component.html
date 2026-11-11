@@ -132,6 +132,11 @@
               Join online
             </a>
           </div>
+
+          <button class="edit-listing-btn" (click)="editEvent()">
+            <span class="material-icons">edit</span>
+            {{ authService.isAdmin() ? 'Edit this event' : 'Suggest an edit' }}
+          </button>
         </aside>
 
       </div>

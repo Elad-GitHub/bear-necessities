@@ -238,4 +238,16 @@ public class PlaceRepository : BaseRepository<Place, PlaceId>, IPlaceRepository
             .Where(p => idList.Contains(p.Id))
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<List<Place>> GetByIdsWithRelationsAsync(
+        IEnumerable<PlaceId> ids,
+        CancellationToken cancellationToken = default)
+    {
+        var idList = ids.ToList();
+        return await Context.Places
+            .Include(p => p.Categories)
+            .Include(p => p.ExternalLinks)
+            .Where(p => idList.Contains(p.Id))
+            .ToListAsync(cancellationToken);
+    }
 }

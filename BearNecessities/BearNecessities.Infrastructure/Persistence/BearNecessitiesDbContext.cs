@@ -21,6 +21,7 @@ public class BearNecessitiesDbContext : DbContext
     public DbSet<ConversationParticipant> ConversationParticipants => Set<ConversationParticipant>();
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<Report> Reports => Set<Report>();
+    public DbSet<EditSuggestion> EditSuggestions => Set<EditSuggestion>();
     public DbSet<SavedItem> SavedItems => Set<SavedItem>();
     public DbSet<ListingChangeLog> ListingChangeLogs => Set<ListingChangeLog>();
     public DbSet<PlaceExternalLink> PlaceExternalLinks => Set<PlaceExternalLink>();

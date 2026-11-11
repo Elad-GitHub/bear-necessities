@@ -4,8 +4,9 @@ import { AdminService } from '../../core/services/admin.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { PlaceSummaryDto } from '../../core/models/place.model';
+import { EditSuggestionDto } from '../../core/models/edit-suggestion.model';
 
-type ModerationTab = 'places' | 'events' | 'members';
+type ModerationTab = 'places' | 'events' | 'edits' | 'members';
 
 @Component({
   selector: 'app-admin',
@@ -18,6 +19,7 @@ export class AdminComponent implements OnInit {
   pendingPlaces = signal<PlaceSummaryDto[]>([]);
   pendingEvents = signal<any[]>([]);
   pendingMembers = signal<any[]>([]);
+  pendingEdits = signal<EditSuggestionDto[]>([]);
   isLoading = signal(true);
   rejectingId = signal<string | null>(null);
   rejectReason = signal('');
@@ -39,7 +41,7 @@ export class AdminComponent implements OnInit {
   }
 
   isAdmin(): boolean {
-    return (this.authService.currentUser()?.roles || []).includes('Admin');
+    return this.authService.isAdmin();
   }
 
   setTab(tab: ModerationTab): void {
@@ -48,7 +50,7 @@ export class AdminComponent implements OnInit {
   }
 
   totalPending(): number {
-    return this.pendingPlaces().length + this.pendingEvents().length + this.pendingMembers().length;
+    return this.pendingPlaces().length + this.pendingEvents().length + this.pendingEdits().length + this.pendingMembers().length;
   }
 
   private loadPending(): void {
@@ -64,6 +66,10 @@ export class AdminComponent implements OnInit {
 
     this.adminService.getPendingEvents().subscribe({
       next: (response) => this.pendingEvents.set(response.items || [])
+    });
+
+    this.adminService.getPendingEdits().subscribe({
+      next: (response) => this.pendingEdits.set(response.items || [])
     });
 
     this.adminService.getPendingMembers().subscribe({
@@ -115,6 +121,36 @@ export class AdminComponent implements OnInit {
       },
       error: () => this.markProcessing(eventItem.id, false)
     });
+  }
+
+  approveEdit(suggestion: EditSuggestionDto): void {
+    this.markProcessing(suggestion.id, true);
+    this.adminService.approveEdit(suggestion.id).subscribe({
+      next: () => {
+        this.removeEdit(suggestion.id);
+        this.toastService.success(`Edit to "${suggestion.targetName}" is live`);
+      },
+      error: () => this.markProcessing(suggestion.id, false)
+    });
+  }
+
+  rejectEdit(suggestion: EditSuggestionDto): void {
+    this.markProcessing(suggestion.id, true);
+    this.adminService.rejectEdit(suggestion.id).subscribe({
+      next: () => {
+        this.removeEdit(suggestion.id);
+        this.toastService.success(`Edit to "${suggestion.targetName}" rejected`);
+      },
+      error: () => this.markProcessing(suggestion.id, false)
+    });
+  }
+
+  viewEditTarget(suggestion: EditSuggestionDto): void {
+    this.router.navigate([suggestion.targetType === 'Place' ? '/places' : '/events', suggestion.targetId]);
+  }
+
+  private removeEdit(suggestionId: string): void {
+    this.pendingEdits.set(this.pendingEdits().filter(item => item.id !== suggestionId));
   }
 
   openRejectForm(id: string): void {

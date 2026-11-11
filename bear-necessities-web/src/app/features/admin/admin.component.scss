@@ -310,6 +310,43 @@ $background: #f5f7f5;
   &:disabled { opacity: 0.5; cursor: wait; }
 }
 
+// Suggested edit: what is listed now next to what the member proposes
+.change-table {
+  width: 100%;
+  margin-top: 12px;
+  border-collapse: collapse;
+  font-size: 13px;
+  table-layout: fixed;
+
+  th {
+    text-align: left;
+    font-weight: 600;
+    color: $text-muted;
+    padding: 6px 8px;
+    border-bottom: 1px solid $border;
+  }
+
+  th:first-child { width: 22%; }
+
+  td {
+    padding: 8px;
+    vertical-align: top;
+    border-bottom: 1px solid $border;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+
+  .change-field { font-weight: 600; color: $text; }
+  .change-current { color: $text-muted; text-decoration: line-through; }
+  .change-proposed { color: $primary-dark; background: $primary-light; }
+}
+
+.no-changes {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: $text-muted;
+}
+
 .reject-form {
   padding-top: 12px;
   border-top: 1px solid $border;

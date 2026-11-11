@@ -11,7 +11,7 @@
           <span class="material-icons">admin_panel_settings</span>
           Moderation Queue
         </h1>
-        <p>Review submitted listings before they go live on the map.</p>
+        <p>Review new listings and suggested edits before they go live on the map.</p>
       </div>
       <span class="pending-count" *ngIf="totalPending() > 0">
         {{ totalPending() }} pending
@@ -30,6 +30,11 @@
         <span class="material-icons">celebration</span>
         Events
         <span class="tab-count" *ngIf="pendingEvents().length">{{ pendingEvents().length }}</span>
+      </button>
+      <button class="queue-tab" [class.active]="activeTab() === 'edits'" (click)="setTab('edits')">
+        <span class="material-icons">edit_note</span>
+        Edits
+        <span class="tab-count" *ngIf="pendingEdits().length">{{ pendingEdits().length }}</span>
       </button>
       <button class="queue-tab" [class.active]="activeTab() === 'members'" (click)="setTab('members')">
         <span class="material-icons">how_to_reg</span>
@@ -147,6 +152,65 @@
         </div>
       </div>
     </ng-container>
+
+    <!-- Suggested edits queue -->
+    <ng-container *ngIf="!isLoading() && activeTab() === 'edits'">
+      <div class="empty-state" *ngIf="pendingEdits().length === 0">
+        <span class="material-icons">task_alt</span>
+        <h3>All clear!</h3>
+        <p>No suggested edits waiting for review.</p>
+      </div>
+
+      <div class="pending-list" *ngIf="pendingEdits().length > 0">
+        <div class="pending-card" *ngFor="let suggestion of pendingEdits()">
+          <div class="card-main" (click)="viewEditTarget(suggestion)">
+            <div class="place-icon" [class.event-icon]="suggestion.targetType === 'Event'">
+              <span class="material-icons">{{ suggestion.targetType === 'Place' ? 'place' : 'celebration' }}</span>
+            </div>
+            <div class="place-info">
+              <h3>{{ suggestion.targetName }}</h3>
+              <p class="place-meta">
+                <span>
+                  <span class="material-icons">person</span>
+                  {{ suggestion.suggestedBy }}
+                </span>
+                <span>
+                  <span class="material-icons">schedule</span>
+                  {{ suggestion.createdAt | date:'MMM d, y • HH:mm' }}
+                </span>
+                <span class="status-chip">SUGGESTED EDIT</span>
+              </p>
+            </div>
+          </div>
+
+          <table class="change-table" *ngIf="suggestion.changes.length > 0">
+            <thead>
+              <tr><th>Field</th><th>Now</th><th>Suggested</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let change of suggestion.changes">
+                <td class="change-field">{{ change.field }}</td>
+                <td class="change-current">{{ change.current || '—' }}</td>
+                <td class="change-proposed">{{ change.proposed || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="no-changes" *ngIf="suggestion.changes.length === 0">This edit matches what's already listed.</p>
+
+          <div class="card-actions">
+            <button class="action-btn approve" [disabled]="isProcessing(suggestion.id)" (click)="approveEdit(suggestion)">
+              <span class="material-icons">check_circle</span>
+              Approve
+            </button>
+            <button class="action-btn reject" [disabled]="isProcessing(suggestion.id)" (click)="rejectEdit(suggestion)">
+              <span class="material-icons">cancel</span>
+              Reject
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
     <!-- Members queue -->
     <ng-container *ngIf="!isLoading() && activeTab() === 'members'">
       <div class="empty-state" *ngIf="pendingMembers().length === 0">

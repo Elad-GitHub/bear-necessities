@@ -109,6 +109,15 @@ export class PlaceDetailComponent implements OnInit {
     });
   }
 
+  // Anyone may suggest an edit; the form sends it to review unless an admin is editing
+  editPlace(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.router.navigate(['/submit'], { queryParams: { edit: this.placeId } });
+  }
+
   private loadUpcomingEvents(): void {
     this.isLoadingEvents.set(true);
     this.eventsService.getByPlace(this.placeId!).subscribe({
