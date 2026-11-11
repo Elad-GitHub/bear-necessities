@@ -8,12 +8,14 @@ const [, , referencePath, outputDir] = process.argv;
 const CLUSTER_TILT_DEGREES = -9;
 const VARIANTS = [
   { name: 'paw-trail', size: 48, fill: [93, 64, 55], fillAlpha: 0.85, tilt: 0 },
-  { name: 'paw-cluster-small', size: 96, fill: [77, 182, 172], outline: [255, 247, 230], tilt: CLUSTER_TILT_DEGREES },
-  { name: 'paw-cluster-medium', size: 96, fill: [38, 166, 154], outline: [255, 247, 230], tilt: CLUSTER_TILT_DEGREES },
-  { name: 'paw-cluster-large', size: 96, fill: [0, 121, 107], outline: [255, 247, 230], tilt: CLUSTER_TILT_DEGREES }
+  // Clusters are an outlined paw with a faint fill, so the map underneath stays readable
+  { name: 'paw-cluster-small', size: 96, fill: [77, 182, 172], fillAlpha: 0.22, stroke: [38, 150, 140], tilt: CLUSTER_TILT_DEGREES },
+  { name: 'paw-cluster-medium', size: 96, fill: [38, 166, 154], fillAlpha: 0.26, stroke: [0, 121, 107], tilt: CLUSTER_TILT_DEGREES },
+  { name: 'paw-cluster-large', size: 96, fill: [0, 121, 107], fillAlpha: 0.3, stroke: [0, 77, 64], tilt: CLUSTER_TILT_DEGREES }
 ];
 const MARGIN_SHARE = 0.08;
-const OUTLINE_SHARE = 0.05;
+const OUTLINE_SHARE = 0.03;
+const OUTLINE_CUT = 40;
 
 const solidWithAlpha = (width, height, [r, g, b], alphaMask) => {
   const pixels = Buffer.alloc(width * height * 4);
@@ -60,16 +62,22 @@ const solidWithAlpha = (width, height, [r, g, b], alphaMask) => {
   }
   const heel = { x: sumX / weight / side - 0.5, y: sumY / weight / side - 0.5 };
 
-  const outlineMask = await sharp(squareMask, { raw: { width: side, height: side, channels: 1 } })
-    .blur(Math.max(0.5, side * OUTLINE_SHARE)).threshold(8).blur(1)
-    // Keep a single channel: blur/threshold can hand back 3, which would misalign every pixel of the outline
-    .extractChannel(0).raw().toBuffer();
+  // Grow the paw by about one blur radius: blur, then cut at the level a step edge reaches one sigma out.
+  // Each step is its own sharp pass because sharp reorders operations chained on one pipeline.
+  const toSingleChannel = (pixels) => sharp(pixels, { raw: { width: side, height: side, channels: 1 } });
+  const blurred = await toSingleChannel(squareMask).blur(Math.max(0.5, side * OUTLINE_SHARE)).extractChannel(0).raw().toBuffer();
+  const grown = blurred.map(alpha => (alpha >= OUTLINE_CUT ? 255 : 0));
+  // Keep a single channel: blur can hand back 3, which would misalign every pixel of the outline
+  const outlineMask = await toSingleChannel(grown).blur(1).extractChannel(0).raw().toBuffer();
   if (outlineMask.length !== side * side) throw new Error(`outline mask has ${outlineMask.length / (side * side)} channels`);
+
+  // The stroke is the band the dilated outline adds around each pad, so the fill inside stays see-through
+  const strokeMask = outlineMask.map((alpha, i) => Math.max(0, alpha - squareMask[i]));
 
   for (const variant of VARIANTS) {
     const fillMask = variant.fillAlpha ? squareMask.map(alpha => Math.round(alpha * variant.fillAlpha)) : squareMask;
     const layers = [{ input: await solidWithAlpha(side, side, variant.fill, fillMask) }];
-    if (variant.outline) layers.unshift({ input: await solidWithAlpha(side, side, variant.outline, outlineMask) });
+    if (variant.stroke) layers.push({ input: await solidWithAlpha(side, side, variant.stroke, strokeMask) });
     const composed = await sharp({ create: { width: side, height: side, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
       .composite(layers).png().toBuffer();
     const rotated = variant.tilt

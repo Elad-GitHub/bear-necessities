@@ -4,7 +4,7 @@ import { loadMapImages } from './map-images';
 
 /**
  * Groups of places (Mapbox clusters and server density cells) drawn as bear paws that grow with their count.
- * Images come from design/generate-paws.js (paw-reference.png recoloured, cream outline, tilted).
+ * Images come from design/generate-paws.js (paw-reference.png as a teal outline with a faint fill, tilted).
  */
 
 const PAW_CLUSTER_PIXELS = 96;
@@ -19,8 +19,8 @@ const ICON_SIZES = { small: 0.85, medium: 1.05, large: 1.25, huge: 1.45 };
 const TEXT_SIZE = 12;
 // Zoomed far out a whole country fits in a few pixels, so paws shrink with the map: [zoom, scale]
 const ZOOM_SCALE: [number, number][] = [[1.5, 0.5], [4, 0.62], [7, 0.82], [10, 1]];
-// Paws let the map show through when they're crowded at low zoom, becoming solid as they spread out
-const ZOOM_OPACITY: [number, number][] = [[2, 0.72], [8, 0.92]];
+// The fill is already faint; crowded low-zoom paws fade a little more so the map shows through
+const ZOOM_OPACITY: [number, number][] = [[2, 0.8], [8, 1]];
 
 const PAW_IMAGE_IDS = ['paw-cluster-small', 'paw-cluster-medium', 'paw-cluster-large'];
 
@@ -62,7 +62,10 @@ export function pawClusterLayout(
 }
 
 export const PAW_CLUSTER_PAINT: mapboxgl.SymbolLayerSpecification['paint'] = {
-  'text-color': FESTIVAL_PALETTE.cream,
+  // Dark count with a cream halo reads on the pale pad and on any map colour behind it
+  'text-color': FESTIVAL_PALETTE.darkTeal,
+  'text-halo-color': FESTIVAL_PALETTE.cream,
+  'text-halo-width': 1.2,
   'icon-opacity': ['interpolate', ['linear'], ['zoom'],
     ...ZOOM_OPACITY.flatMap(([zoom, opacity]) => [zoom, opacity])] as mapboxgl.ExpressionSpecification
 };

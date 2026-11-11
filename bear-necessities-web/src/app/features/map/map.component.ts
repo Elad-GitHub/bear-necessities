@@ -871,7 +871,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       source: 'events-src',
       paint: {
         'circle-color': ['get', 'pinColor'],
-        'circle-radius': ['interpolate', ['linear'], ['zoom'], 4, 4.5, 10, 7.5, 11.9, 9.5, 12, 6, 16, 7],
+        // A gold-ringed dot while the map is zoomed out to paw level; from there on it is the bear's ground spot
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 4, 4.5, DENSITY_MAX_ZOOM - 0.1, 7, DENSITY_MAX_ZOOM, 4, 12, 6, 16, 7],
         'circle-stroke-color': EVENT_RING_COLOR,
         'circle-stroke-width': 3
       }
@@ -881,15 +882,15 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       id: 'event-icons',
       type: 'symbol',
       source: 'events-src',
-      minzoom: 12,
+      minzoom: DENSITY_MAX_ZOOM,
       layout: {
         'icon-image': ['coalesce', ['image', ['get', 'bear']], ['image', EVENT_FALLBACK_BEAR]],
-        'icon-size': ['interpolate', ['linear'], ['zoom'], 12, 0.75, 16, 1.1],
+        'icon-size': ['interpolate', ['linear'], ['zoom'], DENSITY_MAX_ZOOM, 0.5, 12, 0.75, 16, 1.1],
         'icon-anchor': 'bottom',
         'icon-allow-overlap': true,
         'icon-ignore-placement': true,
-        // The date hangs under the dot like a little ticket stub
-        'text-field': ['get', 'dateLabel'],
+        // The date hangs under the dot like a little ticket stub, once there's room for it
+        'text-field': ['step', ['zoom'], '', 12, ['get', 'dateLabel']],
         'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
         'text-size': 11,
         'text-anchor': 'top',
@@ -1122,13 +1123,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       paint: {
         // Festival-style round pins: filled with the category colour, cream ring like the style board
         'circle-color': ['get', 'pinColor'],
-        // Small dots when zoomed out; zoomed in, a mascot pin shrinks its dot to a "ground spot" the bear stands on,
-        // while emoji-only categories grow into round badges that hold the emoji
+        // Individual pins only exist past the paw zooms, and each one is a bear from the start: its dot is just the
+        // "ground spot" it stands on. Emoji-only categories get a round badge that holds the emoji instead.
         'circle-radius': [
           'interpolate', ['linear'], ['zoom'],
-          4, 4,
-          10, 7,
-          11.9, 9,
+          DENSITY_MAX_ZOOM, ['case', HAS_BEAR_POSE, 3.5, 8],
           12, ['case', HAS_BEAR_POSE, 5, 12],
           16, ['case', HAS_BEAR_POSE, 6, 15]
         ],
@@ -1142,19 +1141,19 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       }
     });
 
-    // Category emoji sits over the coloured dot once zoomed in enough to be legible.
-    // The dot alone shows at low zoom so pins stay tiny and don't smother each other.
+    // As soon as a place stands on its own (no longer inside a paw) it shows its bear, small at first and
+    // growing as you zoom in; there is no "bare dot" stage
     map.addLayer({
       id: 'place-icons',
       type: 'symbol',
       source: 'places-src',
       filter: ['!', ['has', 'point_count']],
-      minzoom: 12,
       layout: {
         // The bear pose when the category has one (and its image has loaded), otherwise the category emoji
         'icon-image': ['coalesce', ['image', ['get', 'bear']], ['image', ['get', 'icon']]],
         // Bears (48 CSS px tall at size 1) stand on the dot; emoji (32 px) sit inside the round badge
         'icon-size': ['interpolate', ['linear'], ['zoom'],
+          DENSITY_MAX_ZOOM, 0.5,
           12, ['case', HAS_BEAR_POSE, 0.75, 0.62],
           16, ['case', HAS_BEAR_POSE, 1.1, 0.78]],
         'icon-anchor': ['case', HAS_BEAR_POSE, 'bottom', 'center'],
