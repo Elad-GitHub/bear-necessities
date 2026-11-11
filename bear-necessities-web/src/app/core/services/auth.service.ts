@@ -5,6 +5,7 @@ import {
   AuthUserDto, LoginRequest, LoginResponse, RefreshTokenResponse, RegisterRequest, RegisterResponse
 } from '../models/auth.model';
 import { Router } from '@angular/router';
+import { resolveMediaUrl } from '../utils/media-url';
 
 @Injectable({
   providedIn: 'root'
@@ -17,6 +18,7 @@ export class AuthService {
   currentUser = signal<AuthUserDto | null>(null);
   isAuthenticated = computed(() => this.currentUser() !== null);
   isAdmin = computed(() => (this.currentUser()?.roles || []).includes('Admin'));
+  avatarSrc = computed(() => resolveMediaUrl(this.currentUser()?.avatarUrl));
 
   private pendingRefresh: Observable<string> | null = null;
 
@@ -52,6 +54,15 @@ export class AuthService {
 
     this.clearStorage();
     this.router.navigate(['/map']);
+  }
+
+  /** Keeps the signed-in user (and its stored copy) in step after they edit their profile. */
+  updateCurrentUser(changes: Partial<AuthUserDto>): void {
+    const user = this.currentUser();
+    if (!user) return;
+    const updated = { ...user, ...changes };
+    localStorage.setItem(this.USER_KEY, JSON.stringify(updated));
+    this.currentUser.set(updated);
   }
 
   /** Trades the refresh token for a new access token; parallel 401s share one refresh call. */

@@ -252,6 +252,7 @@ $panel-width: 320px;
   justify-content: center;
   font-weight: 600;
   font-size: 14px;
+  overflow: hidden;
   transition: box-shadow 0.2s ease;
 
   &.large {

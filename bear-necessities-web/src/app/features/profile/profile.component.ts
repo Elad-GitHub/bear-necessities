@@ -1,4 +1,5 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ProfileService, MyRsvpDto, SavedItemDto } from '../../core/services/profile.service';
@@ -22,6 +23,8 @@ export class ProfileComponent implements OnInit {
   isLoadingSaved = signal(true);
   isLoadingListings = signal(true);
 
+  private destroyRef = inject(DestroyRef);
+
   constructor(
     public authService: AuthService,
     private profileService: ProfileService,
@@ -31,10 +34,13 @@ export class ProfileComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const requestedTab = this.route.snapshot.queryParamMap.get('tab');
-    if (requestedTab === 'saved' || requestedTab === 'rsvps' || requestedTab === 'listings') {
-      this.activeTab.set(requestedTab);
-    }
+    // Follow the tab in the URL on every change: the side panel links here while this page is already open
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+      const requestedTab = params.get('tab');
+      if (requestedTab === 'saved' || requestedTab === 'rsvps' || requestedTab === 'listings') {
+        this.activeTab.set(requestedTab);
+      }
+    });
     this.loadRsvps();
     this.loadSavedItems();
     this.loadMyListings();
@@ -121,6 +127,7 @@ export class ProfileComponent implements OnInit {
 
   setTab(tab: ProfileTab): void {
     this.activeTab.set(tab);
+    this.router.navigate([], { relativeTo: this.route, queryParams: { tab }, replaceUrl: true });
   }
 
   private loadRsvps(): void {
@@ -176,16 +183,6 @@ export class ProfileComponent implements OnInit {
     this.router.navigate([route, saved.targetId]);
   }
 
-  getInitials(): string {
-    const user = this.authService.currentUser();
-    if (!user?.displayName) return '';
-    return user.displayName
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  }
 
   getMemberSince(): string {
     const createdAt = this.authService.currentUser()?.createdAt;

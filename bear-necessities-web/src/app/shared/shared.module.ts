@@ -18,6 +18,7 @@ import { PlaceCardComponent } from './components/place-card/place-card.component
 import { LoadingSpinnerComponent } from './components/loading-spinner/loading-spinner.component';
 import { PhotoCreditComponent } from './components/photo-credit/photo-credit.component';
 import { BearIconComponent } from './components/bear-icon/bear-icon.component';
+import { AvatarComponent } from './components/avatar/avatar.component';
 
 @NgModule({
   declarations: [
@@ -28,7 +29,8 @@ import { BearIconComponent } from './components/bear-icon/bear-icon.component';
     PlaceCardComponent,
     LoadingSpinnerComponent,
     PhotoCreditComponent,
-    BearIconComponent
+    BearIconComponent,
+    AvatarComponent
   ],
   imports: [
     CommonModule,
@@ -50,7 +52,8 @@ import { BearIconComponent } from './components/bear-icon/bear-icon.component';
     PlaceCardComponent,
     LoadingSpinnerComponent,
     PhotoCreditComponent,
-    BearIconComponent
+    BearIconComponent,
+    AvatarComponent
   ],
   providers: [DatePipe]
 })

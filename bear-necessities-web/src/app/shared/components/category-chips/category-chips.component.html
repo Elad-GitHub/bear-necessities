@@ -13,7 +13,7 @@
         [class.selected]="hasSelectionInParent(parent)"
         [class.open]="isDropdownOpen(parent.id)"
         (click)="toggleDropdown(parent.id, $event)">
-        <app-bear-icon class="chip-icon" [name]="getIconForCategory(parent)" [size]="18"></app-bear-icon>
+        <app-bear-icon class="chip-icon" [name]="getIconForCategory(parent)" [size]="22"></app-bear-icon>
         {{ parent.name }}
         <span class="selection-count" *ngIf="getSelectedChildCount(parent) > 0">{{ getSelectedChildCount(parent) }}</span>
         <span class="material-icons arrow" [class.rotated]="isDropdownOpen(parent.id)">expand_more</span>

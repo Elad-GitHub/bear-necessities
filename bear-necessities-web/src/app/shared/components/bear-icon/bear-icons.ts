@@ -28,6 +28,9 @@ export const BEAR_ICONS: Record<string, string> = {
 
 export type BearIconName = keyof typeof BEAR_ICONS;
 
+// Icons with an illustrated PNG in public/brand/icons, shown instead of the drawn SVG
+export const BEAR_ICON_IMAGES: ReadonlySet<string> = new Set(["added","approvals","ceremonies","community","coworking","crafting","events","food","gatherings","going","healing","logout","markets","movement","music","nature","paw","places","profile","saved","sexuality","spirituality","trail","volunteering","wellness"]);
+
 export const CATEGORY_BEAR_ICONS: Record<string, string> = {
   "movement": "movement",
   "events": "gatherings",

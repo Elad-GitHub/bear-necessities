@@ -167,12 +167,6 @@ export class NavbarComponent {
     return this.authService.isAdmin();
   }
 
-  getInitials(): string {
-    const user = this.authService.currentUser();
-    if (!user?.displayName) return '';
-    const parts = user.displayName.split(' ');
-    return parts.map(p => p[0]).join('').toUpperCase().slice(0, 2);
-  }
 
   logout(): void {
     this.closePanel();

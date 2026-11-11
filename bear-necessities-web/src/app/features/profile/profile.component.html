@@ -9,8 +9,7 @@
         <span class="material-icons">arrow_back</span>
       </button>
       <div class="avatar">
-        <img *ngIf="authService.currentUser()?.avatarUrl" [src]="authService.currentUser()?.avatarUrl" alt="avatar" />
-        <span *ngIf="!authService.currentUser()?.avatarUrl">{{ getInitials() }}</span>
+        <app-avatar [photoUrl]="authService.avatarSrc()" alt="Your profile photo"></app-avatar>
       </div>
       <div class="user-info">
         <h1>{{ authService.currentUser()?.displayName }}</h1>
@@ -23,6 +22,10 @@
           </span>
         </div>
       </div>
+      <button class="logout-btn" routerLink="/profile/edit">
+        <app-bear-icon name="profile" [size]="18"></app-bear-icon>
+        Edit profile
+      </button>
       <button class="logout-btn" (click)="logout()">
         <span class="material-icons">logout</span>
         Logout
@@ -35,17 +38,17 @@
     <div class="tabs">
       <button class="tab" [class.active]="activeTab() === 'rsvps'" (click)="setTab('rsvps')">
         <app-bear-icon name="going" [size]="20"></app-bear-icon>
-        Events I'm going to
+        Can't Bear to Miss
         <span class="count-badge" *ngIf="rsvps().length">{{ rsvps().length }}</span>
       </button>
       <button class="tab" [class.active]="activeTab() === 'saved'" (click)="setTab('saved')">
         <app-bear-icon name="saved" [size]="20"></app-bear-icon>
-        Saved places
+        My Honey Stash
         <span class="count-badge" *ngIf="savedItems().length">{{ savedItems().length }}</span>
       </button>
       <button class="tab" [class.active]="activeTab() === 'listings'" (click)="setTab('listings')">
         <app-bear-icon name="added" [size]="20"></app-bear-icon>
-        Places I've added
+        My Paw Prints
         <span class="count-badge" *ngIf="totalListings()">{{ totalListings() }}</span>
       </button>
     </div>

@@ -27,7 +27,7 @@ export class MediaService {
   constructor(private api: ApiService, private http: HttpClient) {}
 
   /** Full presigned flow: request URL → PUT file to storage → confirm. */
-  upload(ownerType: 'Place' | 'Event', ownerId: string, file: File): Observable<MediaItemDto> {
+  upload(ownerType: 'Place' | 'Event' | 'User', ownerId: string, file: File): Observable<MediaItemDto> {
     return this.api.post<RequestUploadResponse>('/media/request-upload', {
       ownerType,
       ownerId,

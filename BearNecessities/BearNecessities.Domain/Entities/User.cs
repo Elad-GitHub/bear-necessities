@@ -54,6 +54,18 @@ public sealed class User : BaseEntity<UserId>
 
     public void SetPasswordHash(string hash) => PasswordHash = hash;
 
+    public void UpdateProfile(string displayName, string? bio)
+    {
+        if (string.IsNullOrWhiteSpace(displayName))
+            throw new ArgumentException("Display name cannot be empty.", nameof(displayName));
+
+        DisplayName = displayName.Trim();
+        Bio = string.IsNullOrWhiteSpace(bio) ? null : bio.Trim();
+    }
+
+    /// <summary>Null removes the photo, so the app falls back to the member's initials.</summary>
+    public void SetAvatarUrl(string? avatarUrl) => AvatarUrl = avatarUrl;
+
     public void SetSocialProfileUrl(string url) => SocialProfileUrl = url;
 
     public void ApproveMembership()

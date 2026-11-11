@@ -1,0 +1,60 @@
+<app-navbar></app-navbar>
+
+<div class="edit-page">
+  <header class="edit-header">
+    <button class="back-btn" (click)="cancel()" title="Back to your profile" aria-label="Back to your profile">
+      <span class="material-icons">arrow_back</span>
+    </button>
+    <div>
+      <h1><app-bear-icon name="profile" [size]="32"></app-bear-icon> Bear-ly Me</h1>
+      <p>How other bears see you around the map.</p>
+    </div>
+  </header>
+
+  <div class="loading-state" *ngIf="isLoading()">
+    <span class="material-icons spinning">sync</span> Loading your profile...
+  </div>
+
+  <form class="edit-card" *ngIf="!isLoading()" (submit)="$event.preventDefault(); save()">
+    <section class="photo-row">
+      <div class="photo-preview">
+        <app-avatar [photoUrl]="photoPreview()" alt="Your profile photo"></app-avatar>
+      </div>
+      <div class="photo-actions">
+        <label class="btn-secondary">
+          <input type="file" accept="image/jpeg,image/png,image/webp" hidden #photoInput (change)="onPhotoPicked(photoInput)" />
+          <span class="material-icons">add_a_photo</span>
+          {{ photoPreview() ? 'Change photo' : 'Add a photo' }}
+        </label>
+        <button type="button" class="btn-text" *ngIf="photoPreview()" (click)="removePhoto()">Remove photo</button>
+        <small>A clear face (or a good bear impression) helps people recognise you.</small>
+      </div>
+    </section>
+
+    <label class="field">
+      <span class="field-label">Your name</span>
+      <input type="text" name="displayName" [value]="displayName()" (input)="displayName.set($any($event.target).value)"
+        [attr.maxlength]="MAX_NAME_LENGTH" required autocomplete="name" />
+    </label>
+
+    <label class="field">
+      <span class="field-label">A few words about you <em>(optional)</em></span>
+      <textarea name="bio" rows="4" [value]="bio()" (input)="bio.set($any($event.target).value)" [attr.maxlength]="MAX_BIO_LENGTH"
+        placeholder="Where you're wandering, what you love, what you're looking for..."></textarea>
+      <span class="counter">{{ bio().length }} / {{ MAX_BIO_LENGTH }}</span>
+    </label>
+
+    <div class="field">
+      <span class="field-label">Email</span>
+      <span class="readonly-value">{{ email() }}</span>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn-text" (click)="cancel()">Cancel</button>
+      <button type="submit" class="btn-primary" [disabled]="!canSave()">
+        <span class="material-icons" [class.spinning]="isSaving()">{{ isSaving() ? 'sync' : 'check' }}</span>
+        {{ isSaving() ? 'Saving...' : 'Save' }}
+      </button>
+    </div>
+  </form>
+</div>

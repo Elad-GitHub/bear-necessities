@@ -12,6 +12,21 @@ export interface MyRsvpDto {
   partySize: number;
 }
 
+export interface MyProfileDto {
+  id: string;
+  email: string;
+  displayName: string;
+  bio?: string | null;
+  avatarUrl?: string | null;
+}
+
+export interface UpdateMyProfileRequest {
+  displayName: string;
+  bio: string | null;
+  avatarMediaId?: string | null;
+  removeAvatar?: boolean;
+}
+
 export type SaveType = 'WantToGo' | 'Visited' | 'VisitedLoved';
 
 export interface SavedItemDto {
@@ -37,6 +52,14 @@ export interface PagedResponse<T> {
 })
 export class ProfileService {
   constructor(private api: ApiService) {}
+
+  getMyProfile(): Observable<MyProfileDto> {
+    return this.api.get<MyProfileDto>('/users/me');
+  }
+
+  updateMyProfile(request: UpdateMyProfileRequest): Observable<MyProfileDto> {
+    return this.api.put<MyProfileDto>('/users/me', request);
+  }
 
   getMyRsvps(): Observable<PagedResponse<MyRsvpDto>> {
     return this.api.get<PagedResponse<MyRsvpDto>>('/rsvps/mine', { pageSize: 50 });

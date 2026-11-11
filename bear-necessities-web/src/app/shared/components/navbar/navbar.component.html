@@ -7,19 +7,19 @@
   <div class="nav-actions">
     <!-- Open to everyone: signed-out visitors are sent to login and brought back to the form -->
     <button class="nav-pill primary" (click)="navigateTo('/submit')" aria-label="Add a place or event"
-      title="Know a great spot? Leave your paw print on the map">
-      <app-bear-icon name="paw" [size]="20"></app-bear-icon>
+      title="Add a place or event">
+      <app-bear-icon name="paw" [size]="22"></app-bear-icon>
       <span class="nav-label">Drop a paw</span>
     </button>
 
-    <button class="nav-pill" (click)="openTripPlanner()" aria-label="Plan a trip" title="Plan a trip: pick an area and dates, we'll sniff out the stops">
-      <app-bear-icon name="trail" [size]="20"></app-bear-icon>
-      <span class="nav-label">Plan a Trek</span>
+    <button class="nav-pill" (click)="openTripPlanner()" aria-label="Plan a trip" title="Plan your trip">
+      <app-bear-icon name="trail" [size]="26"></app-bear-icon>
+      <span class="nav-label">Bear-foot trip planner</span>
     </button>
 
-    <button class="nav-pill" (click)="navigateTo('/groups')" aria-label="Communities" title="Communities: find your people, or start a den of your own">
-      <app-bear-icon name="community" [size]="22"></app-bear-icon>
-      <span class="nav-label">Find your Den</span>
+    <button class="nav-pill" (click)="navigateTo('/groups')" aria-label="Communities" title="Conscious communities">
+      <app-bear-icon name="community" [size]="26"></app-bear-icon>
+      <span class="nav-label">Honey Pots</span>
     </button>
   </div>
 
@@ -91,7 +91,7 @@
 
     <button class="avatar-button" *ngIf="authService.isAuthenticated()" (click)="openPanel()"
       aria-label="Open your menu" [attr.aria-expanded]="isPanelOpen()">
-      <span class="avatar">{{ getInitials() }}</span>
+      <app-avatar class="avatar" [photoUrl]="authService.avatarSrc()" alt=""></app-avatar>
     </button>
   </div>
 </nav>
@@ -101,7 +101,7 @@
   <div class="panel-backdrop" [class.open]="isPanelOpen()" (click)="closePanel()"></div>
   <aside class="side-panel" [class.open]="isPanelOpen()" role="dialog" aria-label="Your menu" [attr.aria-hidden]="!isPanelOpen()">
     <header class="panel-header">
-      <span class="avatar large">{{ getInitials() }}</span>
+      <app-avatar class="avatar large" [photoUrl]="authService.avatarSrc()" alt=""></app-avatar>
       <div class="panel-user">
         <strong>{{ authService.currentUser()?.displayName }}</strong>
         <span>{{ authService.currentUser()?.email }}</span>
@@ -112,31 +112,31 @@
     </header>
 
     <nav class="panel-links">
-      <button class="panel-link" (click)="navigateTo('/profile')">
-        <app-bear-icon name="profile" [size]="24"></app-bear-icon>
-        <span class="link-text"><strong>My profile</strong><small>Your name, photo and details</small></span>
+      <button class="panel-link" (click)="navigateTo('/profile/edit')">
+        <app-bear-icon name="profile" [size]="30"></app-bear-icon>
+        <span class="link-text"><strong>Bear-ly Me</strong><small>Your name, photo and a few words about you</small></span>
       </button>
       <button class="panel-link" (click)="navigateToProfileTab('rsvps')">
-        <app-bear-icon name="going" [size]="24"></app-bear-icon>
-        <span class="link-text"><strong>Events I'm going to</strong><small>Events you said you'd join</small></span>
+        <app-bear-icon name="going" [size]="30"></app-bear-icon>
+        <span class="link-text"><strong>Can't Bear to Miss</strong><small>Events you said you'd join</small></span>
       </button>
       <button class="panel-link" (click)="navigateToProfileTab('saved')">
-        <app-bear-icon name="saved" [size]="24"></app-bear-icon>
-        <span class="link-text"><strong>Saved places</strong><small>Places you want to visit, visited or loved</small></span>
+        <app-bear-icon name="saved" [size]="30"></app-bear-icon>
+        <span class="link-text"><strong>My Honey Stash</strong><small>Places you want to visit, visited or loved</small></span>
       </button>
       <button class="panel-link" (click)="navigateToProfileTab('listings')">
-        <app-bear-icon name="added" [size]="24"></app-bear-icon>
-        <span class="link-text"><strong>Places I've added</strong><small>Your places and events, ready to edit</small></span>
+        <app-bear-icon name="added" [size]="30"></app-bear-icon>
+        <span class="link-text"><strong>My Paw Prints</strong><small>Your places and events, ready to edit</small></span>
       </button>
       <button class="panel-link" *ngIf="isAdmin()" (click)="navigateTo('/admin')">
-        <app-bear-icon name="approvals" [size]="24"></app-bear-icon>
-        <span class="link-text"><strong>Approvals</strong><small>New places, suggested edits and members</small></span>
+        <app-bear-icon name="approvals" [size]="30"></app-bear-icon>
+        <span class="link-text"><strong>Paw of Approval</strong><small>New places, suggested edits and members</small></span>
       </button>
     </nav>
 
     <button class="panel-link logout" (click)="logout()">
-      <app-bear-icon name="logout" [size]="24"></app-bear-icon>
-      <span class="link-text"><strong>Log out</strong></span>
+      <app-bear-icon name="logout" [size]="30"></app-bear-icon>
+      <span class="link-text"><strong>Hibernate</strong><small>Log out</small></span>
     </button>
   </aside>
 </ng-container>
