@@ -60,6 +60,9 @@ public sealed class GetPlaceByIdHandler
                 .Select(c => new CategoryDto(c.Id.Value, c.Slug, c.Name, c.Icon, c.Color))
                 .ToList(),
             Media: mediaDtos,
-            CreatedAt: place.CreatedAt));
+            CreatedAt: place.CreatedAt,
+            PhotoUrl: place.PhotoUrl,
+            PhotoCredit: place.PhotoCredit,
+            PhotoCreditUrl: place.PhotoCreditUrl));
     }
 }

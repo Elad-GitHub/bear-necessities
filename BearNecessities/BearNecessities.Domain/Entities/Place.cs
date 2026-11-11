@@ -13,6 +13,9 @@ public sealed class Place : AuditableEntity<PlaceId>
 
     public string Name { get; private set; } = default!;
     public string? Description { get; private set; }
+    public string? PhotoUrl { get; private set; }
+    public string? PhotoCredit { get; private set; }
+    public string? PhotoCreditUrl { get; private set; }
     public decimal Latitude { get; private set; }
     public decimal Longitude { get; private set; }
     public string H3IndexRes8 { get; private set; } = default!;
@@ -124,6 +127,20 @@ public sealed class Place : AuditableEntity<PlaceId>
     public void SetDescription(string? description)
     {
         Description = description;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    // A freely licensed photo hosted elsewhere (e.g. Wikimedia Commons); its licence requires showing the credit
+    public void SetPhoto(string url, string credit, string? creditUrl)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            throw new ArgumentException("Photo URL cannot be empty.", nameof(url));
+        if (string.IsNullOrWhiteSpace(credit))
+            throw new ArgumentException("A photo needs a credit line.", nameof(credit));
+
+        PhotoUrl = url;
+        PhotoCredit = credit.Trim();
+        PhotoCreditUrl = creditUrl;
         UpdatedAt = DateTime.UtcNow;
     }
 

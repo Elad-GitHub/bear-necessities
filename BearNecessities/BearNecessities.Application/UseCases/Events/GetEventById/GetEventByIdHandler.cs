@@ -22,6 +22,8 @@ public sealed class GetEventByIdHandler : IRequestHandler<GetEventByIdRequest, E
             ?? throw new NotFoundException("Event", request.EventId);
 
         var upcoming = await _unitOfWork.Occurrences.GetUpcomingByEventAsync(evt.Id, count: 10, cancellationToken);
+        // Events borrow the photo of the place they happen at
+        var venue = evt.PlaceId is null ? null : await _unitOfWork.Places.GetByIdAsync(evt.PlaceId, cancellationToken);
 
         return new EventDetailDto(
             Id: evt.Id.Value,
@@ -55,6 +57,9 @@ public sealed class GetEventByIdHandler : IRequestHandler<GetEventByIdRequest, E
                 .ToList(),
             UpcomingOccurrences: upcoming
                 .Select(o => new OccurrenceDto(o.Id, o.StartAt, o.EndAt, o.Status.ToString()))
-                .ToList());
+                .ToList(),
+            PhotoUrl: venue?.PhotoUrl,
+            PhotoCredit: venue?.PhotoCredit,
+            PhotoCreditUrl: venue?.PhotoCreditUrl);
     }
 }

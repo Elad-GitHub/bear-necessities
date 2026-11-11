@@ -1,0 +1,5 @@
+@if (creditUrl) {
+  <a class="photo-credit" [href]="creditUrl" target="_blank" rel="noopener" title="About this photo">{{ credit }}</a>
+} @else {
+  <span class="photo-credit">{{ credit }}</span>
+}

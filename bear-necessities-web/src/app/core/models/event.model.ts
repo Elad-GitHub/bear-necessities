@@ -55,6 +55,10 @@ export interface EventDetailDto {
   createdAt: string;
   categories: CategoryDto[];
   media: EventMediaDto[];
+  /** The photo of the place the event is at, shown with its credit (uploaded media come first) */
+  photoUrl?: string;
+  photoCredit?: string;
+  photoCreditUrl?: string;
   upcomingOccurrences: EventOccurrenceDto[];
 }
 

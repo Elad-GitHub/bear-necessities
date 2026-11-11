@@ -106,7 +106,8 @@ using (var scope = app.Services.CreateAsyncScope())
 // Console import commands (run instead of the web host), e.g.:
 //   dotnet run --project BearNecessities.API -- import-osm --iso GR --country Greece [--by-region]
 //   dotnet run --project BearNecessities.API -- import-csv --file ./places.csv --approve
-if (args.Length > 0 && (args[0] == "import-osm" || args[0] == "import-csv"))
+//   dotnet run --project BearNecessities.API -- find-photos [--country PT] [--limit 500]
+if (args.Length > 0 && (args[0] == "import-osm" || args[0] == "import-csv" || args[0] == "find-photos"))
 {
     static string? ArgValue(string[] all, string key)
     {
@@ -117,7 +118,14 @@ if (args.Length > 0 && (args[0] == "import-osm" || args[0] == "import-csv"))
     using var importScope = app.Services.CreateAsyncScope();
     var services = importScope.ServiceProvider;
 
-    if (args[0] == "import-osm")
+    if (args[0] == "find-photos")
+    {
+        var limit = int.TryParse(ArgValue(args, "--limit"), out var parsedLimit) ? parsedLimit : (int?)null;
+        var photos = services.GetRequiredService<BearNecessities.Infrastructure.Imports.PlacePhotoService>();
+        var (checkedCount, foundCount) = await photos.FindMissingPhotosAsync(ArgValue(args, "--country"), limit);
+        Console.WriteLine($"Photos -> checked={checkedCount}, found={foundCount}");
+    }
+    else if (args[0] == "import-osm")
     {
         var iso = ArgValue(args, "--iso") ?? "GR";
         var country = ArgValue(args, "--country");

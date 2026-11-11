@@ -197,7 +197,7 @@ export class PlaceDetailComponent implements OnInit {
   getHeroImageUrl(): string {
     const place = this.place();
     if (!place?.media || place.media.length === 0) {
-      return '';
+      return place?.photoUrl ?? '';
     }
     // Serve through our own API to avoid the public bucket's TLS quirks
     return `${environment.apiUrl}/media/${place.media[0].id}/content`;

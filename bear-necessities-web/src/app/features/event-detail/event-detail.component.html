@@ -10,8 +10,11 @@
     </button>
 
     <!-- Hero -->
-    <div class="hero" [style.backgroundImage]="eventDetail.thumbnailUrl ? 'url(' + eventDetail.thumbnailUrl + ')' : ''">
+    <div class="hero" [style.backgroundImage]="getHeroImageUrl(eventDetail) ? 'url(' + getHeroImageUrl(eventDetail) + ')' : ''">
       <div class="hero-overlay"></div>
+      @if (!eventDetail.thumbnailUrl && eventDetail.photoCredit) {
+        <app-photo-credit [credit]="eventDetail.photoCredit" [creditUrl]="eventDetail.photoCreditUrl"></app-photo-credit>
+      }
       <div class="hero-content">
         <div class="hero-info">
           <div class="badges">

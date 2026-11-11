@@ -28,4 +28,7 @@ public record EventDetailDto(
     DateTime CreatedAt,
     List<CategoryDto> Categories,
     List<MediaDto> Media,
-    List<OccurrenceDto> UpcomingOccurrences);
+    List<OccurrenceDto> UpcomingOccurrences,
+    string? PhotoUrl = null,
+    string? PhotoCredit = null,
+    string? PhotoCreditUrl = null);

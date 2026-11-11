@@ -16,6 +16,7 @@ import { NavbarComponent } from './components/navbar/navbar.component';
 import { CategoryChipsComponent } from './components/category-chips/category-chips.component';
 import { PlaceCardComponent } from './components/place-card/place-card.component';
 import { LoadingSpinnerComponent } from './components/loading-spinner/loading-spinner.component';
+import { PhotoCreditComponent } from './components/photo-credit/photo-credit.component';
 
 @NgModule({
   declarations: [
@@ -24,7 +25,8 @@ import { LoadingSpinnerComponent } from './components/loading-spinner/loading-sp
     NavbarComponent,
     CategoryChipsComponent,
     PlaceCardComponent,
-    LoadingSpinnerComponent
+    LoadingSpinnerComponent,
+    PhotoCreditComponent
   ],
   imports: [
     CommonModule,
@@ -44,7 +46,8 @@ import { LoadingSpinnerComponent } from './components/loading-spinner/loading-sp
     NavbarComponent,
     CategoryChipsComponent,
     PlaceCardComponent,
-    LoadingSpinnerComponent
+    LoadingSpinnerComponent,
+    PhotoCreditComponent
   ],
   providers: [DatePipe]
 })

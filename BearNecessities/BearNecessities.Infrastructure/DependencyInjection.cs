@@ -137,6 +137,11 @@ public static class DependencyInjection
             client.Timeout = TimeSpan.FromMinutes(3);
             client.DefaultRequestHeaders.UserAgent.ParseAdd("BearNecessities/1.0 (community discovery; import)");
         });
+        services.AddHttpClient<Imports.PlacePhotoService>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(30);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("BearNecessities/1.0 (community discovery; photo lookup)");
+        });
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddSingleton<IJwtService, JwtService>();

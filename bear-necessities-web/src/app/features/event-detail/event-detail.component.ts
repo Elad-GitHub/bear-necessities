@@ -142,6 +142,11 @@ export class EventDetailComponent implements OnInit {
   }
 
   // One "Recurring" badge whether the event is typed Recurring or simply carries a recurrence rule
+  // The event's own uploaded image, otherwise the photo of the place it's at
+  getHeroImageUrl(eventDetail: EventDetailDto): string {
+    return eventDetail.thumbnailUrl ?? eventDetail.photoUrl ?? '';
+  }
+
   isRecurring(eventDetail: EventDetailDto): boolean {
     return eventDetail.eventType === 'Recurring' || !!eventDetail.rRule;
   }

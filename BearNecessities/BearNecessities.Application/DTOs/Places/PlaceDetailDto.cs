@@ -24,4 +24,7 @@ public record PlaceDetailDto(
     List<ExternalLinkDto> ExternalLinks,
     List<CategoryDto> Categories,
     List<MediaDto> Media,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    string? PhotoUrl = null,
+    string? PhotoCredit = null,
+    string? PhotoCreditUrl = null);

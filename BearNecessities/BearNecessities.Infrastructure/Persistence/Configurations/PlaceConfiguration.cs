@@ -18,6 +18,9 @@ public class PlaceConfiguration : IEntityTypeConfiguration<Place>
 
         builder.Property(p => p.Name).IsRequired().HasMaxLength(200);
         builder.Property(p => p.Description).HasMaxLength(4000);
+        builder.Property(p => p.PhotoUrl).HasMaxLength(1000);
+        builder.Property(p => p.PhotoCredit).HasMaxLength(300);
+        builder.Property(p => p.PhotoCreditUrl).HasMaxLength(1000);
         builder.Property(p => p.Latitude).HasPrecision(9, 6);
         builder.Property(p => p.Longitude).HasPrecision(9, 6);
         builder.Property(p => p.H3IndexRes8).IsRequired().HasMaxLength(30);

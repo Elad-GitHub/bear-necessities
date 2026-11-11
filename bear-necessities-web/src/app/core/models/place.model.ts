@@ -68,6 +68,10 @@ export interface PlaceDetailDto {
   averageRating?: number;
   reviewCount?: number;
   media?: MediaDto[];
+  /** A freely licensed photo hosted elsewhere, shown with its credit (uploaded media come first) */
+  photoUrl?: string;
+  photoCredit?: string;
+  photoCreditUrl?: string;
   reviews?: ReviewDto[];
   createdBy?: string;
   createdAt?: string;

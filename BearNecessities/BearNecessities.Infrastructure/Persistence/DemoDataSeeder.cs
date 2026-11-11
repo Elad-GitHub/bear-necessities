@@ -103,7 +103,7 @@ public static class DemoDataSeeder
                 "Innovative sustainable community combining passive solar design with volunteer opportunities and collaborative living.",
                 ownerId, new[] { "Volunteering", "CoWorking" }, categories, isPermanent: true),
 
-            CreatePlace("Osho Meditation Resort", 18.5204m, 73.8567m, "Pune, India",
+            CreatePlace("Osho Meditation Resort", 18.5369m, 73.8886m, "Pune, India",
                 "A world-renowned meditation resort offering transformative experiences and spiritual growth programs.",
                 ownerId, new[] { "Spirituality", "Wellness" }, categories, isPermanent: true),
 
