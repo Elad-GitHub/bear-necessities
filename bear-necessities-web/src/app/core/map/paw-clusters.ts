@@ -17,6 +17,10 @@ const LARGE_COUNT = 100;
 const HUGE_COUNT = 1000;
 const ICON_SIZES = { small: 0.85, medium: 1.05, large: 1.25, huge: 1.45 };
 const TEXT_SIZE = 12;
+// Zoomed far out a whole country fits in a few pixels, so paws shrink with the map: [zoom, scale]
+const ZOOM_SCALE: [number, number][] = [[1.5, 0.5], [4, 0.62], [7, 0.82], [10, 1]];
+// Paws let the map show through when they're crowded at low zoom, becoming solid as they spread out
+const ZOOM_OPACITY: [number, number][] = [[2, 0.72], [8, 0.92]];
 
 const PAW_IMAGE_IDS = ['paw-cluster-small', 'paw-cluster-medium', 'paw-cluster-large'];
 
@@ -38,14 +42,18 @@ export function pawClusterLayout(
   count: mapboxgl.ExpressionSpecification,
   label: mapboxgl.ExpressionSpecification
 ): mapboxgl.SymbolLayerSpecification['layout'] {
+  const sizeForCount = stepBySize(count, ICON_SIZES.small, ICON_SIZES.medium, ICON_SIZES.large, ICON_SIZES.huge);
   return {
     'icon-image': ['step', count, PAW_IMAGE_IDS[0], MEDIUM_COUNT, PAW_IMAGE_IDS[1], LARGE_COUNT, PAW_IMAGE_IDS[2]],
-    'icon-size': stepBySize(count, ICON_SIZES.small, ICON_SIZES.medium, ICON_SIZES.large, ICON_SIZES.huge),
+    'icon-size': ['interpolate', ['linear'], ['zoom'],
+      ...ZOOM_SCALE.flatMap(([zoom, scale]) => [zoom, ['*', scale, sizeForCount]])] as mapboxgl.ExpressionSpecification,
     'icon-allow-overlap': true,
     'icon-ignore-placement': true,
     'text-field': label,
     'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
-    'text-size': TEXT_SIZE,
+    // Text scales with the paw, so the em-based offset below keeps the count centred on the heel pad
+    'text-size': ['interpolate', ['linear'], ['zoom'],
+      ...ZOOM_SCALE.flatMap(([zoom, scale]) => [zoom, TEXT_SIZE * scale])] as mapboxgl.ExpressionSpecification,
     'text-offset': stepBySize(count,
       padOffsetEms(ICON_SIZES.small), padOffsetEms(ICON_SIZES.medium), padOffsetEms(ICON_SIZES.large), padOffsetEms(ICON_SIZES.huge)),
     'text-allow-overlap': true,
@@ -53,4 +61,8 @@ export function pawClusterLayout(
   };
 }
 
-export const PAW_CLUSTER_PAINT: mapboxgl.SymbolLayerSpecification['paint'] = { 'text-color': FESTIVAL_PALETTE.cream };
+export const PAW_CLUSTER_PAINT: mapboxgl.SymbolLayerSpecification['paint'] = {
+  'text-color': FESTIVAL_PALETTE.cream,
+  'icon-opacity': ['interpolate', ['linear'], ['zoom'],
+    ...ZOOM_OPACITY.flatMap(([zoom, opacity]) => [zoom, opacity])] as mapboxgl.ExpressionSpecification
+};
