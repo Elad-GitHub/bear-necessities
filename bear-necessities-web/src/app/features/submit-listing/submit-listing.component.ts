@@ -454,7 +454,7 @@ export class SubmitListingComponent implements OnInit, AfterViewInit, OnDestroy 
         this.isSubmitting.set(false);
         this.toastService.success(editId
           ? 'Your changes were saved! Major edits may require a new review.'
-          : 'Your listing was submitted for review! 🎉');
+          : this.getCreatedMessage('listing', response?.status));
         const placeId = editId || response?.placeId || response?.id;
         if (placeId) {
           this.router.navigate(['/places', placeId]);
@@ -513,12 +513,19 @@ export class SubmitListingComponent implements OnInit, AfterViewInit, OnDestroy 
         this.isSubmitting.set(false);
         this.toastService.success(editEventId
           ? 'Your event was updated!'
-          : 'Your event was submitted for review! 🎉');
+          : this.getCreatedMessage('event', response?.status));
         const eventId = editEventId || response?.eventId || response?.id;
         this.router.navigate(eventId ? ['/events', eventId] : ['/map']);
       },
       error: () => this.isSubmitting.set(false)
     });
+  }
+
+  // Admin submissions go live straight away; everyone else's wait in the moderation queue
+  private getCreatedMessage(kind: 'listing' | 'event', status: string | undefined): string {
+    return status === 'Live'
+      ? `Your ${kind} is live on the map! 🐾`
+      : `Your ${kind} was submitted for review! 🎉`;
   }
 
   private buildRRule(recurrence: string, startAt: string): string | null {

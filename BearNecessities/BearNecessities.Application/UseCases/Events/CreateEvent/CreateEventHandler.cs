@@ -74,6 +74,8 @@ public sealed class CreateEventHandler : IRequestHandler<CreateEventRequest, Cre
             evt.AddCategory(category);
 
         evt.Submit();
+        // Admins are the reviewers, so their own listings skip the queue
+        if (_currentUser.HasRole(UserRole.Admin)) evt.Approve(_currentUser.UserId);
 
         await _unitOfWork.Events.AddAsync(evt, cancellationToken);
 

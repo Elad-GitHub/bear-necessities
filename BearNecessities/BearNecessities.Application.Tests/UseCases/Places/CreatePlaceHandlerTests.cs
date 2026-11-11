@@ -1,3 +1,4 @@
+using BearNecessities.Domain.Enums;
 using Moq;
 using BearNecessities.Application.Exceptions;
 using BearNecessities.Application.Interfaces;
@@ -65,6 +66,17 @@ public class CreatePlaceHandlerTests
 
         // Assert
         response.Status.Should().Be("PendingReview");
+    }
+
+    [Fact]
+    public async Task HandleAsync_AdminCreates_ShouldGoLiveWithoutReview()
+    {
+        _mockCurrentUser.Setup(x => x.HasRole(UserRole.Admin)).Returns(true);
+        var request = new CreatePlaceRequest("Test Place", null, 48.8566m, 2.3522m, null, "Paris", "France", "FR", "UTC", false, new List<Guid> { Guid.NewGuid() }, null);
+
+        var response = await _handler.HandleAsync(request, CancellationToken.None);
+
+        response.Status.Should().Be("Live");
     }
 
     [Fact]

@@ -51,6 +51,8 @@ public sealed class CreatePlaceHandler : IRequestHandler<CreatePlaceRequest, Cre
         place.SetIsPermanent(request.IsPermanent);
         place.UpdateCoordinates(request.Latitude, request.Longitude, h3Res8, h3Res5);
         place.Submit();
+        // Admins are the reviewers, so their own listings skip the queue
+        if (_currentUser.HasRole(UserRole.Admin)) place.Approve(_currentUser.UserId);
 
         foreach (var category in foundCategories)
             place.AddCategory(category);
