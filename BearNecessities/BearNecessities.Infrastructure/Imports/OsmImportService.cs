@@ -16,7 +16,8 @@ public sealed class OsmImportService
     [
         "https://overpass-api.de/api/interpreter",
         "https://overpass.kumi.systems/api/interpreter",
-        "https://overpass.private.coffee/api/interpreter"
+        "https://overpass.private.coffee/api/interpreter",
+        "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
     ];
 
     // Overpass filters we union to find candidates within a country area.
@@ -105,7 +106,7 @@ public sealed class OsmImportService
         return ImportReport.Combine(reports);
     }
 
-    private sealed record AdminRegion(long RelationId, string Name);
+    private sealed record AdminRegion(long RelationId, string Name, int AdminLevel);
 
     // Region tiers differ by country (states, provinces, regions); level 4 is the most common first tier
     private static readonly int[] RegionAdminLevels = [4, 3, 5];
@@ -113,21 +114,26 @@ public sealed class OsmImportService
     private const long OverpassAreaIdOffset = 3_600_000_000;
     private static readonly TimeSpan RegionPause = TimeSpan.FromSeconds(5);
 
+    // Looks regions up by their ISO 3166-2 code ("IN-KA", "GR-M"...): a tag-index query that returns every
+    // level at once in seconds, where "relations inside the country's area" timed out for India-sized countries
     private async Task<List<AdminRegion>> FindRegionsAsync(string iso, CancellationToken cancellationToken)
     {
+        if (!IsoCountryCodePattern.IsMatch(iso))
+            throw new ArgumentException($"'{iso}' is not a two-letter ISO country code.", nameof(iso));
+
+        var query = $"""
+            [out:json][timeout:90];
+            rel["ISO3166-2"~"^{iso}-"]["boundary"="administrative"];
+            out tags;
+            """;
+        var json = await FetchWithFailoverAsync(query, $"{iso} regions", cancellationToken);
+        if (json is null)
+            return [];
+
+        var regionsByLevel = ParseRegions(json, iso).ToLookup(region => region.AdminLevel);
         foreach (var adminLevel in RegionAdminLevels)
         {
-            var query = $"""
-                [out:json][timeout:90];
-                {CountryAreaSelector(iso)}
-                rel(area.a)["boundary"="administrative"]["admin_level"="{adminLevel}"];
-                out tags;
-                """;
-            var json = await FetchWithFailoverAsync(query, $"{iso} regions (level {adminLevel})", cancellationToken);
-            if (json is null)
-                continue;
-
-            var regions = ParseRegions(json, iso);
+            var regions = regionsByLevel[adminLevel].ToList();
             _logger.LogInformation("{Iso}: {Count} regions at admin level {Level}", iso, regions.Count, adminLevel);
             if (regions.Count >= MinimumUsefulRegionCount)
                 return regions;
@@ -136,7 +142,9 @@ public sealed class OsmImportService
         return [];
     }
 
-    // rel(area) also returns neighbouring regions that touch the border, so keep only this country's ISO 3166-2 codes
+    private static readonly System.Text.RegularExpressions.Regex IsoCountryCodePattern = new("^[A-Z]{2}$");
+
+    // The regex match is a prefix check on a tag value; re-check it here so a stray match can never import another country
     private static List<AdminRegion> ParseRegions(string json, string iso)
     {
         using var document = JsonDocument.Parse(json);
@@ -153,8 +161,11 @@ public sealed class OsmImportService
             if (subdivisionCode is null || !subdivisionCode.StartsWith($"{iso}-", StringComparison.OrdinalIgnoreCase))
                 continue;
 
+            if (!int.TryParse(GetTag(tags, "admin_level"), out var adminLevel))
+                continue;
+
             var name = GetTag(tags, "name:en") ?? GetTag(tags, "name") ?? subdivisionCode;
-            regions.Add(new AdminRegion(idProperty.GetInt64(), name));
+            regions.Add(new AdminRegion(idProperty.GetInt64(), name, adminLevel));
         }
         return regions;
     }
