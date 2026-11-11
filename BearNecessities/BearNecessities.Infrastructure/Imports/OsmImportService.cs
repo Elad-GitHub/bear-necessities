@@ -252,7 +252,8 @@ public sealed class OsmImportService
                 CategorySlugs: [slug],
                 Source: ListingSourceType.Osm,
                 ExternalSourceId: $"osm:{elementType}/{elementId}",
-                Description: GetTag(tags, "description"),
+                // Most OSM places have no description; a summary built from their tags fills the hover card
+                Description: GetTag(tags, "description") ?? OsmPlaceSummary.Build(ToTagDictionary(tags), slug),
                 Address: BuildAddress(tags),
                 City: GetTag(tags, "addr:city"),
                 Country: countryName ?? iso,
@@ -321,6 +322,11 @@ public sealed class OsmImportService
         if (string.IsNullOrWhiteSpace(street)) return null;
         return string.IsNullOrWhiteSpace(houseNumber) ? street : $"{street} {houseNumber}";
     }
+
+    private static Dictionary<string, string> ToTagDictionary(JsonElement tags) =>
+        tags.EnumerateObject()
+            .Where(tag => tag.Value.ValueKind == JsonValueKind.String)
+            .ToDictionary(tag => tag.Name, tag => tag.Value.GetString()!, StringComparer.OrdinalIgnoreCase);
 
     private static string? GetTag(JsonElement tags, string key)
         => tags.TryGetProperty(key, out var value) ? value.GetString() : null;

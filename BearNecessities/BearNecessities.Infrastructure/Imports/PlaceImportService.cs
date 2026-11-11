@@ -36,8 +36,13 @@ public sealed class PlaceImportService : IPlaceImportService
 
         // Pre-load dedup keys so we don't round-trip per record
         var existing = await _db.Places
-            .Select(p => new { p.Name, p.Latitude, p.Longitude, p.ExternalSourceId })
+            .Select(p => new { p.Name, p.Latitude, p.Longitude, p.ExternalSourceId, HasDescription = p.Description != null })
             .ToListAsync(cancellationToken);
+        // Re-imports fill in descriptions on places imported before descriptions were generated
+        var missingDescription = new HashSet<string>(
+            existing.Where(e => e.ExternalSourceId != null && !e.HasDescription).Select(e => e.ExternalSourceId!),
+            StringComparer.OrdinalIgnoreCase);
+        var descriptionsToBackfill = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         var seenExternalIds = new HashSet<string>(
             existing.Where(e => e.ExternalSourceId != null).Select(e => e.ExternalSourceId!),
@@ -58,6 +63,9 @@ public sealed class PlaceImportService : IPlaceImportService
                 if (IsDuplicate(candidate, seenExternalIds, seenNameGeo))
                 {
                     duplicates++;
+                    if (candidate.ExternalSourceId is not null && candidate.Description is not null
+                        && missingDescription.Contains(candidate.ExternalSourceId))
+                        descriptionsToBackfill[candidate.ExternalSourceId] = candidate.Description;
                     continue;
                 }
 
@@ -80,7 +88,24 @@ public sealed class PlaceImportService : IPlaceImportService
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+        await BackfillDescriptionsAsync(descriptionsToBackfill, cancellationToken);
         return new ImportReport(inserted, duplicates, failed, errors);
+    }
+
+    // One query loads every place that needs a description; one save writes them all
+    private async Task BackfillDescriptionsAsync(Dictionary<string, string> descriptionsByExternalId, CancellationToken cancellationToken)
+    {
+        if (descriptionsByExternalId.Count == 0) return;
+
+        var externalIds = descriptionsByExternalId.Keys.ToList();
+        var places = await _db.Places
+            .Where(p => p.ExternalSourceId != null && externalIds.Contains(p.ExternalSourceId))
+            .ToListAsync(cancellationToken);
+        foreach (var place in places.Where(p => p.Description is null))
+            place.SetDescription(descriptionsByExternalId[place.ExternalSourceId!]);
+
+        await _db.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Filled in descriptions on {Count} existing places", places.Count);
     }
 
     private Place BuildPlace(
