@@ -61,11 +61,11 @@ public static class DemoDataSeeder
         var requiredCategories = new[]
         {
             ("events", "Events"),
-            ("music-and-sound", "MusicAndSound"),
+            ("music-sound", "Music & Sound"),
             ("movement", "Movement"),
             ("healing", "Healing"),
             ("volunteering", "Volunteering"),
-            ("coworking", "CoWorking"),
+            ("co-working", "CoWorking"),
             ("spirituality", "Spirituality"),
             ("wellness", "Wellness"),
             ("sexuality", "Sexuality")
@@ -93,7 +93,7 @@ public static class DemoDataSeeder
         {
             CreatePlace("Wonderfruit Festival Grounds", 12.9236m, 100.8825m, "Pattaya, Thailand",
                 "An annual music and arts festival in Thailand featuring world-class performers and spiritual workshops.",
-                ownerId, new[] { "Events", "MusicAndSound" }, categories, isPermanent: false),
+                ownerId, new[] { "Events", "Music & Sound" }, categories, isPermanent: false),
 
             CreatePlace("The Yoga Barn", -8.5069m, 115.2625m, "Ubud, Bali, Indonesia",
                 "A yoga and wellness sanctuary nestled in the heart of Bali's spiritual center with daily classes and retreats.",
@@ -113,7 +113,7 @@ public static class DemoDataSeeder
 
             CreatePlace("Rainbow Serpent Festival", -37.1m, 143.4m, "Victoria, Australia",
                 "Australia's premier electronic music and arts festival celebrating consciousness, community, and creativity.",
-                ownerId, new[] { "Events", "MusicAndSound" }, categories, isPermanent: false),
+                ownerId, new[] { "Events", "Music & Sound" }, categories, isPermanent: false),
 
             CreatePlace("Tamera Peace Research Village", 37.6748m, -8.3706m, "Alentejo, Portugal",
                 "An intentional community pioneering sustainable and cooperative living with opportunities for volunteers and researchers.",
