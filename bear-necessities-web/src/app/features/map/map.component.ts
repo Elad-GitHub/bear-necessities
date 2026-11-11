@@ -9,12 +9,10 @@ import { MapService } from '../../core/services/map.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ProfileService } from '../../core/services/profile.service';
 import { CategoryIconsService } from '../../core/services/category-icons.service';
-import { EventsService } from '../../core/services/events.service';
 import { TripsService } from '../../core/services/trips.service';
 import { GeocodingService, GeocodeResult } from '../../core/services/geocoding.service';
 import { DirectionsService } from '../../core/services/directions.service';
 import { PlaceDensityCell, PlaceSummaryDto } from '../../core/models/place.model';
-import { EventSummaryDto } from '../../core/models/event.model';
 import { ItineraryDay, MAX_TRIP_DAYS, MIN_TRIP_CATEGORIES } from '../../core/models/trip.model';
 import { applyFestivalTheme, FESTIVAL_PALETTE } from '../../core/map/festival-map-theme';
 import { PAW_CLUSTER_PAINT, pawClusterLayout, registerPawClusterImages } from '../../core/map/paw-clusters';
@@ -22,7 +20,7 @@ import { measureSegments, PAW_IMAGE_ID, PawPrint, pawPrintCountFor, registerPawT
 import { loadMapImages } from '../../core/map/map-images';
 import { MapViewStateService } from '../../core/map/map-view-state.service';
 
-type MapMode = 'places' | 'events' | 'both';
+type WhenOption = 'anytime' | 'week' | 'month' | 'custom';
 
 // Below this zoom (roughly a whole country in view) the server sends per-cell counts instead of individual places,
 // so the totals cover every place rather than one 1000-place page
@@ -37,9 +35,11 @@ const MOBILE_SHEET_HEIGHT_RATIO = 0.45;
 
 // Mustard from the festival palette: events wear it as a ring so they read differently from cream-ringed places
 const EVENT_RING_COLOR = '#FBC02D';
-const EVENT_FALLBACK_BEAR = 'bear-dancing';
 const POPUP_DESCRIPTION_LENGTH = 120;
-const UNDATED_EVENT_LABELS: Record<string, string> = { Recurring: 'Weekly', Permanent: 'Ongoing' };
+const ONGOING_EVENT_LABEL = 'Ongoing';
+const DAYS_IN_WEEK = 7;
+const DAYS_IN_MONTH = 30;
+const MS_PER_DAY = 86_400_000;
 
 const BEAR_WALK_FRAMES = [1, 2, 3, 4].map(frame => `brand/bears/walk-${frame}.png`);
 const BEAR_ARRIVED_IMAGE = 'brand/bears/waving.png';
@@ -51,9 +51,9 @@ const BEAR_WALK_MAX_MS = 14000;
 
 // Mapbox expression: true for pins whose category has a mascot pose (see CategoryIconsService)
 const HAS_BEAR_POSE: mapboxgl.ExpressionSpecification = ['!=', ['get', 'bear'], ''];
+const HAS_EVENT: mapboxgl.ExpressionSpecification = ['!=', ['get', 'eventLabel'], ''];
 
 // "Gatherings" holds event types (festival, retreat, ceremony…), so it only makes sense when events are on the map
-const EVENTS_ONLY_CATEGORY_SLUG = 'events';
 
 // Distinct, colour-blind-friendly hues so each trip day reads as its own leg of the route
 const TRIP_DAY_COLORS = ['#00796b', '#e65100', '#5e35b1', '#c2185b', '#1565c0', '#827717', '#6d4c41'];
@@ -74,14 +74,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   @ViewChild('mapContainer') mapContainer!: ElementRef;
 
   mapInstance: mapboxgl.Map | null = null;
-  mapMode = signal<MapMode>('places');
-  placeCategories = computed(() =>
-    this.categoriesService.categories().filter(category => category.slug !== EVENTS_ONLY_CATEGORY_SLUG));
-  visibleCategories = computed(() =>
-    this.mapMode() === 'places' ? this.placeCategories() : this.categoriesService.categories());
+  // "When?" filter: Anytime shows every place; with days chosen, only what's open or happening then
+  whenOption = signal<WhenOption>('anytime');
+  isDatePickerOpen = signal(false);
+  customFrom = signal('');
+  customTo = signal('');
   // Spinner only for the very first load — viewport reloads on pan/zoom stay silent (no flicker)
   showInitialSpinner = signal(true);
-  private lastEvents: EventSummaryDto[] = [];
   private loadPlacesTimeout: any = null;
   private savedPlaceTypes = new Map<string, string>();
   private lastRenderedPlaces: PlaceSummaryDto[] = [];
@@ -123,7 +122,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     private authService: AuthService,
     private profileService: ProfileService,
     private categoryIcons: CategoryIconsService,
-    private eventsService: EventsService,
     private tripsService: TripsService,
     private geocodingService: GeocodingService,
     private directionsService: DirectionsService,
@@ -144,36 +142,42 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  setMapMode(mode: MapMode): void {
-    this.mapMode.set(mode);
-    if (mode === 'places' && this.dropHiddenCategorySelections()) {
-      this.loadPlacesForViewport();
-      return;
-    }
-    this.refreshForMode();
+  setWhen(option: Exclude<WhenOption, 'custom'>): void {
+    this.whenOption.set(option);
+    this.isDatePickerOpen.set(false);
+    const days = option === 'week' ? DAYS_IN_WEEK : option === 'month' ? DAYS_IN_MONTH : 0;
+    const today = new Date();
+    this.placesService.selectedDates.set(days
+      ? { from: this.toIsoDate(today), to: this.toIsoDate(new Date(today.getTime() + (days - 1) * MS_PER_DAY)) }
+      : null);
+    this.loadPlacesForViewport();
   }
 
-  // Leaving events mode hides Gatherings, so any of its subcategories still selected would filter invisibly
-  private dropHiddenCategorySelections(): boolean {
-    const visibleIds = new Set(this.placeCategories().flatMap(parent => (parent.children || []).map(child => child.id)));
-    const selected = this.placesService.selectedCategories();
-    const stillVisible = selected.filter(id => visibleIds.has(id));
-    if (stillVisible.length === selected.length) return false;
-
-    this.placesService.selectedCategories.set(stillVisible);
-    return true;
+  toggleDatePicker(): void {
+    this.isDatePickerOpen.set(!this.isDatePickerOpen());
+    if (!this.customFrom()) this.customFrom.set(this.toIsoDate(new Date()));
   }
 
-  private refreshForMode(): void {
-    const mode = this.mapMode();
+  applyCustomDates(): void {
+    const from = this.customFrom();
+    const to = this.customTo() || from;
+    if (!from) return;
+    this.whenOption.set('custom');
+    this.isDatePickerOpen.set(false);
+    this.placesService.selectedDates.set(from <= to ? { from, to } : { from: to, to: from });
+    this.loadPlacesForViewport();
+  }
 
-    this.renderPlaceLayers();
+  customDatesLabel(): string {
+    const dates = this.placesService.selectedDates();
+    if (this.whenOption() !== 'custom' || !dates) return 'Pick dates';
+    const format = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    return dates.from === dates.to ? format(dates.from) : format(dates.from) + ' – ' + format(dates.to);
+  }
 
-    if (mode === 'places') {
-      this.renderEventLayers();
-    } else {
-      this.loadEventsForViewport();
-    }
+  private toIsoDate(date: Date): string {
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+    return local.toISOString().slice(0, 10);
   }
 
   ngAfterViewInit(): void {
@@ -252,13 +256,15 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     city?: string,
     country?: string,
     categoryName?: string | null,
-    description?: string | null): string {
+    description?: string | null,
+    nextEvent?: string | null): string {
     const location = [city, country].filter(Boolean).map(part => this.escapeHtml(part!)).join(', ');
     const blurb = this.truncate(description, 120);
     return `<div class="map-popup">
         <strong class="map-popup-title">${this.escapeHtml(name)}</strong>
         ${location ? `<div class="map-popup-loc"><span class="material-icons">place</span>${location}</div>` : ''}
         ${categoryName ? `<div class="map-popup-cat">${this.escapeHtml(categoryName)}</div>` : ''}
+        ${nextEvent ? `<div class="map-popup-next">Next: ${this.escapeHtml(nextEvent)}</div>` : ''}
         ${blurb ? `<div class="map-popup-desc">${this.escapeHtml(blurb)}</div>` : ''}
       </div>`;
   }
@@ -514,7 +520,6 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.itinerary.set(days);
     this.selectedTripDay.set(null);
     this.hidePlaceLayers();
-    this.renderEventLayers();
 
     let order = 0;
     this.tripStopPoints = days.flatMap(day => day.stops.map(stop => ({
@@ -816,140 +821,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         error: () => console.error('Failed to load places')
       });
     }
-
-    if (this.mapMode() !== 'places') {
-      this.loadEventsForViewport();
-    }
   }
 
-  private loadEventsForViewport(): void {
-    const bbox = this.getCurrentBbox();
-    if (!bbox) return;
-
-    this.eventsService.getByViewport(bbox).subscribe({
-      next: (response) => this.renderEvents(response?.items || []),
-      error: () => console.error('Failed to load events')
-    });
-  }
-
-  private renderEvents(events: EventSummaryDto[]): void {
-    this.lastEvents = events.filter(eventItem => eventItem.latitude != null && eventItem.longitude != null);
-    this.renderEventLayers();
-  }
-
-  // Events share the place pin language (bear on a dot) but wear a gold ring and a date, so they read as "happening"
-  private renderEventLayers(): void {
-    if (!this.mapInstance) return;
-    if (!this.mapInstance.isStyleLoaded()) {
-      this.mapInstance.once('idle', () => this.renderEventLayers());
-      return;
-    }
-    const showsEvents = this.mapMode() !== 'places' && !this.tripActive();
-    this.setEventsData(showsEvents ? this.lastEvents : []);
-  }
-
-  private setEventsData(events: EventSummaryDto[]): void {
-    if (!this.mapInstance) return;
-    this.ensureEventLayers();
-
-    const features = events.map(eventItem => {
-      const categoryId = eventItem.categoryIds?.[0];
-      return {
-        type: 'Feature' as const,
-        geometry: { type: 'Point' as const, coordinates: [eventItem.longitude!, eventItem.latitude!] },
-        properties: {
-          id: eventItem.id,
-          title: eventItem.title,
-          description: this.truncate(eventItem.description, POPUP_DESCRIPTION_LENGTH) ?? '',
-          category: this.categoryIcons.getNameForCategoryId(categoryId) ?? 'Event',
-          pinColor: this.categoryIcons.getPinColorForCategoryId(categoryId),
-          bear: this.categoryIcons.getBearImageIdForCategoryId(categoryId) || EVENT_FALLBACK_BEAR,
-          dateLabel: this.formatEventDate(eventItem.startAt, eventItem.eventType)
-        }
-      };
-    });
-    (this.mapInstance.getSource('events-src') as mapboxgl.GeoJSONSource)
-      .setData({ type: 'FeatureCollection', features });
-  }
-
-  // Recurring and ongoing events have no single start date, so they get a word instead of a date
-  private formatEventDate(startAt: string | undefined, eventType: string | undefined): string {
-    if (!startAt) return UNDATED_EVENT_LABELS[eventType ?? ''] ?? '';
-    const date = new Date(startAt);
+  // An ongoing event has no date, so it gets a word instead; the API sends UTC without a zone marker
+  private formatEventDate(startAt: string | null | undefined): string {
+    if (!startAt) return ONGOING_EVENT_LABEL;
+    const date = new Date(/[zZ]|[+-]\d\d:\d\d$/.test(startAt) ? startAt : startAt + 'Z');
     return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-  }
-
-  private ensureEventLayers(): void {
-    const map = this.mapInstance!;
-    if (map.getSource('events-src')) return;
-
-    map.addSource('events-src', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-
-    map.addLayer({
-      id: 'event-dots',
-      type: 'circle',
-      source: 'events-src',
-      paint: {
-        'circle-color': ['get', 'pinColor'],
-        // A gold-ringed dot while the map is zoomed out to paw level; from there on it is the bear's ground spot
-        'circle-radius': ['interpolate', ['linear'], ['zoom'], 4, 4.5, DENSITY_MAX_ZOOM - 0.1, 7, DENSITY_MAX_ZOOM, 4, 12, 6, 16, 7],
-        'circle-stroke-color': EVENT_RING_COLOR,
-        'circle-stroke-width': 3
-      }
-    });
-
-    map.addLayer({
-      id: 'event-icons',
-      type: 'symbol',
-      source: 'events-src',
-      minzoom: DENSITY_MAX_ZOOM,
-      layout: {
-        'icon-image': ['coalesce', ['image', ['get', 'bear']], ['image', EVENT_FALLBACK_BEAR]],
-        'icon-size': ['interpolate', ['linear'], ['zoom'], DENSITY_MAX_ZOOM, 0.5, 12, 0.75, 16, 1.1],
-        'icon-anchor': 'bottom',
-        'icon-allow-overlap': true,
-        'icon-ignore-placement': true,
-        // The date hangs under the dot like a little ticket stub, once there's room for it
-        'text-field': ['step', ['zoom'], '', 12, ['get', 'dateLabel']],
-        'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
-        'text-size': 11,
-        'text-anchor': 'top',
-        'text-offset': [0, 0.7],
-        'text-allow-overlap': true
-      },
-      paint: {
-        'text-color': FESTIVAL_PALETTE.darkTeal,
-        'text-halo-color': EVENT_RING_COLOR,
-        'text-halo-width': 2
-      }
-    });
-
-    const openEvent = (event: mapboxgl.MapLayerMouseEvent) => {
-      const eventId = event.features?.[0]?.properties?.['id'];
-      if (eventId) this.zone.run(() => this.router.navigate(['/events', eventId]));
-    };
-    const showEventPopup = (event: mapboxgl.MapLayerMouseEvent) => {
-      const feature = event.features?.[0];
-      if (!feature || !this.hoverPopup) return;
-      const props = feature.properties || {};
-      const heading = props['dateLabel'] ? `${props['title']} · ${props['dateLabel']}` : props['title'];
-      this.hoverPopup
-        .setLngLat((feature.geometry as GeoJSON.Point).coordinates as [number, number])
-        .setHTML(this.buildPlacePopupHtml(heading, undefined, undefined, props['category'], props['description']))
-        .addTo(map);
-    };
-    for (const layerId of ['event-dots', 'event-icons']) {
-      map.on('click', layerId, openEvent);
-      map.on('mouseenter', layerId, (event) => {
-        map.getCanvas().style.cursor = 'pointer';
-        showEventPopup(event);
-      });
-      map.on('mousemove', layerId, showEventPopup);
-      map.on('mouseleave', layerId, () => {
-        map.getCanvas().style.cursor = '';
-        this.hoverPopup?.remove();
-      });
-    }
   }
 
   private isValidBbox(bbox: MapBbox): boolean {
@@ -998,14 +876,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    const showsPlaces = this.mapMode() !== 'events';
     const validPlaces = this.lastRenderedPlaces.filter(place =>
       place.latitude >= -90 && place.latitude <= 90 &&
       place.longitude >= -180 && place.longitude <= 180
     );
 
-    this.setDensityData(showsPlaces && this.isDensityView ? this.lastDensityCells : []);
-    this.setPlacesData(showsPlaces && !this.isDensityView ? validPlaces : []);
+    this.setDensityData(this.isDensityView ? this.lastDensityCells : []);
+    this.setPlacesData(!this.isDensityView ? validPlaces : []);
   }
 
   private hidePlaceLayers(): void {
@@ -1102,7 +979,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           bear: this.categoryIcons.getBearImageIdForCategoryId(place.categoryId || place.categoryIds?.[0]),
           description: this.truncate(place.description, POPUP_DESCRIPTION_LENGTH) ?? '',
           address: place.address ?? '',
-          saveType
+          saveType,
+          // A place with something coming up wears a gold ring and the date, like a ticket stub
+          eventTitle: place.nextEvent?.title ?? '',
+          eventLabel: place.nextEvent ? this.formatEventDate(place.nextEvent.startAt) : ''
         }
       };
     });
@@ -1156,8 +1036,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           'WantToGo', SAVE_TYPE_COLORS['WantToGo'],
           'Visited', SAVE_TYPE_COLORS['Visited'],
           'VisitedLoved', SAVE_TYPE_COLORS['VisitedLoved'],
-          FESTIVAL_PALETTE.cream],
-        'circle-stroke-width': ['case', ['==', ['get', 'saveType'], 'None'], 2, 3.5]
+          ['case', HAS_EVENT, EVENT_RING_COLOR, FESTIVAL_PALETTE.cream]],
+        'circle-stroke-width': ['case', ['all', ['==', ['get', 'saveType'], 'None'], ['!', HAS_EVENT]], 2, 3.5]
       }
     });
 
@@ -1178,7 +1058,19 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           16, ['case', HAS_BEAR_POSE, 1.1, 0.78]],
         'icon-anchor': ['case', HAS_BEAR_POSE, 'bottom', 'center'],
         'icon-allow-overlap': true,
-        'icon-ignore-placement': true
+        'icon-ignore-placement': true,
+        // The date hangs under the pin like a ticket stub, once there's room for it
+        'text-field': ['step', ['zoom'], '', 12, ['get', 'eventLabel']],
+        'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
+        'text-size': 11,
+        'text-anchor': 'top',
+        'text-offset': [0, 0.7],
+        'text-allow-overlap': true
+      },
+      paint: {
+        'text-color': FESTIVAL_PALETTE.darkTeal,
+        'text-halo-color': EVENT_RING_COLOR,
+        'text-halo-width': 2
       }
     });
 
@@ -1214,7 +1106,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           props['address'] || props['city'],
           props['address'] ? props['city'] : props['country'],
           props['category'],
-          props['description']))
+          props['description'],
+          props['eventTitle'] ? props['eventTitle'] + ' · ' + props['eventLabel'] : null))
         .addTo(map);
     };
 

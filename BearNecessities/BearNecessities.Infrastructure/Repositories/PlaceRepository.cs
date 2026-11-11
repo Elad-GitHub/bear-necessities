@@ -97,15 +97,16 @@ public class PlaceRepository : BaseRepository<Place, PlaceId>, IPlaceRepository
         IEnumerable<CategoryId>? categoryIds,
         Guid? cursor,
         int pageSize,
+        DateRange? when = null,
         CancellationToken cancellationToken = default)
     {
-        var inViewport = WhereInAnyCategory(
+        var inViewport = WhereOpenDuring(WhereInAnyCategory(
             Context.Places.Where(p => p.Status == ListingStatus.Live
                 && p.Latitude >= viewport.SouthWest.Latitude
                 && p.Latitude <= viewport.NorthEast.Latitude
                 && p.Longitude >= viewport.SouthWest.Longitude
                 && p.Longitude <= viewport.NorthEast.Longitude),
-            categoryIds?.Select(c => c.Value).ToList());
+            categoryIds?.Select(c => c.Value).ToList()), when);
 
         // First page (the map's case): count and page in SQL instead of loading the whole viewport
         if (!cursor.HasValue)
@@ -140,6 +141,25 @@ public class PlaceRepository : BaseRepository<Place, PlaceId>, IPlaceRepository
 
     // Filters through the PlaceCategories join table: EF Core 8 can't translate c.Id.Value on the
     // value-converted key inside Categories.Any(), but it can translate a join-table subquery.
+    // With dates chosen, a place shows if it's always there or something happens at it in those dates;
+    // festival grounds that only come alive for the festival drop out the rest of the year
+    private IQueryable<Place> WhereOpenDuring(IQueryable<Place> query, DateRange? when)
+    {
+        if (when is null)
+            return query;
+
+        var from = when.From;
+        var to = when.To;
+        // One-time events may carry only their own dates; recurring ones are scheduled as occurrences
+        return query.Where(p => p.IsPermanent || Context.Events.Any(e =>
+            e.PlaceId == p.Id && e.Status == ListingStatus.Live
+            && (e.EventType == EventType.Permanent
+                || (e.EventType == EventType.OneTime && e.StartAt <= to
+                    && (e.EndAt >= from || (e.EndAt == null && e.StartAt >= from)))
+                || Context.EventOccurrences.Any(o => o.RecurringEventId == e.Id && o.Status != ListingStatus.Cancelled
+                    && o.StartAt <= to && (o.EndAt >= from || (o.EndAt == null && o.StartAt >= from))))));
+    }
+
     private IQueryable<Place> WhereInAnyCategory(IQueryable<Place> query, IReadOnlyCollection<Guid>? categoryIds)
     {
         if (categoryIds is not { Count: > 0 })
@@ -156,6 +176,7 @@ public class PlaceRepository : BaseRepository<Place, PlaceId>, IPlaceRepository
         GeoViewport viewport,
         IReadOnlyCollection<Guid>? categoryIds,
         decimal cellSizeDegrees,
+        DateRange? when = null,
         CancellationToken cancellationToken = default)
     {
         var query = Context.Places.Where(p => p.Status == ListingStatus.Live
@@ -164,7 +185,7 @@ public class PlaceRepository : BaseRepository<Place, PlaceId>, IPlaceRepository
             && p.Longitude >= viewport.SouthWest.Longitude
             && p.Longitude <= viewport.NorthEast.Longitude);
 
-        query = WhereInAnyCategory(query, categoryIds);
+        query = WhereOpenDuring(WhereInAnyCategory(query, categoryIds), when);
 
         // GROUP BY runs in SQL Server: one row per occupied cell instead of one per place
         return await query

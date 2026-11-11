@@ -20,6 +20,7 @@ public interface IPlaceRepository : IRepository<Place, PlaceId>
         IEnumerable<CategoryId>? categoryIds,
         Guid? cursor,
         int pageSize,
+        DateRange? when = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>Counts live places per square grid cell in the database, so zoomed-out maps never load every place.</summary>
@@ -27,6 +28,7 @@ public interface IPlaceRepository : IRepository<Place, PlaceId>
         GeoViewport viewport,
         IReadOnlyCollection<Guid>? categoryIds,
         decimal cellSizeDegrees,
+        DateRange? when = null,
         CancellationToken cancellationToken = default);
 
     Task<Place?> GetByIdWithRelationsAsync(PlaceId id, CancellationToken cancellationToken = default);

@@ -44,6 +44,14 @@ export interface PlaceSummaryDto {
   reviewCount?: number;
   isPermanent?: boolean;
   createdAt?: string;
+  nextEvent?: PlaceNextEventDto | null;
+}
+
+/** The soonest happening at a place; no startAt means it's ongoing. */
+export interface PlaceNextEventDto {
+  id: string;
+  title: string;
+  startAt?: string | null;
 }
 
 export interface PlaceDetailDto {

@@ -30,8 +30,9 @@ public sealed class GetPlacesByViewportHandler
             .Select(id => new CategoryId(id))
             .ToList();
 
+        var when = MapDates.ToRange(request.From, request.To);
         var (places, totalCount) = await _unitOfWork.Places.FindByViewportPagedAsync(
-            viewport, categoryIds, request.Cursor, request.PageSize, cancellationToken);
+            viewport, categoryIds, request.Cursor, request.PageSize, when, cancellationToken);
 
         if (places.Count == 0)
             return new GetPlacesByViewportResponse([], null, totalCount);
@@ -39,6 +40,9 @@ public sealed class GetPlacesByViewportHandler
         var placeGuids = places.Select(p => p.Id.Value).ToList();
         var allMedia = await _unitOfWork.Media.GetByOwnersAsync(
             MediaOwnerType.Place, placeGuids, cancellationToken);
+
+        var nextEvents = await _unitOfWork.Events.FindNextEventByPlacesAsync(
+            places.Select(p => p.Id), when?.From ?? DateTime.UtcNow, when?.To, cancellationToken);
 
         // GetByOwnersAsync orders by SortOrder; first per place is the primary image.
         var thumbnailByPlaceId = allMedia
@@ -61,7 +65,10 @@ public sealed class GetPlacesByViewportHandler
                 ThumbnailUrl: thumbnailByPlaceId.GetValueOrDefault(p.Id.Value),
                 IsPermanent: p.IsPermanent,
                 Description: TextShortening.Shorten(p.Description),
-                Address: p.Address))
+                Address: p.Address,
+                NextEvent: nextEvents.TryGetValue(p.Id, out var next)
+                    ? new PlaceNextEventDto(next.EventId.Value, next.Title, next.StartAt)
+                    : null))
             .ToList();
 
         var nextCursor = places.Count == request.PageSize

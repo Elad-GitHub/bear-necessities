@@ -38,7 +38,7 @@ public class GetPlaceDensityHandlerTests
     {
         var categoryId = Guid.NewGuid();
         Mock.Get(_mockUnitOfWork.Object.Places)
-            .Setup(x => x.GetDensityAsync(It.IsAny<GeoViewport>(), It.Is<IReadOnlyCollection<Guid>>(ids => ids.Contains(categoryId)), 15m, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetDensityAsync(It.IsAny<GeoViewport>(), It.Is<IReadOnlyCollection<Guid>>(ids => ids.Contains(categoryId)), 15m, It.IsAny<DateRange?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<PlaceDensityCell>
             {
                 new(38.7m, -9.1m, 1300, 36.9m, -9.5m, 42.1m, -6.2m),

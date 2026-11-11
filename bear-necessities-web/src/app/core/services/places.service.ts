@@ -3,6 +3,12 @@ import { Observable, tap } from 'rxjs';
 import { PlaceSummaryDto, PlaceDetailDto, PlaceDensityResponse } from '../models/place.model';
 import { ApiService } from './api.service';
 
+/** Days chosen in the map's "When?" filter, as YYYY-MM-DD. */
+export interface MapDateRange {
+  from: string;
+  to: string;
+}
+
 export interface MapBbox {
   northEastLat: number;
   northEastLng: number;
@@ -17,6 +23,8 @@ export class PlacesService {
   places = signal<PlaceSummaryDto[]>([]);
   isLoading = signal(false);
   selectedCategories = signal<string[]>([]);
+  // Null means "Anytime": every place, whatever is on
+  selectedDates = signal<MapDateRange | null>(null);
 
   constructor(private api: ApiService) {}
 
@@ -34,6 +42,7 @@ export class PlacesService {
     if (categoryIds && categoryIds.length > 0) {
       params['categoryIds'] = categoryIds;
     }
+    this.addDates(params);
 
     return this.api.get<any>('/places', params).pipe(
       tap(response => {
@@ -51,7 +60,15 @@ export class PlacesService {
     if (categoryIds && categoryIds.length > 0) {
       params['categoryIds'] = categoryIds;
     }
+    this.addDates(params);
     return this.api.get<PlaceDensityResponse>('/places/density', params);
+  }
+
+  private addDates(params: Record<string, any>): void {
+    const dates = this.selectedDates();
+    if (!dates) return;
+    params['from'] = dates.from;
+    params['to'] = dates.to;
   }
 
   getById(id: string): Observable<PlaceDetailDto> {

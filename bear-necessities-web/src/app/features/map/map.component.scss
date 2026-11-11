@@ -320,12 +320,13 @@ $planner-primary-dark: #004d40;
   background: white;
 }
 
-.map-mode-toggle {
+.when-filter {
   position: absolute;
   top: 55px;
   left: 12px;
   z-index: 20;
   display: flex;
+  align-items: center;
   background: white;
   border-radius: 22px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
@@ -355,6 +356,60 @@ $planner-primary-dark: #004d40;
       background: #00796b;
       color: white;
     }
+  }
+
+  .when-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0 8px 0 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #004d40;
+
+    app-bear-icon { color: #00796b; }
+  }
+}
+
+// Little card under the filter for choosing exact days
+.when-picker {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 12px;
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #757575;
+  }
+
+  input {
+    padding: 7px 8px;
+    border: 1.5px solid #dde7e5;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    color: #212121;
+
+    &:focus { outline: none; border-color: #00796b; }
+  }
+
+  .when-apply {
+    background: #00796b !important;
+    color: white !important;
+
+    &:hover:not(:disabled) { background: #004d40 !important; }
+    &:disabled { opacity: 0.5; cursor: default; }
   }
 }
 
@@ -418,6 +473,17 @@ $planner-primary-dark: #004d40;
       color: #00796b;
       text-transform: uppercase;
       letter-spacing: 0.3px;
+    }
+
+    .map-popup-next {
+      margin-top: 6px;
+      padding: 3px 8px;
+      display: inline-block;
+      border-radius: 10px;
+      background: #fff6d6;
+      color: #6d4c00;
+      font-size: 12px;
+      font-weight: 700;
     }
 
     .map-popup-desc {
@@ -499,9 +565,22 @@ $planner-primary-dark: #004d40;
     min-height: 44px;
   }
 
-  .map-mode-toggle {
+  .when-filter {
     top: 67px;
     left: 10px;
+    right: 10px;
+    overflow-x: auto;
+
+    .when-label { display: none; }
+
+    // The row scrolls sideways on phones, so the date card sits on the screen rather than inside it
+    .when-picker {
+      position: fixed;
+      top: 118px;
+      left: 10px;
+      right: 10px;
+      flex-wrap: wrap;
+    }
 
     button {
       padding: 9px 12px;

@@ -7,4 +7,6 @@ public record GetPlacesByViewportRequest(
     decimal SouthWestLng,
     IEnumerable<Guid>? CategoryIds = null,
     int PageSize = 20,
-    Guid? Cursor = null);
+    Guid? Cursor = null,
+    DateOnly? From = null,
+    DateOnly? To = null);

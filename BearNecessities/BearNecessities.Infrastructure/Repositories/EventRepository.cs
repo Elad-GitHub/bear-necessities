@@ -66,6 +66,44 @@ public class EventRepository : BaseRepository<Event, EventId>, IEventRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyDictionary<PlaceId, PlaceNextEvent>> FindNextEventByPlacesAsync(
+        IEnumerable<PlaceId> placeIds, DateTime fromUtc, DateTime? toUtc, CancellationToken cancellationToken = default)
+    {
+        var idList = placeIds.ToList();
+        if (idList.Count == 0) return new Dictionary<PlaceId, PlaceNextEvent>();
+
+        var liveAtPlaces = Context.Events.Where(e => e.Status == ListingStatus.Live
+            && e.PlaceId != null && idList.Contains(e.PlaceId!));
+        var until = toUtc ?? DateTime.MaxValue;
+
+        var scheduled = await (
+            from o in Context.EventOccurrences
+            join e in liveAtPlaces on o.RecurringEventId equals e.Id
+            where o.Status != ListingStatus.Cancelled && o.StartAt <= until
+                && (o.EndAt >= fromUtc || (o.EndAt == null && o.StartAt >= fromUtc))
+            select new NextCandidate(e.PlaceId!, e.Id, e.Title, o.StartAt)).ToListAsync(cancellationToken);
+
+        // One-time events may carry only their own dates, without a scheduled occurrence
+        var oneTime = await liveAtPlaces
+            .Where(e => e.EventType == EventType.OneTime && e.StartAt != null && e.StartAt <= until
+                && (e.EndAt >= fromUtc || (e.EndAt == null && e.StartAt >= fromUtc)))
+            .Select(e => new NextCandidate(e.PlaceId!, e.Id, e.Title, e.StartAt))
+            .ToListAsync(cancellationToken);
+
+        var ongoing = await liveAtPlaces
+            .Where(e => e.EventType == EventType.Permanent)
+            .Select(e => new NextCandidate(e.PlaceId!, e.Id, e.Title, null))
+            .ToListAsync(cancellationToken);
+
+        // A dated happening beats an ongoing one: "Boom Festival · 22 Jul" says more than "Ongoing"
+        var next = new Dictionary<PlaceId, PlaceNextEvent>();
+        foreach (var candidate in ongoing.Concat(scheduled.Concat(oneTime).OrderByDescending(item => item.StartAt)))
+            next[candidate.PlaceId] = new PlaceNextEvent(candidate.EventId, candidate.Title, candidate.StartAt);
+        return next;
+    }
+
+    private sealed record NextCandidate(PlaceId PlaceId, EventId EventId, string Title, DateTime? StartAt);
+
     public async Task<List<Event>> GetByOwnerAsync(
         UserId ownerId,
         CancellationToken cancellationToken = default)

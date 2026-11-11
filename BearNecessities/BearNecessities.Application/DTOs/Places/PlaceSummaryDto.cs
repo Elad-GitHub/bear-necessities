@@ -18,4 +18,8 @@ public record PlaceSummaryDto(
     bool IsPermanent,
     string? RejectionReason = null,
     string? Description = null,
-    string? Address = null);
+    string? Address = null,
+    PlaceNextEventDto? NextEvent = null);
+
+/// <summary>The soonest happening at a place; StartAt is null for an ongoing event.</summary>
+public record PlaceNextEventDto(Guid Id, string Title, DateTime? StartAt);

@@ -28,7 +28,7 @@ public sealed class GetPlaceDensityHandler : IRequestHandler<GetPlaceDensityRequ
             Coordinates.Create(request.SouthWestLat, request.SouthWestLng));
 
         var cells = await _unitOfWork.Places.GetDensityAsync(
-            viewport, request.CategoryIds, CellSizeForZoom(request.Zoom), cancellationToken);
+            viewport, request.CategoryIds, CellSizeForZoom(request.Zoom), MapDates.ToRange(request.From, request.To), cancellationToken);
 
         var dtos = cells
             .Select(cell => new PlaceDensityCellDto(

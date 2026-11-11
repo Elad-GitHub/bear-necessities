@@ -3,7 +3,7 @@
 <div class="map-page">
   <div class="map-filters">
     <app-category-chips
-      [categories]="visibleCategories()"
+      [categories]="categoriesService.categories()"
       [selectedIds]="placesService.selectedCategories()"
       (selectionChange)="onCategoryChange($event)">
     </app-category-chips>
@@ -55,7 +55,7 @@
   <!-- Trip planner panel -->
   <div class="planner-panel" *ngIf="isPlannerOpen()">
     <div class="planner-header">
-      <h3><span class="material-icons">explore</span> Plan a Trip</h3>
+      <h3><app-bear-icon name="trail" [size]="24"></app-bear-icon> Bear-foot trip planner</h3>
       <button class="planner-close" (click)="togglePlanner()">
         <span class="material-icons">close</span>
       </button>
@@ -84,7 +84,7 @@
     <p class="planner-hint">Pick at least {{ minTripCategories }} subcategories — open a category to choose.</p>
     <app-category-chips
       [wrap]="true"
-      [categories]="placeCategories()"
+      [categories]="categoriesService.categories()"
       [selectedIds]="tripCategoryIds()"
       (selectionChange)="onPlannerCategoriesChange($event)">
     </app-category-chips>
@@ -110,16 +110,24 @@
     </button>
   </div>
 
-  <div class="map-mode-toggle" *ngIf="!tripActive()">
-    <button [class.active]="mapMode() === 'places'" (click)="setMapMode('places')">
-      <span class="material-icons">place</span> Places
+  <!-- When? Anytime shows everything; with days chosen, only places open or happening then -->
+  <div class="when-filter" *ngIf="!tripActive()" role="group" aria-label="When are you going?">
+    <span class="when-label">
+      <app-bear-icon name="going" [size]="20"></app-bear-icon>
+      When?
+    </span>
+    <button [class.active]="whenOption() === 'anytime'" (click)="setWhen('anytime')">Anytime</button>
+    <button [class.active]="whenOption() === 'week'" (click)="setWhen('week')">This week</button>
+    <button [class.active]="whenOption() === 'month'" (click)="setWhen('month')">This month</button>
+    <button [class.active]="whenOption() === 'custom'" (click)="toggleDatePicker()" [attr.aria-expanded]="isDatePickerOpen()">
+      {{ customDatesLabel() }}
     </button>
-    <button [class.active]="mapMode() === 'events'" (click)="setMapMode('events')">
-      <span class="material-icons">celebration</span> Events
-    </button>
-    <button [class.active]="mapMode() === 'both'" (click)="setMapMode('both')">
-      Both
-    </button>
+
+    <div class="when-picker" *ngIf="isDatePickerOpen()">
+      <label>From <input type="date" [value]="customFrom()" (input)="customFrom.set($any($event.target).value)" /></label>
+      <label>To <input type="date" [value]="customTo()" [min]="customFrom()" (input)="customTo.set($any($event.target).value)" /></label>
+      <button class="when-apply" (click)="applyCustomDates()" [disabled]="!customFrom()">Show</button>
+    </div>
   </div>
 
   <app-loading-spinner *ngIf="showInitialSpinner()"></app-loading-spinner>

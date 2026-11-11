@@ -82,11 +82,13 @@ public class PlacesController : BaseApiController
         [FromQuery] Guid[]? categoryIds,
         [FromQuery] int pageSize = 20,
         [FromQuery] Guid? cursor = null,
+        [FromQuery] DateOnly? from = null,
+        [FromQuery] DateOnly? to = null,
         CancellationToken cancellationToken = default)
     {
         var request = new GetPlacesByViewportRequest(
             northEastLat, northEastLng, southWestLat, southWestLng,
-            categoryIds, pageSize, cursor);
+            categoryIds, pageSize, cursor, from, to);
 
         var response = await _viewportHandler.HandleAsync(request, cancellationToken);
         return Ok(response);
@@ -100,10 +102,12 @@ public class PlacesController : BaseApiController
         [FromQuery] decimal southWestLng,
         [FromQuery] double zoom,
         [FromQuery] Guid[]? categoryIds,
+        [FromQuery] DateOnly? from = null,
+        [FromQuery] DateOnly? to = null,
         CancellationToken cancellationToken = default)
     {
         var request = new GetPlaceDensityRequest(
-            northEastLat, northEastLng, southWestLat, southWestLng, zoom, categoryIds?.ToList());
+            northEastLat, northEastLng, southWestLat, southWestLng, zoom, categoryIds?.ToList(), from, to);
         return Ok(await _densityHandler.HandleAsync(request, cancellationToken));
     }
 

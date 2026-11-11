@@ -21,6 +21,10 @@ public interface IEventRepository : IRepository<Event, EventId>
 
     Task<List<Event>> SearchUpcomingByTextAsync(string query, int limit, DateTime nowUtc, CancellationToken cancellationToken = default);
     Task<List<Event>> FindUpcomingByPlacesAsync(IEnumerable<PlaceId> placeIds, CancellationToken cancellationToken = default);
+
+    /// <summary>The soonest live event at each place from <paramref name="fromUtc"/> on (up to <paramref name="toUtc"/> when given).</summary>
+    Task<IReadOnlyDictionary<PlaceId, PlaceNextEvent>> FindNextEventByPlacesAsync(
+        IEnumerable<PlaceId> placeIds, DateTime fromUtc, DateTime? toUtc, CancellationToken cancellationToken = default);
     Task<List<Event>> GetPendingAsync(int pageSize, Guid? cursor, CancellationToken cancellationToken = default);
 
     Task<(IReadOnlyList<EventViewportItem> Items, int TotalCount)> FindByViewportPagedAsync(

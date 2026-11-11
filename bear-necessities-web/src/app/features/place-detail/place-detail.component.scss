@@ -643,3 +643,24 @@ $radius-md: 8px;
     flex: 1 1 100%;
   }
 }
+
+// The soonest happening here, right under the name: what a traveller wants to know first
+.next-up {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 6px 14px 6px 10px;
+  border: none;
+  border-radius: 18px;
+  background: #fbc02d;
+  color: #3e2c00;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  transition: transform 0.15s ease;
+
+  &:hover { transform: translateY(-1px); }
+}

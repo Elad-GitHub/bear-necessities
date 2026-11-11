@@ -28,6 +28,10 @@
             </mat-chip>
           </div>
           <h1 class="hero-title">{{ place.name }}</h1>
+          <button class="next-up" *ngIf="upcomingEvents()[0] as nextEvent" (click)="openEvent(nextEvent)">
+            <app-bear-icon name="events" [size]="18"></app-bear-icon>
+            Next: {{ nextEvent.title }}<ng-container *ngIf="nextEvent.startAt"> · {{ nextEvent.startAt | date:'d MMM' }}</ng-container>
+          </button>
         </div>
         <div class="save-actions">
           <button class="save-btn want-to-go" [class.saved]="isSaveType('WantToGo')"
