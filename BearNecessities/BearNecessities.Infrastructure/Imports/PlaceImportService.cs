@@ -12,6 +12,13 @@ public sealed class PlaceImportService : IPlaceImportService
 {
     private const string ImportOwnerEmail = "demo@nomadica.app";
     private const int SaveEvery = 100;
+    private const int MaxCategoriesPerPlace = 5;
+
+    // What the first version of the OSM import could assign; a place with only these was never categorised by hand
+    private static readonly HashSet<string> FirstImportSlugs = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "yoga", "vegan-restaurant", "indian-food", "health-food-cafe", "camping", "hot-springs", "farmers-market", "community-garden"
+    };
 
     private readonly BearNecessitiesDbContext _db;
     private readonly ILogger<PlaceImportService> _logger;
@@ -43,6 +50,7 @@ public sealed class PlaceImportService : IPlaceImportService
             existing.Where(e => e.ExternalSourceId != null && !e.HasDescription).Select(e => e.ExternalSourceId!),
             StringComparer.OrdinalIgnoreCase);
         var descriptionsToBackfill = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var categoriesToUpdate = new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase);
 
         var seenExternalIds = new HashSet<string>(
             existing.Where(e => e.ExternalSourceId != null).Select(e => e.ExternalSourceId!),
@@ -66,6 +74,8 @@ public sealed class PlaceImportService : IPlaceImportService
                     if (candidate.ExternalSourceId is not null && candidate.Description is not null
                         && missingDescription.Contains(candidate.ExternalSourceId))
                         descriptionsToBackfill[candidate.ExternalSourceId] = candidate.Description;
+                    if (candidate.ExternalSourceId is not null && candidate.CategorySlugs.Count > 0)
+                        categoriesToUpdate[candidate.ExternalSourceId] = candidate.CategorySlugs;
                     continue;
                 }
 
@@ -89,7 +99,51 @@ public sealed class PlaceImportService : IPlaceImportService
 
         await _db.SaveChangesAsync(cancellationToken);
         await BackfillDescriptionsAsync(descriptionsToBackfill, cancellationToken);
+        await UpdateCategoriesAsync(categoriesToUpdate, categoriesBySlug, cancellationToken);
         return new ImportReport(inserted, duplicates, failed, errors);
+    }
+
+    // Re-imports bring places already on the map up to the current category rules. Places whose categories all
+    // came from the first import get the new set; places someone categorised by hand only gain what's missing.
+    private async Task UpdateCategoriesAsync(
+        Dictionary<string, IReadOnlyList<string>> slugsByExternalId,
+        IReadOnlyDictionary<string, Category> categoriesBySlug,
+        CancellationToken cancellationToken)
+    {
+        if (slugsByExternalId.Count == 0) return;
+
+        var externalIds = slugsByExternalId.Keys.ToList();
+        var places = await _db.Places
+            .Include(p => p.Categories)
+            .Where(p => p.ExternalSourceId != null && externalIds.Contains(p.ExternalSourceId))
+            .ToListAsync(cancellationToken);
+
+        var changed = 0;
+        foreach (var place in places)
+        {
+            var wanted = slugsByExternalId[place.ExternalSourceId!]
+                .Where(categoriesBySlug.ContainsKey)
+                .Select(slug => categoriesBySlug[slug])
+                .ToList();
+            var current = place.Categories.Select(c => c.Slug).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            if (wanted.Count == 0 || wanted.All(category => current.Contains(category.Slug)) && wanted.Count == current.Count) continue;
+
+            if (current.All(FirstImportSlugs.Contains))
+            {
+                place.ClearCategories();
+                foreach (var category in wanted.Take(MaxCategoriesPerPlace)) place.AddCategory(category);
+            }
+            else
+            {
+                foreach (var category in wanted.Where(category => !current.Contains(category.Slug))
+                    .Take(MaxCategoriesPerPlace - current.Count))
+                    place.AddCategory(category);
+            }
+            changed++;
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Updated categories on {Count} existing places", changed);
     }
 
     // One query loads every place that needs a description; one save writes them all

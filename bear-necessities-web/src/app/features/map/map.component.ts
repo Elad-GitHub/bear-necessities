@@ -57,6 +57,10 @@ const BEAR_WALK_FRAMES = [1, 2, 3, 4].map(frame => `brand/bears/walk-${frame}.pn
 const BEAR_ARRIVED_IMAGE = 'brand/bears/waving.png';
 const BEAR_WALK_FRAME_MS = 140;
 const TRIP_ROUTE_OPACITY = 0.8;
+const TRIP_STOP_CLUSTER_RADIUS_PX = 22;
+const TRIP_STOP_CLUSTER_MAX_ZOOM = 16;
+// About 15 m: enough to separate stops in one building without misplacing them
+const SHARED_SPOT_SPREAD_DEGREES = 0.00014;
 const WALKED_ROUTE_OPACITY = 0.25;
 const BEAR_WALK_MIN_MS = 6000;
 const BEAR_WALK_MAX_MS = 14000;
@@ -601,9 +605,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.hidePlaceLayers();
 
     let order = 0;
+    const spread = this.spreadSharedSpots(days.flatMap(day => day.stops));
     this.tripStopPoints = days.flatMap(day => day.stops.map(stop => ({
       type: 'Feature' as const,
-      geometry: { type: 'Point' as const, coordinates: [stop.longitude, stop.latitude] },
+      geometry: { type: 'Point' as const, coordinates: spread.get(stop.id) ?? [stop.longitude, stop.latitude] },
       properties: {
         id: stop.id,
         order: ++order,
@@ -634,6 +639,28 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     } else {
       this.flyToArea(area);
     }
+  }
+
+  // Several stops in one building would sit exactly on top of each other even fully zoomed in,
+  // so stops sharing a spot fan out in a small ring around it
+  private spreadSharedSpots(stops: PlaceSummaryDto[]): Map<string, [number, number]> {
+    const bySpot = new Map<string, PlaceSummaryDto[]>();
+    for (const stop of stops) {
+      const spot = `${stop.latitude.toFixed(4)},${stop.longitude.toFixed(4)}`;
+      bySpot.set(spot, [...(bySpot.get(spot) ?? []), stop]);
+    }
+    const positions = new Map<string, [number, number]>();
+    for (const shared of bySpot.values()) {
+      if (shared.length < 2) continue;
+      shared.forEach((stop, index) => {
+        const angle = (2 * Math.PI * index) / shared.length;
+        positions.set(stop.id, [
+          stop.longitude + SHARED_SPOT_SPREAD_DEGREES * Math.cos(angle),
+          stop.latitude + SHARED_SPOT_SPREAD_DEGREES * Math.sin(angle)
+        ]);
+      });
+    }
+    return positions;
   }
 
   private flyToArea(area: GeocodeResult): void {
@@ -690,7 +717,18 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     const emptyCollection: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
     map.addSource('trip-route', { type: 'geojson', data: emptyCollection });
-    map.addSource('trip-stops', { type: 'geojson', data: emptyCollection });
+    // Stops close enough to overlap merge into one circle labelled with their range ("3–5")
+    map.addSource('trip-stops', {
+      type: 'geojson',
+      data: emptyCollection,
+      cluster: true,
+      clusterRadius: TRIP_STOP_CLUSTER_RADIUS_PX,
+      clusterMaxZoom: TRIP_STOP_CLUSTER_MAX_ZOOM,
+      clusterProperties: {
+        firstOrder: ['min', ['get', 'order']],
+        lastOrder: ['max', ['get', 'order']]
+      }
+    });
 
     map.addLayer({
       id: 'trip-route',
@@ -723,9 +761,23 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       id: 'trip-stop-circles',
       type: 'circle',
       source: 'trip-stops',
+      filter: ['!', ['has', 'point_count']],
       paint: {
         'circle-color': ['get', 'color'],
         'circle-radius': 12,
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#ffffff'
+      }
+    });
+
+    map.addLayer({
+      id: 'trip-stop-groups',
+      type: 'circle',
+      source: 'trip-stops',
+      filter: ['has', 'point_count'],
+      paint: {
+        'circle-color': FESTIVAL_PALETTE.darkTeal,
+        'circle-radius': 16,
         'circle-stroke-width': 2,
         'circle-stroke-color': '#ffffff'
       }
@@ -736,14 +788,29 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       type: 'symbol',
       source: 'trip-stops',
       layout: {
-        'text-field': ['to-string', ['get', 'order']],
+        'text-field': ['case', ['has', 'point_count'],
+          ['concat', ['to-string', ['get', 'firstOrder']], '–', ['to-string', ['get', 'lastOrder']]],
+          ['to-string', ['get', 'order']]],
         'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
-        'text-size': 12,
+        'text-size': ['case', ['has', 'point_count'], 11, 12],
         'text-allow-overlap': true,
         'text-ignore-placement': true
       },
       paint: { 'text-color': '#ffffff' }
     });
+
+    // A merged circle opens up to where its stops stand apart
+    map.on('click', 'trip-stop-groups', (event) => {
+      const group = event.features?.[0];
+      const groupId = group?.properties?.['cluster_id'];
+      if (groupId == null) return;
+      (map.getSource('trip-stops') as mapboxgl.GeoJSONSource).getClusterExpansionZoom(groupId, (error, zoom) => {
+        if (error || zoom == null) return;
+        map.easeTo({ center: (group!.geometry as GeoJSON.Point).coordinates as [number, number], zoom });
+      });
+    });
+    map.on('mouseenter', 'trip-stop-groups', () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'trip-stop-groups', () => { map.getCanvas().style.cursor = ''; });
 
     map.on('click', 'trip-stop-circles', (event) => {
       const placeId = event.features?.[0]?.properties?.['id'];

@@ -701,3 +701,11 @@ $planner-primary-dark: #004d40;
     opacity: 0.7;
   }
 }
+
+// The panel scrolls through the category chips, so the plan button stays pinned to its bottom edge
+.planner-panel:not(.trip-itinerary) > .planner-go {
+  position: sticky;
+  bottom: -18px;
+  z-index: 2;
+  box-shadow: 0 -10px 14px 4px white;
+}

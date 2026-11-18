@@ -31,7 +31,14 @@ public sealed class OsmImportService
         "nwr[\"tourism\"=\"camp_site\"](area.a);",
         "nwr[\"natural\"=\"hot_spring\"](area.a);",
         "nwr[\"amenity\"=\"marketplace\"](area.a);",
-        "nwr[\"leisure\"=\"garden\"][\"garden:type\"=\"community\"](area.a);"
+        "nwr[\"leisure\"=\"garden\"][\"garden:type\"=\"community\"](area.a);",
+        // Healing, retreats and spiritual places, which OSM tags directly or names plainly
+        "nwr[\"healthcare\"=\"alternative\"](area.a);",
+        "nwr[\"healthcare:speciality\"~\"ayurveda|acupuncture|reiki\"](area.a);",
+        "nwr[\"shop\"=\"massage\"](area.a);",
+        "nwr[\"shop\"~\"^(herbalist|esoteric)$\"](area.a);",
+        "nwr[\"amenity\"=\"public_bath\"][\"bath:type\"~\"hot_spring|onsen\"](area.a);",
+        "nwr[\"name\"~\"^Dhamma |vipassana|meditation cent|retreat|eco ?village|ecovila|ecoaldea|ecstatic dance|permacult|ayurved|reiki|kirtan|temazcal|sound healing|cacao ceremony\",i](area.a);"
     ];
 
     private readonly HttpClient _http;
@@ -237,8 +244,9 @@ public sealed class OsmImportService
             var name = GetTag(tags, "name");
             if (string.IsNullOrWhiteSpace(name)) continue;
 
-            var slug = SlugForTags(tags);
-            if (slug is null) continue;
+            var tagDictionary = ToTagDictionary(tags);
+            var slugs = OsmCategoryRules.Classify(tagDictionary);
+            if (slugs.Count == 0) continue;
 
             if (!TryGetCoordinates(element, out var latitude, out var longitude)) continue;
 
@@ -249,11 +257,11 @@ public sealed class OsmImportService
                 Name: name!,
                 Latitude: latitude,
                 Longitude: longitude,
-                CategorySlugs: [slug],
+                CategorySlugs: slugs.ToList(),
                 Source: ListingSourceType.Osm,
                 ExternalSourceId: $"osm:{elementType}/{elementId}",
                 // Most OSM places have no description; a summary built from their tags fills the hover card
-                Description: GetTag(tags, "description") ?? OsmPlaceSummary.Build(ToTagDictionary(tags), slug),
+                Description: GetTag(tags, "description") ?? OsmPlaceSummary.Build(tagDictionary, slugs[0]),
                 Address: BuildAddress(tags),
                 City: GetTag(tags, "addr:city"),
                 Country: countryName ?? iso,
@@ -263,32 +271,6 @@ public sealed class OsmImportService
         }
 
         return results;
-    }
-
-    private static string? SlugForTags(JsonElement tags)
-    {
-        var sport = GetTag(tags, "sport");
-        if (string.Equals(sport, "yoga", StringComparison.OrdinalIgnoreCase)) return "yoga";
-
-        var cuisine = GetTag(tags, "cuisine")?.ToLowerInvariant() ?? string.Empty;
-        var dietVegan = GetTag(tags, "diet:vegan")?.ToLowerInvariant();
-        if (cuisine.Contains("vegan") || cuisine.Contains("vegetarian") || dietVegan is "yes" or "only")
-            return "vegan-restaurant";
-        if (cuisine.Contains("indian")) return "indian-food";
-
-        if (string.Equals(GetTag(tags, "shop"), "health_food", StringComparison.OrdinalIgnoreCase))
-            return "health-food-cafe";
-        if (string.Equals(GetTag(tags, "tourism"), "camp_site", StringComparison.OrdinalIgnoreCase))
-            return "camping";
-        if (string.Equals(GetTag(tags, "natural"), "hot_spring", StringComparison.OrdinalIgnoreCase))
-            return "hot-springs";
-        if (string.Equals(GetTag(tags, "amenity"), "marketplace", StringComparison.OrdinalIgnoreCase))
-            return "farmers-market";
-        if (string.Equals(GetTag(tags, "leisure"), "garden", StringComparison.OrdinalIgnoreCase)
-            && string.Equals(GetTag(tags, "garden:type"), "community", StringComparison.OrdinalIgnoreCase))
-            return "community-garden";
-
-        return null;
     }
 
     private static bool TryGetCoordinates(JsonElement element, out decimal latitude, out decimal longitude)
