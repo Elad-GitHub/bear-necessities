@@ -39,7 +39,11 @@
           <div class="search-section-label">Places</div>
           <button class="search-result" *ngFor="let result of placeResults()"
             (click)="openSearchResult(result, searchInput)">
-            <mat-icon>place</mat-icon>
+            @if (result.thumbnailUrl | sizedPhoto: 80; as photo) {
+              <img class="result-photo" [src]="photo" alt="" loading="lazy" />
+            } @else {
+              <mat-icon>place</mat-icon>
+            }
             <span class="result-name">{{ result.name }}</span>
             <span class="result-location" *ngIf="result.city || result.country">
               {{ result.city }}<ng-container *ngIf="result.city && result.country">, </ng-container>{{ result.country }}

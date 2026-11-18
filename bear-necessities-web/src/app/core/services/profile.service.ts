@@ -39,6 +39,7 @@ export interface SavedItemDto {
     city?: string;
     country?: string;
     imageUrl?: string;
+    thumbnailUrl?: string;
   };
 }
 

@@ -7,7 +7,7 @@ using BearNecessities.Domain.Enums;
 namespace BearNecessities.Infrastructure.Imports;
 
 /// Imports a curated CSV of places. Expected header (case-insensitive):
-/// Name,Latitude,Longitude,Categories,City,Country,Website,Description
+/// Name,Latitude,Longitude,Categories,City,Country,CountryCode,Website,Description
 /// Categories is a semicolon-separated list of category slugs (e.g. "ecstatic-dance;sound-healing").
 public sealed class CsvImportService
 {
@@ -87,6 +87,7 @@ public sealed class CsvImportService
             Description: Field(fields, columns, "description"),
             City: Field(fields, columns, "city"),
             Country: Field(fields, columns, "country"),
+            CountryCode: Field(fields, columns, "countrycode")?.ToUpperInvariant(),
             Website: Field(fields, columns, "website"),
             IsPermanent: true);
     }

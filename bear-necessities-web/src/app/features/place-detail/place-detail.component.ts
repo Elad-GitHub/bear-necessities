@@ -28,6 +28,7 @@ interface PickedPhoto {
 })
 export class PlaceDetailComponent implements OnInit, OnDestroy {
   place = signal<PlaceDetailDto | null>(null);
+  isRemovingPhoto = signal(false);
   isLoading = signal<boolean>(true);
   mySaveType = signal<SaveType | null>(null);
   isTogglingSave = signal<boolean>(false);
@@ -332,6 +333,22 @@ export class PlaceDetailComponent implements OnInit, OnDestroy {
     const place = this.place();
     if (!place) return '';
     return `https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`;
+  }
+
+  removePhoto(): void {
+    if (!this.placeId || !confirm('Remove this photo? The place will show its category image instead.')) return;
+    this.isRemovingPhoto.set(true);
+    this.placesService.removePhoto(this.placeId).subscribe({
+      next: () => {
+        this.place.update(place => place && { ...place, photoUrl: undefined, photoCredit: undefined, photoCreditUrl: undefined });
+        this.isRemovingPhoto.set(false);
+        this.toastService.success('Photo removed');
+      },
+      error: () => {
+        this.isRemovingPhoto.set(false);
+        this.toastService.error('Could not remove the photo');
+      }
+    });
   }
 
   getHeroImageUrl(): string {

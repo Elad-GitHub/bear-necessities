@@ -1,3 +1,4 @@
+@use 'variables';
 * {
   box-sizing: border-box;
 }
@@ -10,7 +11,7 @@ html, body {
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: variables.$font-body;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

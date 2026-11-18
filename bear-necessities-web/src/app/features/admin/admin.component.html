@@ -55,7 +55,7 @@
     <!-- Places queue -->
     <ng-container *ngIf="!isLoading() && activeTab() === 'places'">
       <div class="empty-state" *ngIf="pendingPlaces().length === 0">
-        <span class="material-icons">task_alt</span>
+        <img class="empty-trail" src="brand/paw-trail.svg" alt="" width="150" height="60">
         <h3>All clear!</h3>
         <p>No places waiting for review.</p>
       </div>
@@ -107,7 +107,7 @@
     <!-- Events queue -->
     <ng-container *ngIf="!isLoading() && activeTab() === 'events'">
       <div class="empty-state" *ngIf="pendingEvents().length === 0">
-        <span class="material-icons">task_alt</span>
+        <img class="empty-trail" src="brand/paw-trail.svg" alt="" width="150" height="60">
         <h3>All clear!</h3>
         <p>No events waiting for review.</p>
       </div>
@@ -161,7 +161,7 @@
     <!-- Suggested edits queue -->
     <ng-container *ngIf="!isLoading() && activeTab() === 'edits'">
       <div class="empty-state" *ngIf="pendingEdits().length === 0">
-        <span class="material-icons">task_alt</span>
+        <img class="empty-trail" src="brand/paw-trail.svg" alt="" width="150" height="60">
         <h3>All clear!</h3>
         <p>No suggested edits waiting for review.</p>
       </div>
@@ -219,7 +219,7 @@
     <!-- Gallery photos queue -->
     <ng-container *ngIf="!isLoading() && activeTab() === 'photos'">
       <div class="empty-state" *ngIf="pendingPhotos().length === 0">
-        <span class="material-icons">task_alt</span>
+        <img class="empty-trail" src="brand/paw-trail.svg" alt="" width="150" height="60">
         <h3>All clear!</h3>
         <p>No photos waiting for review.</p>
       </div>
@@ -251,7 +251,7 @@
     <!-- Members queue -->
     <ng-container *ngIf="!isLoading() && activeTab() === 'members'">
       <div class="empty-state" *ngIf="pendingMembers().length === 0">
-        <span class="material-icons">task_alt</span>
+        <img class="empty-trail" src="brand/paw-trail.svg" alt="" width="150" height="60">
         <h3>All clear!</h3>
         <p>No membership applications waiting for review.</p>
       </div>

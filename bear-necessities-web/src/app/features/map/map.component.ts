@@ -15,6 +15,7 @@ import { DirectionsService } from '../../core/services/directions.service';
 import { PlaceDensityCell, PlaceSummaryDto } from '../../core/models/place.model';
 import { ItineraryDay, MAX_TRIP_DAYS, MIN_TRIP_CATEGORIES } from '../../core/models/trip.model';
 import { applyFestivalTheme, FESTIVAL_PALETTE } from '../../core/map/festival-map-theme';
+import { sizedPhotoUrl } from '../../core/utils/photo-size';
 import { PAW_CLUSTER_PAINT, pawClusterLayout, registerPawClusterImages } from '../../core/map/paw-clusters';
 import { measureSegments, PAW_IMAGE_ID, PawPrint, pawPrintCountFor, registerPawTrailImage, samplePawPrints, toPawFeatures } from '../../core/map/paw-trail';
 import { loadMapImages } from '../../core/map/map-images';
@@ -57,6 +58,7 @@ const BEAR_WALK_FRAMES = [1, 2, 3, 4].map(frame => `brand/bears/walk-${frame}.pn
 const BEAR_ARRIVED_IMAGE = 'brand/bears/waving.png';
 const BEAR_WALK_FRAME_MS = 140;
 const TRIP_ROUTE_OPACITY = 0.8;
+const POPUP_PHOTO_WIDTH_PX = 330;
 const TRIP_STOP_CLUSTER_RADIUS_PX = 22;
 const TRIP_STOP_CLUSTER_MAX_ZOOM = 16;
 // About 15 m: enough to separate stops in one building without misplacing them
@@ -327,7 +329,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           .setHTML(this.buildPlacePopupHtml(
             place.name, place.city, place.country,
             this.categoryIcons.getNameForCategoryId(place.categoryId || place.categoryIds?.[0]),
-            place.description))
+            place.description,
+            null,
+            sizedPhotoUrl(place.photoUrl, POPUP_PHOTO_WIDTH_PX)))
           .addTo(this.mapInstance);
       }
     });
@@ -339,10 +343,12 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     country?: string,
     categoryName?: string | null,
     description?: string | null,
-    nextEvent?: string | null): string {
+    nextEvent?: string | null,
+    photoUrl?: string | null): string {
     const location = [city, country].filter(Boolean).map(part => this.escapeHtml(part!)).join(', ');
     const blurb = this.truncate(description, 120);
     return `<div class="map-popup">
+        ${photoUrl ? `<img class="map-popup-photo" src="${this.escapeHtml(photoUrl)}" alt="" />` : ''}
         <strong class="map-popup-title">${this.escapeHtml(name)}</strong>
         ${location ? `<div class="map-popup-loc"><span class="material-icons">place</span>${location}</div>` : ''}
         ${categoryName ? `<div class="map-popup-cat">${this.escapeHtml(categoryName)}</div>` : ''}
@@ -1133,7 +1139,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           saveType,
           // A place with something coming up wears a gold ring and the date, like a ticket stub
           eventTitle: place.nextEvent?.title ?? '',
-          eventLabel: place.nextEvent ? this.formatEventDate(place.nextEvent.startAt) : ''
+          eventLabel: place.nextEvent ? this.formatEventDate(place.nextEvent.startAt) : '',
+          photo: sizedPhotoUrl(place.thumbnailUrl, POPUP_PHOTO_WIDTH_PX) ?? ''
         }
       };
     });
@@ -1258,7 +1265,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           props['address'] ? props['city'] : props['country'],
           props['category'],
           props['description'],
-          props['eventTitle'] ? props['eventTitle'] + ' · ' + props['eventLabel'] : null))
+          props['eventTitle'] ? props['eventTitle'] + ' · ' + props['eventLabel'] : null,
+          props['photo'] || null))
         .addTo(map);
     };
 

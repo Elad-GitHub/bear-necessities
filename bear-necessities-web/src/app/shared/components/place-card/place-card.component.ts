@@ -1,6 +1,9 @@
 import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { PlaceSummaryDto } from '../../../core/models/place.model';
+import { sizedPhotoUrl } from '../../../core/utils/photo-size';
+
+const CARD_PHOTO_WIDTH_PX = 480;
 
 @Component({
   selector: 'app-place-card',
@@ -20,10 +23,10 @@ export class PlaceCardComponent {
   }
 
   getPlaceImageUrl(): string {
-    return this.place.imageUrl || '';
+    return sizedPhotoUrl(this.place.thumbnailUrl, CARD_PHOTO_WIDTH_PX) ?? this.place.imageUrl ?? '';
   }
 
   hasImage(): boolean {
-    return !!this.place.imageUrl;
+    return !!(this.place.thumbnailUrl || this.place.imageUrl);
   }
 }

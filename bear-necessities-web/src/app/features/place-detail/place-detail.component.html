@@ -16,6 +16,12 @@
       <div class="hero-overlay"></div>
       @if (!place.media?.length && place.photoCredit) {
         <app-photo-credit [credit]="place.photoCredit" [creditUrl]="place.photoCreditUrl"></app-photo-credit>
+        @if (authService.isAdmin()) {
+          <button type="button" class="remove-photo" (click)="removePhoto()" [disabled]="isRemovingPhoto()"
+            title="This photo shows the wrong place">
+            <span class="material-icons">hide_image</span> Wrong photo
+          </button>
+        }
       }
       <div class="hero-content">
         <div class="hero-info">

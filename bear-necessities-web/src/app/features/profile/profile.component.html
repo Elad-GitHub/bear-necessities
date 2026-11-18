@@ -113,7 +113,11 @@
       <div class="card-list" *ngIf="!isLoadingSaved() && savedItems().length > 0">
         <div class="list-card" *ngFor="let saved of savedItems()" (click)="openSavedItem(saved)">
           <div class="card-icon" [class.event-icon]="saved.targetType === 'Event'">
-            <span class="material-icons">{{ saved.targetType === 'Event' ? 'celebration' : 'place' }}</span>
+            @if (saved.summary?.thumbnailUrl | sizedPhoto: 120; as photo) {
+              <img class="card-photo" [src]="photo" alt="" loading="lazy" />
+            } @else {
+              <span class="material-icons">{{ saved.targetType === 'Event' ? 'celebration' : 'place' }}</span>
+            }
           </div>
           <div class="card-body">
             <h3>{{ saved.summary?.name || 'Listing' }}</h3>
@@ -156,7 +160,11 @@
         <!-- Places -->
         <div class="list-card" *ngFor="let listing of myListings()" (click)="openListing(listing)">
           <div class="card-icon">
-            <span class="material-icons">place</span>
+            @if (listing.thumbnailUrl | sizedPhoto: 120; as photo) {
+              <img class="card-photo" [src]="photo" alt="" loading="lazy" />
+            } @else {
+              <span class="material-icons">place</span>
+            }
           </div>
           <div class="card-body">
             <h3>{{ listing.name }}</h3>

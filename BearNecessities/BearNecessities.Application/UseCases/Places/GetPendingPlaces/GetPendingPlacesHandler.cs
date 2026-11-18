@@ -37,7 +37,7 @@ public sealed class GetPendingPlacesHandler : IRequestHandler<GetPendingPlacesRe
                 AverageRating: null,
                 ReviewCount: 0,
                 CategoryIds: p.Categories.Select(c => c.Id.Value).ToList(),
-                ThumbnailUrl: null,
+                ThumbnailUrl: p.PhotoUrl,
                 IsPermanent: p.IsPermanent))
             .ToList();
 

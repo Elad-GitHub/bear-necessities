@@ -29,6 +29,9 @@ public class OsmCategoryRulesTests
     [InlineData("Lakshmi Ayurveda Retreat", "ayurveda")]
     [InlineData("Ecovila Terra Mater", "eco-village")]
     [InlineData("Casa Temazcal", "sweat-lodge")]
+    [InlineData("Lisbon Qigong School", "qigong")]
+    [InlineData("Wim Hof Ice Bath Studio", "cold-therapy")]
+    [InlineData("Kambo Healing Space", "kambo")]
     public void Classify_PracticeInTheName_ShouldBeRecognised(string name, string expected)
     {
         Classify(("name", name), ("tourism", "guest_house")).Should().Contain(expected);
@@ -59,6 +62,17 @@ public class OsmCategoryRulesTests
         var tags = new List<(string, string)> { ("name", name), ("shop", "massage") };
         if (style is not null) tags.Add(("massage", style));
         Classify(tags.ToArray()).Should().Contain(expected);
+    }
+
+    [Theory]
+    [InlineData("amenity", "coworking_space", "coworking-space")]
+    [InlineData("leisure", "hackerspace", "hackerspace")]
+    [InlineData("sport", "tai_chi", "tai-chi")]
+    [InlineData("craft", "pottery", "pottery")]
+    [InlineData("amenity", "music_venue", "live-music")]
+    public void Classify_CommunitySpaceTag_ShouldBeRecognised(string key, string value, string expected)
+    {
+        Classify(("name", "Casa Aberta"), (key, value)).Should().Equal(expected);
     }
 
     [Fact]

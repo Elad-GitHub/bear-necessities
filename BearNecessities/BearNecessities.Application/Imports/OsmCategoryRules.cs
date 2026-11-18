@@ -36,7 +36,24 @@ public static partial class OsmCategoryRules
         (Word("temazcal|sweat lodge"), "sweat-lodge"),
         (Word("yoga"), "yoga"),
         (Word("acupunct(ure|ura)"), "acupuncture"),
-        (Word("thai massage"), "thai-massage")
+        (Word("thai massage"), "thai-massage"),
+        (Word("qi ?gong"), "qigong"),
+        (Word("tai ?chi"), "tai-chi"),
+        (Word("breathwork"), "breathwork"),
+        (Word("acro ?yoga"), "acro-yoga"),
+        (Word("contact improv(isation)?"), "contact-improv"),
+        (Word("circus school|circus arts"), "circus-arts"),
+        (Word("kambo"), "kambo"),
+        (Word("shaman(ic|ism)?"), "shamanism"),
+        (Word("wwoof(ing)?"), "wwoofing"),
+        (Word("co-?living"), "co-living"),
+        (Word("ice bath|wim hof"), "cold-therapy"),
+        (Word("tuina|tui na"), "tuina"),
+        (Word("drum(ming)? circle"), "drumming-circle"),
+        (Word("sound bath"), "sound-bath"),
+        (Word("macram(e|é)"), "macrame-fiber-arts"),
+        (Word("human design"), "human-design"),
+        (Word("fab ?lab|makerspace|maker space"), "maker-space")
     ];
 
     private static readonly (Regex Pattern, string Slug)[] MarketRules =
@@ -72,6 +89,12 @@ public static partial class OsmCategoryRules
             || (Is(tags, "amenity", "public_bath") && Is(tags, "bath:type", "onsen")))
             Add("hot-springs");
         if (Is(tags, "leisure", "garden") && Is(tags, "garden:type", "community")) Add("community-garden");
+        if (Is(tags, "amenity", "coworking_space")) Add("coworking-space");
+        if (Is(tags, "leisure", "hackerspace")) Add("hackerspace");
+        if (Is(tags, "sport", "tai_chi")) Add("tai-chi");
+        if (Is(tags, "sport", "qigong")) Add("qigong");
+        if (Is(tags, "craft", "pottery")) Add("pottery");
+        if (Is(tags, "amenity", "music_venue")) Add("live-music");
 
         var name = tags.GetValueOrDefault("name", string.Empty);
         if (Is(tags, "amenity", "marketplace"))

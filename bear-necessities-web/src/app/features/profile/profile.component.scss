@@ -277,6 +277,13 @@ $background: #f5f7f5;
 
   .material-icons { font-size: 22px; }
 
+  .card-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+  }
+
   &.event-icon {
     background: #fff3e0;
     color: #ef6c00;

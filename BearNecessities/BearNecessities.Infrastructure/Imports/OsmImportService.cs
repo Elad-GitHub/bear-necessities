@@ -20,6 +20,18 @@ public sealed class OsmImportService
         "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
     ];
 
+    // Telling words in a name ("Dhamma Giri", "Lisbon Qigong School"). Matched only on objects that already
+    // carry a place-type key: a bare name regex scans every named object in the country and times out.
+    private const string PracticeNamePattern =
+        "^Dhamma |vipassana|meditation cent|retreat|eco ?village|ecovila|ecoaldea|ecstatic dance|permacult|ayurved|reiki|kirtan|temazcal|sound healing|cacao ceremony|qi ?gong|tai ?chi|breathwork|acro ?yoga|contact improv|circus school|kambo|shaman|wwoof|co-?living|ice bath|wim hof|tuina|tui na|drum circle|sound bath|macram|human design";
+
+    private static readonly string[] PlaceTypeKeys =
+        ["amenity", "leisure", "tourism", "shop", "healthcare", "club", "sport", "office", "craft", "building", "landuse"];
+
+    private static string PracticeNameFilter() =>
+        "(" + string.Concat(PlaceTypeKeys.Select(key =>
+            $"nwr[\"{key}\"][\"name\"~\"{PracticeNamePattern}\",i](area.a);")) + ");";
+
     // Overpass filters we union to find candidates within a country area.
     private static readonly string[] CandidateFilters =
     [
@@ -38,7 +50,12 @@ public sealed class OsmImportService
         "nwr[\"shop\"=\"massage\"](area.a);",
         "nwr[\"shop\"~\"^(herbalist|esoteric)$\"](area.a);",
         "nwr[\"amenity\"=\"public_bath\"][\"bath:type\"~\"hot_spring|onsen\"](area.a);",
-        "nwr[\"name\"~\"^Dhamma |vipassana|meditation cent|retreat|eco ?village|ecovila|ecoaldea|ecstatic dance|permacult|ayurved|reiki|kirtan|temazcal|sound healing|cacao ceremony\",i](area.a);"
+        // Community spaces and practices OSM tags as their own kind
+        "nwr[\"amenity\"=\"coworking_space\"](area.a);",
+        "nwr[\"leisure\"=\"hackerspace\"](area.a);",
+        "nwr[\"sport\"~\"^(tai_chi|qigong)$\"](area.a);",
+        "nwr[\"craft\"=\"pottery\"](area.a);",
+        "nwr[\"amenity\"=\"music_venue\"](area.a);"
     ];
 
     private readonly HttpClient _http;
@@ -56,10 +73,10 @@ public sealed class OsmImportService
         string isoCountryCode,
         string? countryName,
         bool autoApprove,
-        int maxResults = 1500,
+        int maxResultsPerKind = 300,
         CancellationToken cancellationToken = default)
     {
-        var query = BuildQuery(CountryAreaSelector(isoCountryCode), maxResults);
+        var query = BuildQuery(CountryAreaSelector(isoCountryCode), maxResultsPerKind);
         _logger.LogInformation("Querying Overpass for {Iso}...", isoCountryCode);
 
         var json = await FetchWithFailoverAsync(query, isoCountryCode, cancellationToken);
@@ -79,7 +96,7 @@ public sealed class OsmImportService
         string isoCountryCode,
         string? countryName,
         bool autoApprove,
-        int maxResultsPerRegion = 1500,
+        int maxResultsPerKind = 300,
         CancellationToken cancellationToken = default)
     {
         var iso = isoCountryCode.ToUpperInvariant();
@@ -94,7 +111,7 @@ public sealed class OsmImportService
             var region = regions[index];
             var label = $"{iso}/{region.Name}";
             var json = await FetchWithFailoverAsync(
-                BuildQuery(RegionAreaSelector(region.RelationId), maxResultsPerRegion), label, cancellationToken);
+                BuildQuery(RegionAreaSelector(region.RelationId), maxResultsPerKind), label, cancellationToken);
 
             if (json is null)
             {
@@ -216,16 +233,17 @@ public sealed class OsmImportService
         return null;
     }
 
-    private static string BuildQuery(string areaSelector, int maxResults)
+    // Each kind gets its own cap, so thousands of markets can't crowd rarer kinds (reiki, temazcal) out of the result
+    private static string BuildQuery(string areaSelector, int maxResultsPerKind)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("[out:json][timeout:120];");
+        builder.AppendLine("[out:json][timeout:180];");
         builder.AppendLine(areaSelector);
-        builder.AppendLine("(");
-        foreach (var filter in CandidateFilters)
-            builder.AppendLine("  " + filter);
-        builder.AppendLine(");");
-        builder.AppendLine($"out center {maxResults};");
+        foreach (var filter in CandidateFilters.Append(PracticeNameFilter()))
+        {
+            builder.AppendLine(filter);
+            builder.AppendLine($"out center {maxResultsPerKind};");
+        }
         return builder.ToString();
     }
 
@@ -241,7 +259,7 @@ public sealed class OsmImportService
         {
             if (!element.TryGetProperty("tags", out var tags)) continue;
 
-            var name = GetTag(tags, "name");
+            var name = GetTag(tags, "name:en") ?? GetTag(tags, "name");
             if (string.IsNullOrWhiteSpace(name)) continue;
 
             var tagDictionary = ToTagDictionary(tags);

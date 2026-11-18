@@ -173,6 +173,11 @@ $background: #f5f7f5;
   padding: 60px 24px;
   color: $text-muted;
 
+  .empty-trail {
+    display: block;
+    margin: 0 auto 14px;
+  }
+
   .material-icons {
     font-size: 52px;
     color: $success;

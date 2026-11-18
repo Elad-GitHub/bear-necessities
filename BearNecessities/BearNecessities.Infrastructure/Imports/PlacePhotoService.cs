@@ -38,7 +38,7 @@ public sealed class PlacePhotoService
     public async Task<(int Checked, int Found)> FindMissingPhotosAsync(
         string? countryCode, int? limit, CancellationToken cancellationToken = default)
     {
-        var query = _db.Places.Where(p => p.PhotoUrl == null);
+        var query = _db.Places.Where(p => p.PhotoUrl == null && p.PhotoSearchedAt == null);
         if (!string.IsNullOrWhiteSpace(countryCode))
             query = query.Where(p => p.CountryCode == countryCode.ToUpperInvariant());
         var places = await query
@@ -62,10 +62,18 @@ public sealed class PlacePhotoService
                 });
 
             found += await SavePhotosAsync(photos, cancellationToken);
+            await MarkSearchedAsync(chunk.Select(place => place.Id).ToList(), cancellationToken);
             _logger.LogInformation("Photos: {Found} found so far", found);
         }
 
         return (places.Count, found);
+    }
+
+    private async Task MarkSearchedAsync(List<PlaceId> ids, CancellationToken cancellationToken)
+    {
+        var searchedAt = DateTime.UtcNow;
+        await _db.Places.Where(p => ids.Contains(p.Id))
+            .ExecuteUpdateAsync(setters => setters.SetProperty(p => p.PhotoSearchedAt, searchedAt), cancellationToken);
     }
 
     private async Task<int> SavePhotosAsync(Dictionary<PlaceId, PlacePhoto> photos, CancellationToken cancellationToken)

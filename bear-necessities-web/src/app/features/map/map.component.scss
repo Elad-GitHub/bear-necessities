@@ -445,7 +445,16 @@ $planner-primary-dark: #004d40;
       padding: 10px 14px;
       border-radius: 10px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
-      font-family: 'Inter', sans-serif;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    .map-popup-photo {
+      display: block;
+      width: calc(100% + 28px);
+      height: 110px;
+      margin: -10px -14px 8px;
+      object-fit: cover;
+      border-radius: 10px 10px 0 0;
     }
 
     .map-popup-title {

@@ -11,7 +11,7 @@
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
 
 // Google Font import
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Fredoka:wght@500;600;700&display=swap');
 
 // Global styles
 html, body {
@@ -23,7 +23,25 @@ html, body {
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: variables.$font-body;
+}
+
+h1, h2, h3,
+.display-font {
+  font-family: variables.$font-display;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+}
+
+// Material's prebuilt theme pins Roboto on its components; let them follow the app font
+.mat-mdc-button-base, .mat-mdc-menu-item, .mat-mdc-snack-bar-container, .mat-mdc-form-field,
+.mat-mdc-select, .mat-mdc-option, .mat-mdc-tooltip, .mat-mdc-dialog-container, .mat-mdc-chip {
+  font-family: variables.$font-body !important;
+  --mdc-typography-button-font-family: #{variables.$font-body};
+  --mat-option-label-text-font: #{variables.$font-body};
+  --mdc-plain-tooltip-supporting-text-font: #{variables.$font-body};
+  --mat-menu-item-label-text-font: #{variables.$font-body};
+  --mdc-snackbar-supporting-text-font: #{variables.$font-body};
 }
 
 app-root {

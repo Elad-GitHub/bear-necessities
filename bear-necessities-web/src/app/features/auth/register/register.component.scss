@@ -24,7 +24,13 @@
 }
 
 .auth-logo {
+  text-align: center;
   margin-bottom: 32px;
+
+  .auth-trail {
+    display: block;
+    margin: 6px auto 0;
+  }
 
   .auth-bear {
     display: block;
@@ -34,6 +40,7 @@
   }
 
   .logo-text {
+    font-family: 'Fredoka', 'Nunito', sans-serif;
     font-size: 24px;
     font-weight: 800;
     color: #00796b;

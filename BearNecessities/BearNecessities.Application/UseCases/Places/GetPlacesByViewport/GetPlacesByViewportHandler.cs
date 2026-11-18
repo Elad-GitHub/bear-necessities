@@ -62,7 +62,7 @@ public sealed class GetPlacesByViewportHandler
                 AverageRating: null, // requires a dedicated review-aggregate query; not yet implemented
                 ReviewCount: 0,
                 CategoryIds: p.Categories.Select(c => c.Id.Value).ToList(),
-                ThumbnailUrl: thumbnailByPlaceId.GetValueOrDefault(p.Id.Value),
+                ThumbnailUrl: thumbnailByPlaceId.GetValueOrDefault(p.Id.Value) ?? p.PhotoUrl,
                 IsPermanent: p.IsPermanent,
                 Description: TextShortening.Shorten(p.Description),
                 Address: p.Address,

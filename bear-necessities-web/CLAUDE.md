@@ -17,7 +17,7 @@ npm install
 ```bash
 npm start
 ```
-Runs `ng serve` on `http://localhost:55069`. Hot reload enabled.
+Runs `ng serve` on `http://localhost:4200`. Hot reload enabled.
 
 ### Production Build
 ```bash

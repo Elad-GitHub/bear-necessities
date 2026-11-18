@@ -20,7 +20,7 @@ public static class DemoDataSeeder
 
         try
         {
-            var demoUser = User.Create("demo@nomadica.app", "Bear Necessities Demo");
+            var demoUser = User.Create("demo@bearnecessities.app", "Bear Necessities Demo");
             demoUser.SetPasswordHash(new Services.BcryptPasswordHasher().Hash("Demo1234!"));
             demoUser.AddRole(UserRole.Traveler);
             demoUser.AddRole(UserRole.Organizer);

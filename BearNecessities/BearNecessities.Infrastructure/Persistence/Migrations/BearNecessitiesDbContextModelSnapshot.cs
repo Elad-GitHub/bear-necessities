@@ -1615,6 +1615,9 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<DateTime?>("PhotoSearchedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("PhotoUrl")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");

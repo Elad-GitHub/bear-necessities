@@ -14,6 +14,8 @@ public sealed class Place : AuditableEntity<PlaceId>
     public string Name { get; private set; } = default!;
     public string? Description { get; private set; }
     public string? PhotoUrl { get; private set; }
+    // When the automatic photo search last looked at this place, so it isn't searched again (or refilled after a removal)
+    public DateTime? PhotoSearchedAt { get; private set; }
     public string? PhotoCredit { get; private set; }
     public string? PhotoCreditUrl { get; private set; }
     public decimal Latitude { get; private set; }
@@ -141,6 +143,16 @@ public sealed class Place : AuditableEntity<PlaceId>
         PhotoUrl = url;
         PhotoCredit = credit.Trim();
         PhotoCreditUrl = creditUrl;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    // A wrong automatic photo: removing it also stops the photo search from picking one again
+    public void RemovePhoto()
+    {
+        PhotoUrl = null;
+        PhotoCredit = null;
+        PhotoCreditUrl = null;
+        PhotoSearchedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
 

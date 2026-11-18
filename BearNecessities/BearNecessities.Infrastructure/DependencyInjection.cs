@@ -58,6 +58,7 @@ using BearNecessities.Application.UseCases.SavedItems.GetSavedItems;
 using BearNecessities.Application.UseCases.SavedItems.ToggleSave;
 using BearNecessities.Application.UseCases.Telemetry.IngestTelemetry;
 using BearNecessities.Infrastructure.Telemetry;
+using BearNecessities.Application.UseCases.Places.RemovePlacePhoto;
 using BearNecessities.Application.UseCases.Places.ApprovePlace;
 using BearNecessities.Application.UseCases.Places.CreatePlace;
 using BearNecessities.Application.UseCases.Places.DeletePlace;
@@ -153,6 +154,7 @@ public static class DependencyInjection
         services.AddSingleton<IOccurrenceExpander, OccurrenceExpander>();
         services.AddScoped<IOccurrenceRefreshService, OccurrenceRefreshService>();
         services.AddHostedService<OccurrenceRefreshBackgroundService>();
+        services.AddHostedService<PlacePhotoBackgroundService>();
 
         services.AddScoped<GetPlacesByViewportHandler>();
         services.AddScoped<GetPlaceDensityHandler>();
@@ -161,6 +163,7 @@ public static class DependencyInjection
         services.AddScoped<CreatePlaceHandler>();
         services.AddScoped<UpdatePlaceHandler>();
         services.AddScoped<ApprovePlaceHandler>();
+        services.AddScoped<RemovePlacePhotoHandler>();
         services.AddScoped<GetPendingEditSuggestionsHandler>();
         services.AddScoped<ReviewEditSuggestionHandler>();
         services.AddScoped<RejectPlaceHandler>();

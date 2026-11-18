@@ -10,7 +10,7 @@ namespace BearNecessities.Infrastructure.Imports;
 
 public sealed class PlaceImportService : IPlaceImportService
 {
-    private const string ImportOwnerEmail = "demo@nomadica.app";
+    private const string ImportOwnerEmail = "demo@bearnecessities.app";
     private const int SaveEvery = 100;
     private const int MaxCategoriesPerPlace = 5;
 
@@ -41,8 +41,9 @@ public sealed class PlaceImportService : IPlaceImportService
 
         var categoriesBySlug = await LoadCategoriesAsync(cancellationToken);
 
-        // Pre-load dedup keys so we don't round-trip per record
+        // Pre-load dedup keys so we don't round-trip per record; deleted places count too, so a re-import doesn't revive them
         var existing = await _db.Places
+            .IgnoreQueryFilters()
             .Select(p => new { p.Name, p.Latitude, p.Longitude, p.ExternalSourceId, HasDescription = p.Description != null })
             .ToListAsync(cancellationToken);
         // Re-imports fill in descriptions on places imported before descriptions were generated

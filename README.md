@@ -1,3 +1,5 @@
+<p align="center"><img src="bear-necessities-web/public/brand/paw-trail.svg" alt="" width="200"></p>
+
 # 🐻 Bear Necessities
 
 **A map for conscious travelers.** Ecstatic dance, tantra, sound healing, vipassana, retreats, eco-villages,
@@ -8,8 +10,9 @@ that speak to you.
 
 ## What it does
 
-- **One map for places and happenings.** Over 20,000 places imported from OpenStreetMap across Portugal,
-  Spain, Greece, India, Indonesia, Thailand, Mexico and Costa Rica, plus places the community adds.
+- **One map for places and happenings.** Seeded with a hand-checked example of each kind of place in Portugal,
+  Spain, Greece, India, Indonesia, Thailand, Mexico and Costa Rica (from OpenStreetMap and research); the rest
+  comes from the community.
   A venue with something coming up wears a gold ring and the date; its page says what's next.
 - **"When?" filter.** Anytime, this week, this month or picked dates: with dates chosen the map keeps what's
   always open plus what's happening then, so festival grounds only appear while a festival is on.

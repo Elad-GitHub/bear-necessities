@@ -41,7 +41,28 @@ public static class OsmPlaceSummary
         ["cacao-ceremony"] = "Cacao ceremony",
         ["sweat-lodge"] = "Temazcal",
         ["hippie-market"] = "Hippie market",
-        ["artisan-market"] = "Artisan market"
+        ["artisan-market"] = "Artisan market",
+        ["coworking-space"] = "Co-working space",
+        ["hackerspace"] = "Hackerspace",
+        ["maker-space"] = "Maker space",
+        ["tai-chi"] = "Tai chi",
+        ["qigong"] = "Qigong",
+        ["pottery"] = "Pottery studio",
+        ["live-music"] = "Live music venue",
+        ["breathwork"] = "Breathwork",
+        ["acro-yoga"] = "Acro yoga",
+        ["contact-improv"] = "Contact improvisation",
+        ["circus-arts"] = "Circus school",
+        ["kambo"] = "Kambo",
+        ["shamanism"] = "Shamanic practice",
+        ["wwoofing"] = "WWOOF farm",
+        ["co-living"] = "Co-living",
+        ["cold-therapy"] = "Ice bath",
+        ["tuina"] = "Tuina",
+        ["drumming-circle"] = "Drum circle",
+        ["sound-bath"] = "Sound bath",
+        ["macrame-fiber-arts"] = "Macramé",
+        ["human-design"] = "Human design"
     };
 
     public static string? Build(IReadOnlyDictionary<string, string> tags, string categorySlug)

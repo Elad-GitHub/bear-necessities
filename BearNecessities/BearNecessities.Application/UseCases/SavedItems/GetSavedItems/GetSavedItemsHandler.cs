@@ -73,7 +73,7 @@ public sealed class GetSavedItemsHandler : IRequestHandler<GetSavedItemsRequest,
                     null,
                     0,
                     place.Categories.Select(c => c.Id.Value).ToList(),
-                    null,
+                    place.PhotoUrl,
                     place.IsPermanent),
                 "Event" when eventMap.TryGetValue(s.TargetId, out var evt) => new EventSummaryDto(
                     evt.Id.Value,

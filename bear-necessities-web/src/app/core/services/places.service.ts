@@ -74,5 +74,10 @@ export class PlacesService {
   getById(id: string): Observable<PlaceDetailDto> {
     return this.api.get<PlaceDetailDto>(`/places/${id}`);
   }
+
+  // Admins take down a wrong automatic photo; the photo search won't pick one again
+  removePhoto(id: string): Observable<void> {
+    return this.api.delete<void>(`/places/${id}/photo`);
+  }
 }
 

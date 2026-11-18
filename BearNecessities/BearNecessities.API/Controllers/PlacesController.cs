@@ -10,6 +10,7 @@ using BearNecessities.Application.UseCases.Places.GetPlacesByViewport;
 using BearNecessities.Application.UseCases.Places.GetPlaceDensity;
 using BearNecessities.Application.UseCases.Places.RejectPlace;
 using BearNecessities.Application.UseCases.Places.SearchPlaces;
+using BearNecessities.Application.UseCases.Places.RemovePlacePhoto;
 using BearNecessities.Application.UseCases.Places.UpdatePlace;
 
 namespace BearNecessities.API.Controllers;
@@ -27,6 +28,7 @@ public class PlacesController : BaseApiController
     private readonly GetPendingPlacesHandler _pendingHandler;
     private readonly SearchPlacesHandler _searchHandler;
     private readonly GetMyPlacesHandler _myPlacesHandler;
+    private readonly RemovePlacePhotoHandler _removePhotoHandler;
 
     public PlacesController(
         GetPlacesByViewportHandler viewportHandler,
@@ -39,7 +41,8 @@ public class PlacesController : BaseApiController
         DeletePlaceHandler deleteHandler,
         GetPendingPlacesHandler pendingHandler,
         SearchPlacesHandler searchHandler,
-        GetMyPlacesHandler myPlacesHandler)
+        GetMyPlacesHandler myPlacesHandler,
+        RemovePlacePhotoHandler removePhotoHandler)
     {
         _viewportHandler = viewportHandler;
         _densityHandler = densityHandler;
@@ -52,6 +55,7 @@ public class PlacesController : BaseApiController
         _pendingHandler = pendingHandler;
         _searchHandler = searchHandler;
         _myPlacesHandler = myPlacesHandler;
+        _removePhotoHandler = removePhotoHandler;
     }
 
     [HttpGet("mine")]
@@ -177,6 +181,16 @@ public class PlacesController : BaseApiController
         var merged = request with { PlaceId = id };
         var response = await _rejectHandler.HandleAsync(merged, cancellationToken);
         return Ok(response);
+    }
+
+    [HttpDelete("{id:guid}/photo")]
+    [Authorize]
+    public async Task<IActionResult> RemovePhoto(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        await _removePhotoHandler.HandleAsync(new RemovePlacePhotoRequest(id), cancellationToken);
+        return NoContent();
     }
 
     [HttpDelete("{id:guid}")]

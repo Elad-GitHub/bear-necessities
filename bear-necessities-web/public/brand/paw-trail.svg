@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 252 100" role="img" aria-label="Bear Necessities paw trail">
+  <defs>
+    <!-- One bear paw: a wide heel pad under four toes, drawn pointing up -->
+    <symbol id="paw" viewBox="-20 -24 40 44">
+      <path d="M0 -3 C 8 -3 16 5 16 11 C 16 17 10 18 5 16.5 C 2 15.6 -2 15.6 -5 16.5 C -10 18 -16 17 -16 11 C -16 5 -8 -3 0 -3 Z"/>
+      <ellipse cx="-13" cy="-9" rx="4.6" ry="6" transform="rotate(-24 -13 -9)"/>
+      <ellipse cx="-4.6" cy="-17" rx="4.8" ry="6.4" transform="rotate(-8 -4.6 -17)"/>
+      <ellipse cx="4.6" cy="-17" rx="4.8" ry="6.4" transform="rotate(8 4.6 -17)"/>
+      <ellipse cx="13" cy="-9" rx="4.6" ry="6" transform="rotate(24 13 -9)"/>
+    </symbol>
+  </defs>
+  <!-- Steps wander left to right, alternating feet, growing and warming from teal to honey -->
+  <use href="#paw" x="2" y="52" width="26" height="29" fill="#4db8a8" opacity="0.45" transform="rotate(62 15 66)"/>
+  <use href="#paw" x="44" y="22" width="30" height="33" fill="#4db8a8" opacity="0.65" transform="rotate(74 59 38)"/>
+  <use href="#paw" x="88" y="50" width="34" height="37" fill="#2a9a8a" opacity="0.85" transform="rotate(64 105 68)"/>
+  <use href="#paw" x="136" y="14" width="38" height="42" fill="#00796b" transform="rotate(78 155 35)"/>
+  <use href="#paw" x="186" y="38" width="44" height="48" fill="#f2b134" transform="rotate(70 208 62)"/>
+</svg>

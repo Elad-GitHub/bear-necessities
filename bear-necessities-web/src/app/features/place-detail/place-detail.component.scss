@@ -29,6 +29,28 @@ $radius-md: 8px;
 }
 
 // Hero section
+.hero .remove-photo {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  color: white;
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+
+  .material-icons { font-size: 16px; }
+  &:hover:not(:disabled) { background: rgba(0, 0, 0, 0.75); }
+  &:disabled { opacity: 0.6; cursor: wait; }
+}
+
 .hero {
   height: 360px;
   background-size: cover;

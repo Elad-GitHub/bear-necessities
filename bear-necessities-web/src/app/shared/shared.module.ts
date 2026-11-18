@@ -10,6 +10,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 
+import { SizedPhotoPipe } from './pipes/sized-photo.pipe';
 import { TimeAgoPipe } from './pipes/time-ago.pipe';
 import { FormatDatePipe } from './pipes/format-date.pipe';
 import { NavbarComponent } from './components/navbar/navbar.component';
@@ -23,6 +24,7 @@ import { AvatarComponent } from './components/avatar/avatar.component';
 @NgModule({
   declarations: [
     TimeAgoPipe,
+    SizedPhotoPipe,
     FormatDatePipe,
     NavbarComponent,
     CategoryChipsComponent,
@@ -46,6 +48,7 @@ import { AvatarComponent } from './components/avatar/avatar.component';
   ],
   exports: [
     TimeAgoPipe,
+    SizedPhotoPipe,
     FormatDatePipe,
     NavbarComponent,
     CategoryChipsComponent,
