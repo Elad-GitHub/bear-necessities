@@ -5,4 +5,5 @@ public record CreateReviewRequest(
     Guid TargetId,
     int Rating,
     string? Body,
-    Guid? CounterpartyId);
+    Guid? CounterpartyId,
+    List<Guid>? PhotoMediaIds = null);

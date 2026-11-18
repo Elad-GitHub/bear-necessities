@@ -30,7 +30,9 @@ public sealed class GetPlaceByIdHandler
         var media = await _unitOfWork.Media.GetByOwnersAsync(
             MediaOwnerType.Place, [place.Id.Value], cancellationToken);
 
+        // Members' photos wait for an admin before they reach the banner or the gallery
         var mediaDtos = media
+            .Where(m => m.ModerationStatus == ModerationStatus.Approved)
             .Select(m => new MediaDto(m.Id, m.Url, m.ThumbnailUrl, m.MimeType, m.SortOrder, m.ModerationStatus))
             .ToList();
 

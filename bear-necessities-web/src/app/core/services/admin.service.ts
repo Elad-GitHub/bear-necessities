@@ -4,6 +4,16 @@ import { ApiService } from './api.service';
 import { PlaceSummaryDto } from '../models/place.model';
 import { EditSuggestionDto } from '../models/edit-suggestion.model';
 
+/** A gallery photo a member shared, waiting for an admin. */
+export interface PendingPhotoDto {
+  id: string;
+  placeId: string;
+  placeName: string;
+  uploadedByName: string;
+  uploadedAt: string;
+  reviewSnippet?: string | null;
+}
+
 export interface PendingPlacesResponse {
   items: PlaceSummaryDto[];
   nextCursor?: string;
@@ -49,6 +59,18 @@ export class AdminService {
 
   rejectEdit(suggestionId: string): Observable<any> {
     return this.api.post<any>(`/editsuggestions/${suggestionId}/reject`, {});
+  }
+
+  getPendingPhotos(): Observable<{ items: PendingPhotoDto[] }> {
+    return this.api.get<{ items: PendingPhotoDto[] }>('/media/pending');
+  }
+
+  approvePhoto(mediaId: string): Observable<any> {
+    return this.api.post<any>(`/media/${mediaId}/approve`, {});
+  }
+
+  rejectPhoto(mediaId: string): Observable<any> {
+    return this.api.post<any>(`/media/${mediaId}/reject`, {});
   }
 
   getPendingMembers(): Observable<{ items: any[] }> {

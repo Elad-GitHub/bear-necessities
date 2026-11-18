@@ -1,6 +1,7 @@
 using BearNecessities.Application.Exceptions;
 using BearNecessities.Application.Interfaces;
 using BearNecessities.Domain.Entities;
+using BearNecessities.Domain.Enums;
 using BearNecessities.Domain.Interfaces;
 using BearNecessities.Domain.ValueObjects;
 
@@ -46,9 +47,34 @@ public sealed class CreateReviewHandler : IRequestHandler<CreateReviewRequest, C
         review.TryReveal();
 
         await _unitOfWork.Reviews.AddAsync(review, cancellationToken);
+        await AttachPhotosAsync(review, request, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new CreateReviewResponse(review.Id, review.Status.ToString());
+    }
+
+    private const int MaxPhotosPerReview = 4;
+
+    // Review photos are uploaded to the place's gallery first; here they get tied to the review
+    private async Task AttachPhotosAsync(Review review, CreateReviewRequest request, CancellationToken cancellationToken)
+    {
+        var photoIds = (request.PhotoMediaIds ?? []).Distinct().ToList();
+        if (photoIds.Count == 0) return;
+        if (photoIds.Count > MaxPhotosPerReview)
+            throw new ValidationException(new Dictionary<string, string[]>
+            {
+                ["photoMediaIds"] = [$"Up to {MaxPhotosPerReview} photos per review."]
+            });
+
+        var photos = await _unitOfWork.Media.GetByIdsAsync(photoIds, cancellationToken);
+        var isOwnPhotoOfThisPlace = (Domain.Entities.Media photo) =>
+            photo.UploadedBy == _currentUser.UserId && photo.OwnerType == MediaOwnerType.Place
+            && photo.OwnerId == request.TargetId && photo.ReviewId is null;
+        if (photos.Count != photoIds.Count || !photos.All(isOwnPhotoOfThisPlace))
+            throw new ForbiddenException();
+
+        foreach (var photo in photos)
+            photo.AttachToReview(review.Id);
     }
 
     private static void ValidateRequest(CreateReviewRequest request)

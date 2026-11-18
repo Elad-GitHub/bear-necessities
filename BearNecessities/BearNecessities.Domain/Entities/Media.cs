@@ -17,6 +17,8 @@ public sealed class Media : BaseEntity<Guid>
     public ModerationStatus ModerationStatus { get; private set; }
     public int SortOrder { get; private set; }
     public UserId UploadedBy { get; private set; } = default!;
+    /// <summary>Set when the photo was shared with a review; it then also shows in the place's gallery.</summary>
+    public Guid? ReviewId { get; private set; }
 
     public static Media Create(
         MediaOwnerType ownerType,
@@ -58,6 +60,8 @@ public sealed class Media : BaseEntity<Guid>
     {
         ModerationStatus = status;
     }
+
+    public void AttachToReview(Guid reviewId) => ReviewId = reviewId;
 
     public void SetSortOrder(int sortOrder)
     {

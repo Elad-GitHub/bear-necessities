@@ -95,6 +95,8 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             (1, 107, "martial-arts",        "Martial Arts"),
             (1, 108, "contact-improv",      "Contact Dance"),
             (1, 109, "circus-arts",         "Circus Arts"),
+            // Mobility, handstands, floor work and Ido Portal-style movement practice
+            (1, 110, "movement-flow",       "Movement & Flow"),
 
             // Events (parent 2)
             (2, 201, "festival",            "Festival"),

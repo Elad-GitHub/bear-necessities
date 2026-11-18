@@ -87,10 +87,9 @@ public sealed class RequestUploadHandler : IRequestHandler<RequestUploadRequest,
         {
             case MediaOwnerType.Place:
             {
-                var place = await _unitOfWork.Places.GetByIdAsync(new PlaceId(request.OwnerId), cancellationToken)
+                // Galleries are community-built: any member can add a photo, which waits for an admin (see ConfirmUpload)
+                _ = await _unitOfWork.Places.GetByIdAsync(new PlaceId(request.OwnerId), cancellationToken)
                     ?? throw new NotFoundException("Place", request.OwnerId);
-                if (place.OwnerId != _currentUser.UserId)
-                    throw new ForbiddenException();
                 break;
             }
             case MediaOwnerType.Event:

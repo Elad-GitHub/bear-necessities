@@ -27,5 +27,6 @@ public class MediaConfiguration : IEntityTypeConfiguration<Media>
 
         builder.HasIndex(m => new { m.OwnerType, m.OwnerId });
         builder.HasIndex(m => m.ModerationStatus);
+        builder.HasIndex(m => m.ReviewId);
     }
 }

@@ -37,7 +37,9 @@ public sealed class ConfirmUploadHandler : IRequestHandler<ConfirmUploadRequest,
                 ["objectKey"] = ["Upload not found in storage. Please re-upload the file."]
             });
 
-        media.SetModerationStatus(ModerationStatus.Approved);
+        // Admin photos and a member's own profile photo go live; anything else waits in Paw of Approval
+        var isLiveRightAway = isAdmin || media.OwnerType == MediaOwnerType.User;
+        media.SetModerationStatus(isLiveRightAway ? ModerationStatus.Approved : ModerationStatus.Pending);
         await _unitOfWork.Media.UpdateAsync(media, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

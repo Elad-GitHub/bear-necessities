@@ -71,6 +71,7 @@ using BearNecessities.Application.UseCases.Places.SearchPlaces;
 using BearNecessities.Application.UseCases.Places.UpdatePlace;
 using BearNecessities.Application.UseCases.EditSuggestions;
 using BearNecessities.Application.UseCases.Users.MyProfile;
+using BearNecessities.Application.UseCases.Media.ModeratePhotos;
 using BearNecessities.Domain.Interfaces;
 using BearNecessities.Infrastructure.Persistence;
 using BearNecessities.Infrastructure.Repositories;
@@ -193,6 +194,8 @@ public static class DependencyInjection
         services.AddScoped<GetPendingMembersHandler>();
         services.AddScoped<ReviewMembershipHandler>();
         services.AddScoped<GetMyProfileHandler>();
+        services.AddScoped<GetPendingPhotosHandler>();
+        services.AddScoped<ReviewPhotoHandler>();
         services.AddScoped<UpdateMyProfileHandler>();
         services.AddScoped<GetTripSuggestionsHandler>();
         services.AddScoped<PlanItineraryHandler>();

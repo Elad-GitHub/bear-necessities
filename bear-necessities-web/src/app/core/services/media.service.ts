@@ -10,6 +10,9 @@ export interface MediaItemDto {
   thumbnailUrl?: string;
   mimeType?: string;
   sortOrder?: number;
+  /** Who shared the photo, for the credit under it in the gallery. */
+  uploadedByName?: string | null;
+  reviewId?: string | null;
 }
 
 interface RequestUploadResponse {

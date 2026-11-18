@@ -5,8 +5,10 @@ import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { PlaceSummaryDto } from '../../core/models/place.model';
 import { EditSuggestionDto } from '../../core/models/edit-suggestion.model';
+import { PendingPhotoDto } from '../../core/services/admin.service';
+import { MediaService } from '../../core/services/media.service';
 
-type ModerationTab = 'places' | 'events' | 'edits' | 'members';
+type ModerationTab = 'places' | 'events' | 'edits' | 'photos' | 'members';
 
 @Component({
   selector: 'app-admin',
@@ -20,6 +22,7 @@ export class AdminComponent implements OnInit {
   pendingEvents = signal<any[]>([]);
   pendingMembers = signal<any[]>([]);
   pendingEdits = signal<EditSuggestionDto[]>([]);
+  pendingPhotos = signal<PendingPhotoDto[]>([]);
   isLoading = signal(true);
   rejectingId = signal<string | null>(null);
   rejectReason = signal('');
@@ -28,6 +31,7 @@ export class AdminComponent implements OnInit {
   constructor(
     private adminService: AdminService,
     private toastService: ToastService,
+    private mediaService: MediaService,
     private router: Router,
     public authService: AuthService
   ) {}
@@ -50,7 +54,7 @@ export class AdminComponent implements OnInit {
   }
 
   totalPending(): number {
-    return this.pendingPlaces().length + this.pendingEvents().length + this.pendingEdits().length + this.pendingMembers().length;
+    return this.pendingPlaces().length + this.pendingEvents().length + this.pendingEdits().length + this.pendingPhotos().length + this.pendingMembers().length;
   }
 
   private loadPending(): void {
@@ -70,6 +74,10 @@ export class AdminComponent implements OnInit {
 
     this.adminService.getPendingEdits().subscribe({
       next: (response) => this.pendingEdits.set(response.items || [])
+    });
+
+    this.adminService.getPendingPhotos().subscribe({
+      next: (response) => this.pendingPhotos.set(response.items || [])
     });
 
     this.adminService.getPendingMembers().subscribe({
@@ -143,6 +151,40 @@ export class AdminComponent implements OnInit {
       },
       error: () => this.markProcessing(suggestion.id, false)
     });
+  }
+
+  photoUrl(photo: PendingPhotoDto): string {
+    return this.mediaService.contentUrl(photo.id);
+  }
+
+  approvePhoto(photo: PendingPhotoDto): void {
+    this.markProcessing(photo.id, true);
+    this.adminService.approvePhoto(photo.id).subscribe({
+      next: () => {
+        this.removePhoto(photo.id);
+        this.toastService.success(`Photo added to ${photo.placeName} 📸`);
+      },
+      error: () => this.markProcessing(photo.id, false)
+    });
+  }
+
+  rejectPhoto(photo: PendingPhotoDto): void {
+    this.markProcessing(photo.id, true);
+    this.adminService.rejectPhoto(photo.id).subscribe({
+      next: () => {
+        this.removePhoto(photo.id);
+        this.toastService.success('Photo removed');
+      },
+      error: () => this.markProcessing(photo.id, false)
+    });
+  }
+
+  viewPhotoPlace(photo: PendingPhotoDto): void {
+    this.router.navigate(['/places', photo.placeId]);
+  }
+
+  private removePhoto(photoId: string): void {
+    this.pendingPhotos.set(this.pendingPhotos().filter(item => item.id !== photoId));
   }
 
   viewEditTarget(suggestion: EditSuggestionDto): void {

@@ -12,6 +12,7 @@ export interface ReviewDto {
   revealedAt?: string;
   targetType: string;
   targetId: string;
+  photoIds?: string[];
 }
 
 export interface ReviewsByTargetResponse {
@@ -26,6 +27,7 @@ export interface CreateReviewRequest {
   targetId: string;
   rating: number;
   body?: string;
+  photoMediaIds?: string[];
 }
 
 @Injectable({

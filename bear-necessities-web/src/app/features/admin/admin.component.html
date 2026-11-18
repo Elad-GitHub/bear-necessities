@@ -36,6 +36,11 @@
         Edits
         <span class="tab-count" *ngIf="pendingEdits().length">{{ pendingEdits().length }}</span>
       </button>
+      <button class="queue-tab" [class.active]="activeTab() === 'photos'" (click)="setTab('photos')">
+        <span class="material-icons">photo_library</span>
+        Photos
+        <span class="tab-count" *ngIf="pendingPhotos().length">{{ pendingPhotos().length }}</span>
+      </button>
       <button class="queue-tab" [class.active]="activeTab() === 'members'" (click)="setTab('members')">
         <span class="material-icons">how_to_reg</span>
         Members
@@ -203,6 +208,38 @@
               Approve
             </button>
             <button class="action-btn reject" [disabled]="isProcessing(suggestion.id)" (click)="rejectEdit(suggestion)">
+              <span class="material-icons">cancel</span>
+              Reject
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Gallery photos queue -->
+    <ng-container *ngIf="!isLoading() && activeTab() === 'photos'">
+      <div class="empty-state" *ngIf="pendingPhotos().length === 0">
+        <span class="material-icons">task_alt</span>
+        <h3>All clear!</h3>
+        <p>No photos waiting for review.</p>
+      </div>
+
+      <div class="photo-queue" *ngIf="pendingPhotos().length > 0">
+        <div class="photo-card" *ngFor="let photo of pendingPhotos()">
+          <a class="photo-preview" [href]="photoUrl(photo)" target="_blank" rel="noopener" title="Open full size">
+            <img [src]="photoUrl(photo)" [alt]="'Photo of ' + photo.placeName" loading="lazy" />
+          </a>
+          <div class="photo-info">
+            <button class="photo-place" (click)="viewPhotoPlace(photo)">{{ photo.placeName }}</button>
+            <span class="photo-meta">📷 {{ photo.uploadedByName }} · {{ photo.uploadedAt | date:'MMM d, HH:mm' }}</span>
+            <span class="photo-review" *ngIf="photo.reviewSnippet">“{{ photo.reviewSnippet }}”</span>
+          </div>
+          <div class="card-actions">
+            <button class="action-btn approve" [disabled]="isProcessing(photo.id)" (click)="approvePhoto(photo)">
+              <span class="material-icons">check_circle</span>
+              Approve
+            </button>
+            <button class="action-btn reject" [disabled]="isProcessing(photo.id)" (click)="rejectPhoto(photo)">
               <span class="material-icons">cancel</span>
               Reject
             </button>

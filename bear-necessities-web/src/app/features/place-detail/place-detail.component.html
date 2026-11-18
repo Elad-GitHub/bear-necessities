@@ -64,6 +64,32 @@
             <p class="description">{{ place.description || 'No description available.' }}</p>
           </section>
 
+          <!-- Gallery: the community's photos of this place -->
+          <section class="section gallery-section">
+            <h2 class="section-title">
+              Photos
+              <span class="photo-count" *ngIf="galleryPhotos().length">{{ galleryPhotos().length }}</span>
+            </h2>
+            <div class="gallery-grid">
+              <button class="gallery-item" *ngFor="let photo of galleryPhotos(); let index = index" (click)="openGallery(index)"
+                [attr.aria-label]="'Open photo ' + (index + 1)">
+                <img [src]="photo.url" [alt]="'Photo of ' + place.name" loading="lazy" />
+                <span class="photo-by" *ngIf="photo.uploadedByName">📷 {{ photo.uploadedByName }}</span>
+              </button>
+
+              <label class="gallery-add" *ngIf="authService.isAuthenticated()" [class.busy]="isUploadingPhoto()">
+                <input type="file" accept="image/jpeg,image/png,image/webp" hidden #galleryInput
+                  [disabled]="isUploadingPhoto()" (change)="addGalleryPhoto(galleryInput)" />
+                <mat-icon [class.spinning]="isUploadingPhoto()">{{ isUploadingPhoto() ? 'sync' : 'add_a_photo' }}</mat-icon>
+                <span>{{ isUploadingPhoto() ? 'Uploading...' : (galleryPhotos().length ? 'Add a photo' : 'Be the first to share a photo') }}</span>
+              </label>
+              <button class="gallery-add" *ngIf="!authService.isAuthenticated()" (click)="goToLogin()">
+                <mat-icon>add_a_photo</mat-icon>
+                <span>Log in to share a photo</span>
+              </button>
+            </div>
+          </section>
+
           <!-- External links -->
           <section class="section" *ngIf="hasExternalLinks()">
             <h2 class="section-title">Visit</h2>
@@ -198,6 +224,20 @@
                   placeholder="Share your experience (optional)..."
                   [value]="reviewBody()"
                   (input)="reviewBody.set($any($event.target).value)"></textarea>
+                <div class="review-photos-picker">
+                  <div class="review-photo-thumb" *ngFor="let photo of reviewPhotos(); let index = index">
+                    <img [src]="photo.preview" alt="Photo to share with your review" />
+                    <button type="button" (click)="removeReviewPhoto(index)" aria-label="Remove photo">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                  <label class="review-photo-add" *ngIf="reviewPhotos().length < MAX_REVIEW_PHOTOS">
+                    <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden #reviewPhotoInput
+                      (change)="pickReviewPhotos(reviewPhotoInput)" />
+                    <mat-icon>add_a_photo</mat-icon>
+                    {{ reviewPhotos().length ? 'Add more' : 'Add photos' }}
+                  </label>
+                </div>
                 <div class="review-form-actions">
                   <button mat-button (click)="closeReviewForm()">Cancel</button>
                   <button mat-raised-button color="primary"
@@ -222,6 +262,12 @@
               </mat-card-header>
               <mat-card-content>
                 <p>{{ review.body }}</p>
+                <div class="review-photos" *ngIf="review.photoIds?.length">
+                  <button *ngFor="let photoId of review.photoIds; let index = index" (click)="openReviewPhotos(review, index)"
+                    [attr.aria-label]="'Open photo ' + (index + 1) + ' from this review'">
+                    <img [src]="photoUrl(photoId)" alt="Photo from this review" loading="lazy" />
+                  </button>
+                </div>
               </mat-card-content>
             </mat-card>
           </section>
@@ -237,5 +283,20 @@
         Back to map
       </button>
     </div>
+  </ng-container>
+</div>
+
+<!-- Full-screen photo viewer -->
+<div class="lightbox" *ngIf="lightbox() as view" (click)="closeLightbox()" role="dialog" aria-label="Photo viewer">
+  <img [src]="view.urls[view.index]" alt="Photo" (click)="$event.stopPropagation()" />
+  <button class="lightbox-close" (click)="closeLightbox()" aria-label="Close"><mat-icon>close</mat-icon></button>
+  <ng-container *ngIf="view.urls.length > 1">
+    <button class="lightbox-step previous" (click)="$event.stopPropagation(); stepLightbox(-1)" aria-label="Previous photo">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <button class="lightbox-step next" (click)="$event.stopPropagation(); stepLightbox(1)" aria-label="Next photo">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+    <span class="lightbox-count">{{ view.index + 1 }} / {{ view.urls.length }}</span>
   </ng-container>
 </div>

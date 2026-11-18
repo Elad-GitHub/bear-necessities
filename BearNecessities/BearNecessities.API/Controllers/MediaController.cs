@@ -4,6 +4,7 @@ using BearNecessities.Application.UseCases.Media.ConfirmUpload;
 using BearNecessities.Application.UseCases.Media.DeleteMedia;
 using BearNecessities.Application.UseCases.Media.GetMediaByOwner;
 using BearNecessities.Application.UseCases.Media.GetMediaContent;
+using BearNecessities.Application.UseCases.Media.ModeratePhotos;
 using BearNecessities.Application.UseCases.Media.ReorderMedia;
 using BearNecessities.Application.UseCases.Media.RequestUpload;
 using BearNecessities.Domain.Enums;
@@ -18,6 +19,8 @@ public class MediaController : BaseApiController
     private readonly GetMediaByOwnerHandler _byOwnerHandler;
     private readonly ReorderMediaHandler _reorderHandler;
     private readonly GetMediaContentHandler _contentHandler;
+    private readonly GetPendingPhotosHandler _pendingPhotosHandler;
+    private readonly ReviewPhotoHandler _reviewPhotoHandler;
 
     public MediaController(
         RequestUploadHandler requestUploadHandler,
@@ -25,8 +28,12 @@ public class MediaController : BaseApiController
         DeleteMediaHandler deleteHandler,
         GetMediaByOwnerHandler byOwnerHandler,
         ReorderMediaHandler reorderHandler,
-        GetMediaContentHandler contentHandler)
+        GetMediaContentHandler contentHandler,
+        GetPendingPhotosHandler pendingPhotosHandler,
+        ReviewPhotoHandler reviewPhotoHandler)
     {
+        _pendingPhotosHandler = pendingPhotosHandler;
+        _reviewPhotoHandler = reviewPhotoHandler;
         _requestUploadHandler = requestUploadHandler;
         _confirmUploadHandler = confirmUploadHandler;
         _deleteHandler = deleteHandler;
@@ -34,6 +41,21 @@ public class MediaController : BaseApiController
         _reorderHandler = reorderHandler;
         _contentHandler = contentHandler;
     }
+
+    [HttpGet("pending")]
+    [Authorize]
+    public async Task<IActionResult> GetPendingPhotos(CancellationToken cancellationToken = default) =>
+        Ok(await _pendingPhotosHandler.HandleAsync(new GetPendingPhotosRequest(), cancellationToken));
+
+    [HttpPost("{id:guid}/approve")]
+    [Authorize]
+    public async Task<IActionResult> ApprovePhoto(Guid id, CancellationToken cancellationToken = default) =>
+        Ok(await _reviewPhotoHandler.HandleAsync(new ReviewPhotoRequest(id, IsApproved: true), cancellationToken));
+
+    [HttpPost("{id:guid}/reject")]
+    [Authorize]
+    public async Task<IActionResult> RejectPhoto(Guid id, CancellationToken cancellationToken = default) =>
+        Ok(await _reviewPhotoHandler.HandleAsync(new ReviewPhotoRequest(id, IsApproved: false), cancellationToken));
 
     [HttpGet("{id:guid}/content")]
     public async Task<IActionResult> GetContent(Guid id, CancellationToken cancellationToken = default)

@@ -8,4 +8,6 @@ public record MediaDto(
     string? ThumbnailUrl,
     string MimeType,
     int SortOrder,
-    ModerationStatus ModerationStatus);
+    ModerationStatus ModerationStatus,
+    string? UploadedByName = null,
+    Guid? ReviewId = null);

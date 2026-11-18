@@ -6,6 +6,7 @@ namespace BearNecessities.Domain.Interfaces;
 public interface IReviewRepository
 {
     Task<Review?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<List<Review>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
     Task AddAsync(Review review, CancellationToken cancellationToken = default);
     Task UpdateAsync(Review review, CancellationToken cancellationToken = default);
     Task<List<Review>> GetByTargetAsync(string targetType, Guid targetId, int pageSize, Guid? cursor, CancellationToken cancellationToken = default);

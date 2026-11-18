@@ -17,10 +17,18 @@ public sealed class GetMediaByOwnerHandler : IRequestHandler<GetMediaByOwnerRequ
     {
         var allMedia = await _unitOfWork.Media.GetByOwnerAsync(request.OwnerType, request.OwnerId, cancellationToken);
 
-        var approved = allMedia
+        var approvedMedia = allMedia
             .Where(m => m.ModerationStatus == Domain.Enums.ModerationStatus.Approved)
             .OrderBy(m => m.SortOrder)
-            .Select(m => new MediaDto(m.Id, m.Url, m.ThumbnailUrl, m.MimeType, m.SortOrder, m.ModerationStatus))
+            .ThenBy(m => m.CreatedAt)
+            .ToList();
+
+        // Gallery photos credit whoever took them
+        var uploaders = (await _unitOfWork.Users.GetByIdsAsync(approvedMedia.Select(m => m.UploadedBy).Distinct(), cancellationToken))
+            .ToDictionary(user => user.Id.Value, user => user.DisplayName);
+        var approved = approvedMedia
+            .Select(m => new MediaDto(m.Id, m.Url, m.ThumbnailUrl, m.MimeType, m.SortOrder, m.ModerationStatus,
+                uploaders.GetValueOrDefault(m.UploadedBy.Value), m.ReviewId))
             .ToList();
 
         return new GetMediaByOwnerResponse(approved);

@@ -39,6 +39,9 @@ public sealed class GetReviewsByTargetHandler : IRequestHandler<GetReviewsByTarg
         var authorIds = reviews.Select(r => r.AuthorId).Distinct().ToList();
         var authors = await _unitOfWork.Users.GetByIdsAsync(authorIds, cancellationToken);
         var authorMap = authors.ToDictionary(u => u.Id.Value);
+        var photosByReview = (await _unitOfWork.Media.GetApprovedByReviewsAsync(reviews.Select(r => r.Id), cancellationToken))
+            .GroupBy(photo => photo.ReviewId!.Value)
+            .ToDictionary(group => group.Key, group => (IReadOnlyList<Guid>)group.Select(photo => photo.Id).ToList());
 
         var items = reviews.Select(r =>
         {
@@ -48,7 +51,8 @@ public sealed class GetReviewsByTargetHandler : IRequestHandler<GetReviewsByTarg
                 author?.DisplayName ?? "Unknown",
                 author?.AvatarUrl,
                 r.Rating, r.Body, r.RevealedAt,
-                r.TargetType, r.TargetId);
+                r.TargetType, r.TargetId,
+                photosByReview.GetValueOrDefault(r.Id, []));
         }).ToList();
 
         var nextCursor = items.Count == pageSize ? items[^1].Id : (Guid?)null;

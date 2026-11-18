@@ -9,4 +9,5 @@ public record ReviewDto(
     string? Body,
     DateTime? RevealedAt,
     string TargetType,
-    Guid TargetId);
+    Guid TargetId,
+    IReadOnlyList<Guid>? PhotoIds = null);

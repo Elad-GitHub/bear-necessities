@@ -69,6 +69,12 @@ public sealed class ReviewRepository : IReviewRepository
             r => r.AuthorId == authorId && r.TargetType == targetType && r.TargetId == targetId,
             cancellationToken);
 
+    public async Task<List<Review>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        var idList = ids.ToList();
+        return await _context.Reviews.Where(r => idList.Contains(r.Id)).ToListAsync(cancellationToken);
+    }
+
     public async Task<List<Review>> GetByAuthorAsync(UserId authorId, int pageSize, Guid? cursor, CancellationToken cancellationToken = default)
     {
         var all = await _context.Reviews
