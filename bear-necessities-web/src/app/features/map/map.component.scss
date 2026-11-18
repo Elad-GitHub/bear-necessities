@@ -631,8 +631,8 @@ $planner-primary-dark: #004d40;
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: #ff6f61;
-    box-shadow: 0 0 0 0 rgba(255, 111, 97, 0.6);
+    background: #00796b;
+    box-shadow: 0 0 0 0 rgba(0, 121, 107, 0.55);
     animation: found-ping 2.4s ease-out infinite;
   }
 
@@ -640,21 +640,21 @@ $planner-primary-dark: #004d40;
     padding: 6px 14px;
     border: none;
     border-radius: 16px;
-    background: #ff6f61;
+    background: #00796b;
     color: white;
     font-family: inherit;
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
 
-    &:hover { background: #e85a4c; }
+    &:hover { background: #004d40; }
   }
 }
 
 @keyframes found-ping {
-  0% { box-shadow: 0 0 0 0 rgba(255, 111, 97, 0.6); }
-  70% { box-shadow: 0 0 0 10px rgba(255, 111, 97, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 111, 97, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(0, 121, 107, 0.55); }
+  70% { box-shadow: 0 0 0 10px rgba(0, 121, 107, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 121, 107, 0); }
 }
 
 @media (max-width: 760px) {
@@ -681,8 +681,10 @@ $planner-primary-dark: #004d40;
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    border: 2.5px solid #ff6f61;
-    background: rgba(255, 111, 97, 0.18);
+    // Brand teal with a thin cream edge, so the ring reads on the sand and on the teal water alike
+    border: 2.5px solid #00796b;
+    background: rgba(0, 121, 107, 0.16);
+    box-shadow: 0 0 0 1.5px #fff7e6, inset 0 0 0 1.5px #fff7e6;
     animation: filter-pulse 2.4s ease-out infinite;
     animation-delay: inherit;
   }
