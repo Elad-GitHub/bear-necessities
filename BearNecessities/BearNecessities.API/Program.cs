@@ -105,9 +105,11 @@ using (var scope = app.Services.CreateAsyncScope())
 
 // Console import commands (run instead of the web host), e.g.:
 //   dotnet run --project BearNecessities.API -- import-osm --iso GR --country Greece [--by-region]
+//   dotnet run --project BearNecessities.API -- import-pbf --file ./portugal-latest.osm.pbf --iso PT --country Portugal
 //   dotnet run --project BearNecessities.API -- import-csv --file ./places.csv --approve
 //   dotnet run --project BearNecessities.API -- find-photos [--country PT] [--limit 500]
-if (args.Length > 0 && (args[0] == "import-osm" || args[0] == "import-csv" || args[0] == "find-photos"))
+string[] consoleCommands = ["import-osm", "import-pbf", "import-csv", "find-photos"];
+if (args.Length > 0 && consoleCommands.Contains(args[0]))
 {
     static string? ArgValue(string[] all, string key)
     {
@@ -136,6 +138,19 @@ if (args.Length > 0 && (args[0] == "import-osm" || args[0] == "import-csv" || ar
             ? await osm.ImportCountryByRegionAsync(iso, country, autoApprove)
             : await osm.ImportCountryAsync(iso, country, autoApprove);
         Console.WriteLine($"OSM import [{iso}] -> {report}");
+    }
+    else if (args[0] == "import-pbf")
+    {
+        var file = ArgValue(args, "--file");
+        var iso = ArgValue(args, "--iso");
+        if (string.IsNullOrWhiteSpace(file) || string.IsNullOrWhiteSpace(iso))
+        {
+            Console.WriteLine("Provide --file <country.osm.pbf> --iso <XX> [--country <Name>]");
+            return;
+        }
+        var pbf = services.GetRequiredService<BearNecessities.Infrastructure.Imports.OsmPbfImportService>();
+        var report = await pbf.ImportFileAsync(file, iso, ArgValue(args, "--country"), !args.Contains("--pending"));
+        Console.WriteLine($"PBF import [{iso.ToUpperInvariant()}] -> {report}");
     }
     else
     {

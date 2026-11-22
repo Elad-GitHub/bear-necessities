@@ -137,6 +137,7 @@ public static class DependencyInjection
         // Bulk import pipeline (OSM + CSV → shared importer)
         services.AddScoped<IPlaceImportService, Imports.PlaceImportService>();
         services.AddScoped<Imports.CsvImportService>();
+        services.AddScoped<Imports.OsmPbfImportService>();
         services.AddHttpClient<Imports.OsmImportService>(client =>
         {
             client.Timeout = TimeSpan.FromMinutes(3);

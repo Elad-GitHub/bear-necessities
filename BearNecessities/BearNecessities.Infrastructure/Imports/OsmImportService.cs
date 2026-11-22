@@ -101,6 +101,8 @@ public sealed class OsmImportService
     {
         var iso = isoCountryCode.ToUpperInvariant();
         var regions = await FindRegionsAsync(iso, cancellationToken);
+        if (regions is null)
+            return new ImportReport(0, 0, 0, [$"Overpass unavailable for {iso} regions after retries (rate-limited/timeout)."]);
         if (regions.Count == 0)
             return new ImportReport(0, 0, 0, [$"No administrative regions found for {iso}."]);
 
@@ -140,7 +142,8 @@ public sealed class OsmImportService
 
     // Looks regions up by their ISO 3166-2 code ("IN-KA", "GR-M"...): a tag-index query that returns every
     // level at once in seconds, where "relations inside the country's area" timed out for India-sized countries
-    private async Task<List<AdminRegion>> FindRegionsAsync(string iso, CancellationToken cancellationToken)
+    // Null means Overpass never answered, so a blocked server isn't reported as "no regions"
+    private async Task<List<AdminRegion>?> FindRegionsAsync(string iso, CancellationToken cancellationToken)
     {
         if (!IsoCountryCodePattern.IsMatch(iso))
             throw new ArgumentException($"'{iso}' is not a two-letter ISO country code.", nameof(iso));
@@ -152,7 +155,7 @@ public sealed class OsmImportService
             """;
         var json = await FetchWithFailoverAsync(query, $"{iso} regions", cancellationToken);
         if (json is null)
-            return [];
+            return null;
 
         var regionsByLevel = ParseRegions(json, iso).ToLookup(region => region.AdminLevel);
         foreach (var adminLevel in RegionAdminLevels)
@@ -258,34 +261,13 @@ public sealed class OsmImportService
         foreach (var element in elements.EnumerateArray())
         {
             if (!element.TryGetProperty("tags", out var tags)) continue;
-
-            var name = GetTag(tags, "name:en") ?? GetTag(tags, "name");
-            if (string.IsNullOrWhiteSpace(name)) continue;
-
-            var tagDictionary = ToTagDictionary(tags);
-            var slugs = OsmCategoryRules.Classify(tagDictionary);
-            if (slugs.Count == 0) continue;
-
             if (!TryGetCoordinates(element, out var latitude, out var longitude)) continue;
+            if (!element.TryGetProperty("id", out var idProperty)) continue;
 
-            var elementType = GetString(element, "type");
-            var elementId = GetString(element, "id");
-
-            results.Add(new ImportPlace(
-                Name: name!,
-                Latitude: latitude,
-                Longitude: longitude,
-                CategorySlugs: slugs.ToList(),
-                Source: ListingSourceType.Osm,
-                ExternalSourceId: $"osm:{elementType}/{elementId}",
-                // Most OSM places have no description; a summary built from their tags fills the hover card
-                Description: GetTag(tags, "description") ?? OsmPlaceSummary.Build(tagDictionary, slugs[0]),
-                Address: BuildAddress(tags),
-                City: GetTag(tags, "addr:city"),
-                Country: countryName ?? iso,
-                CountryCode: iso.ToUpperInvariant(),
-                Website: GetTag(tags, "website") ?? GetTag(tags, "contact:website"),
-                IsPermanent: true));
+            var place = OsmPlaceMapper.ToImportPlace(ToTagDictionary(tags), GetString(element, "type"),
+                idProperty.GetInt64(), latitude, longitude, iso, countryName);
+            if (place is not null)
+                results.Add(place);
         }
 
         return results;
@@ -313,14 +295,6 @@ public sealed class OsmImportService
         }
 
         return false;
-    }
-
-    private static string? BuildAddress(JsonElement tags)
-    {
-        var street = GetTag(tags, "addr:street");
-        var houseNumber = GetTag(tags, "addr:housenumber");
-        if (string.IsNullOrWhiteSpace(street)) return null;
-        return string.IsNullOrWhiteSpace(houseNumber) ? street : $"{street} {houseNumber}";
     }
 
     private static Dictionary<string, string> ToTagDictionary(JsonElement tags) =>
