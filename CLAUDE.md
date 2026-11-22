@@ -4,7 +4,7 @@ Two projects live here: `BearNecessities/` (.NET 8 backend) and `bear-necessitie
 
 The app is called **Bear Necessities** everywhere: user-facing text says "Bear Necessities", code identifiers use `BearNecessities` (namespaces, projects, `BearNecessitiesDbContext`), folders and packages use `bear-necessities-web`. Earlier names were Nomadica (code) and HippieLand (UI); only these leftovers keep the old name on purpose:
 - `nomadica-media` — the real Cloudflare R2 bucket name; renaming it means creating a new bucket.
-- The SQL Server database `Nomadica` (renaming it means changing the connection string in user-secrets) and the Docker volume `nomadica-sql-data`. The containers are `bear-necessities-sql` / `bear-necessities-seq`, and the demo account (owner of imported places) is `demo@bearnecessities.app`.
+- The Docker volume `nomadica-sql-data` (renaming it means copying the data into a new volume). The database is `BearNecessities` (renamed from `Nomadica` on 2026-11-22), the containers are `bear-necessities-sql` / `bear-necessities-seq`, and the demo account (owner of imported places) is `demo@bearnecessities.app`.
 - The old session files `HippieLand-HANDOFF.md` / `HippieLand-session-transcript.json`.
 
 Full history of the project (architecture, how to run, gotchas, pending work as of July 2026) is in `HippieLand-HANDOFF.md` in the Google Drive folder "Nomadica".
