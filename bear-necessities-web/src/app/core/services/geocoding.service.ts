@@ -11,6 +11,7 @@ export interface GeocodeResult {
   address?: string;
   city?: string;
   country?: string;
+  countryCode?: string;
   bbox?: [number, number, number, number];
 }
 
@@ -62,8 +63,13 @@ export class GeocodingService {
 
   private toResult(feature: any): GeocodeResult {
     const context: any[] = feature.context || [];
-    const findContext = (prefix: string) =>
-      context.find(entry => (entry.id || '').startsWith(prefix))?.text;
+    const findEntry = (prefix: string) => context.find(entry => (entry.id || '').startsWith(prefix));
+    const findContext = (prefix: string) => findEntry(prefix)?.text;
+    // A country result carries its own code; anything smaller finds it in its context
+    const isCountry = (feature.id || '').startsWith('country');
+    const countryShortCode: string | undefined = isCountry
+      ? feature.properties?.short_code
+      : findEntry('country')?.short_code;
 
     return {
       name: feature.text,
@@ -72,7 +78,8 @@ export class GeocodingService {
       latitude: feature.center?.[1],
       address: feature.properties?.address || undefined,
       city: findContext('place') || findContext('locality'),
-      country: findContext('country'),
+      country: isCountry ? feature.text : findContext('country'),
+      countryCode: countryShortCode?.toUpperCase(),
       bbox: Array.isArray(feature.bbox) && feature.bbox.length === 4 ? feature.bbox : undefined
     };
   }

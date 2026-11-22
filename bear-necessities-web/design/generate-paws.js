@@ -8,10 +8,10 @@ const [, , referencePath, outputDir] = process.argv;
 const CLUSTER_TILT_DEGREES = -9;
 const VARIANTS = [
   { name: 'paw-trail', size: 48, fill: [93, 64, 55], fillAlpha: 0.85, tilt: 0 },
-  // Clusters are an outlined paw with a faint fill, so the map underneath stays readable
-  { name: 'paw-cluster-small', size: 96, fill: [77, 182, 172], fillAlpha: 0.22, stroke: [38, 150, 140], tilt: CLUSTER_TILT_DEGREES },
-  { name: 'paw-cluster-medium', size: 96, fill: [38, 166, 154], fillAlpha: 0.26, stroke: [0, 121, 107], tilt: CLUSTER_TILT_DEGREES },
-  { name: 'paw-cluster-large', size: 96, fill: [0, 121, 107], fillAlpha: 0.3, stroke: [0, 77, 64], tilt: CLUSTER_TILT_DEGREES }
+  // Clusters are warm honey paws with a dark-teal outline: teal vanished into the map's greens and water
+  { name: 'paw-cluster-small', size: 96, fill: [251, 192, 45], fillAlpha: 0.8, stroke: [0, 89, 79], tilt: CLUSTER_TILT_DEGREES },
+  { name: 'paw-cluster-medium', size: 96, fill: [249, 158, 27], fillAlpha: 0.85, stroke: [0, 89, 79], tilt: CLUSTER_TILT_DEGREES },
+  { name: 'paw-cluster-large', size: 96, fill: [245, 124, 0], fillAlpha: 0.9, stroke: [0, 77, 64], tilt: CLUSTER_TILT_DEGREES }
 ];
 const MARGIN_SHARE = 0.08;
 const OUTLINE_SHARE = 0.03;

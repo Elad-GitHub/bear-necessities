@@ -251,6 +251,8 @@ export class SubmitListingComponent implements OnInit, AfterViewInit, OnDestroy 
       address: ['', [Validators.maxLength(200)]],
       city: ['', [Validators.maxLength(100)]],
       country: ['', [Validators.maxLength(100)]],
+      // Filled from the address search only; lets the map group the place by country
+      countryCode: [null as string | null],
       timezone: [detectedTimezone, [Validators.required]],
       latitude: [null as number | null, [Validators.required, Validators.min(-90), Validators.max(90)]],
       longitude: [null as number | null, [Validators.required, Validators.min(-180), Validators.max(180)]],
@@ -307,6 +309,7 @@ export class SubmitListingComponent implements OnInit, AfterViewInit, OnDestroy 
       longitude: parseFloat(result.longitude.toFixed(6)),
       city: result.city || this.form.get('city')?.value,
       country: result.country || this.form.get('country')?.value,
+      countryCode: result.countryCode ?? null,
       address: result.fullName
     });
 
@@ -439,7 +442,7 @@ export class SubmitListingComponent implements OnInit, AfterViewInit, OnDestroy 
       address: formValue.address || null,
       city: formValue.city || null,
       country: formValue.country || null,
-      countryCode: null,
+      countryCode: formValue.countryCode || null,
       timezone: formValue.timezone,
       isPermanent: formValue.isPermanent,
       categoryIds: this.selectedCategoryIds(),

@@ -187,6 +187,11 @@ public sealed class PlaceImportService : IPlaceImportService
             if (categoriesBySlug.TryGetValue(slug, out var category))
                 place.AddCategory(category);
 
+        // A place without a category never shows under any filter, so a typo'd slug list must fail the row, not hide it
+        if (place.Categories.Count == 0)
+            throw new InvalidOperationException(
+                $"no known category in '{string.Join(";", candidate.CategorySlugs)}' (slugs are separated by ';')");
+
         if (!string.IsNullOrWhiteSpace(candidate.Website))
             place.AddExternalLink(PlaceExternalLink.Create(place.Id, "Website", candidate.Website!));
 

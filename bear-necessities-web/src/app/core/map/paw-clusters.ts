@@ -4,7 +4,7 @@ import { loadMapImages } from './map-images';
 
 /**
  * Groups of places (Mapbox clusters and server density cells) drawn as bear paws that grow with their count.
- * Images come from design/generate-paws.js (paw-reference.png as a teal outline with a faint fill, tilted).
+ * Images come from design/generate-paws.js (paw-reference.png as a honey paw with a dark-teal outline, tilted).
  */
 
 const PAW_CLUSTER_PIXELS = 96;
@@ -19,7 +19,7 @@ const ICON_SIZES = { small: 0.85, medium: 1.05, large: 1.25, huge: 1.45 };
 const TEXT_SIZE = 12;
 // Zoomed far out a whole country fits in a few pixels, so paws shrink with the map: [zoom, scale]
 const ZOOM_SCALE: [number, number][] = [[1.5, 0.5], [4, 0.62], [7, 0.82], [10, 1]];
-// The fill is already faint; crowded low-zoom paws fade a little more so the map shows through
+// Crowded low-zoom paws fade a little so the map shows through
 const ZOOM_OPACITY: [number, number][] = [[2, 0.8], [8, 1]];
 
 const PAW_IMAGE_IDS = ['paw-cluster-small', 'paw-cluster-medium', 'paw-cluster-large'];
