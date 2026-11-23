@@ -127,9 +127,8 @@ export class TripPlannerComponent implements OnInit {
     this.isLoading.set(true);
     this.hasSearched.set(true);
 
-    // A country geocode result has no parent country in its context — search by name.
-    // Cities/regions search within a radius around their center instead.
-    const isCountryResult = !area.city && !area.country;
+    // A whole country is searched by name; cities and regions within a radius around their center
+    const isCountryResult = !!area.isCountry;
     const options = isCountryResult
       ? { country: area.name, categoryIds: this.selectedCategoryIds() }
       : { latitude: area.latitude, longitude: area.longitude, radiusKm: 300, categoryIds: this.selectedCategoryIds() };

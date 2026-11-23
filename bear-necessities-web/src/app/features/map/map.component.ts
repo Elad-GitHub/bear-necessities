@@ -13,7 +13,7 @@ import { TripsService } from '../../core/services/trips.service';
 import { GeocodingService, GeocodeResult } from '../../core/services/geocoding.service';
 import { DirectionsService } from '../../core/services/directions.service';
 import { PlaceDensityCell, PlaceSummaryDto } from '../../core/models/place.model';
-import { ItineraryDay, MAX_TRIP_DAYS, MIN_TRIP_CATEGORIES } from '../../core/models/trip.model';
+import { AI_PLANNER, ItineraryDay, MAX_TRIP_DAYS, MAX_TRIP_WISH_LENGTH, MIN_TRIP_CATEGORIES } from '../../core/models/trip.model';
 import { applyFestivalTheme, FESTIVAL_PALETTE } from '../../core/map/festival-map-theme';
 import { sizedPhotoUrl } from '../../core/utils/photo-size';
 import { PAW_CLUSTER_PAINT, pawClusterLayout, registerPawClusterImages } from '../../core/map/paw-clusters';
@@ -119,11 +119,17 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   tripAreaResults = signal<GeocodeResult[]>([]);
   tripCategoryIds = signal<string[]>([]);
   tripDays = signal(3);
+  tripWish = signal('');
+  readonly maxTripWishLength = MAX_TRIP_WISH_LENGTH;
   itinerary = signal<ItineraryDay[]>([]);
+  isAiPlanned = signal(false);
   selectedTripDay = signal<number | null>(null);
   tripStopCount = computed(() => this.itinerary().reduce((total, day) => total + day.stops.length, 0));
+  // A written description says what the traveller wants, so it stands in for the subcategory minimum
   canPlanTrip = computed(() =>
-    !!this.tripArea() && this.tripCategoryIds().length >= MIN_TRIP_CATEGORIES && !this.isPlanning());
+    !!this.tripArea()
+    && (this.tripCategoryIds().length >= MIN_TRIP_CATEGORIES || this.tripWish().trim().length > 0)
+    && !this.isPlanning());
   private planningSubscription: Subscription | null = null;
   private walkingBear: mapboxgl.Marker | null = null;
   private walkAnimationFrame: number | null = null;
@@ -407,19 +413,21 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.isPlanning.set(true);
 
     // A bare country geocode has no parent country/city in context → search the whole country
-    const isCountryResult = !area.city && !area.country;
+    const isCountryResult = !!area.isCountry;
     this.planningSubscription = this.tripsService.getItinerary({
       country: isCountryResult ? area.name : undefined,
       latitude: area.latitude,
       longitude: area.longitude,
       radiusKm: isCountryResult ? undefined : 300,
       categoryIds: this.tripCategoryIds(),
-      days: this.tripDays()
+      days: this.tripDays(),
+      wish: this.tripWish()
     }).subscribe({
       next: (itinerary) => {
         this.planningSubscription = null;
         this.isPlanning.set(false);
         this.isPlannerOpen.set(false);
+        this.isAiPlanned.set(itinerary.planner === AI_PLANNER);
         this.showItinerary(itinerary.days, area);
       },
       error: () => {

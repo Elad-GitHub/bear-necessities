@@ -24,10 +24,11 @@ public class TripsController : BaseApiController
         [FromQuery] int days = 3,
         [FromQuery] int stopsPerDay = 4,
         [FromQuery] double radiusKm = 150,
+        [FromQuery] string? wish = null,
         CancellationToken cancellationToken = default)
     {
         var request = new PlanItineraryRequest(
-            country, latitude, longitude, categoryIds?.ToList() ?? [], days, stopsPerDay, radiusKm);
+            country, latitude, longitude, categoryIds?.ToList() ?? [], days, stopsPerDay, radiusKm, wish);
         var response = await _itineraryHandler.HandleAsync(request, cancellationToken);
         return Ok(response);
     }

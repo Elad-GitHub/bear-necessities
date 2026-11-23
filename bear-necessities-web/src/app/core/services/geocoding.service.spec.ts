@@ -48,6 +48,19 @@ describe('GeocodingService', () => {
 
     expect(country.country).toBe('Thailand');
     expect(country.countryCode).toBe('TH');
+    expect(country.isCountry).toBe(true);
+  });
+
+  it('marks a city as not a whole country, so trips search around it', () => {
+    const [city] = searchFor({
+      id: 'place.9',
+      text: 'Ubud',
+      place_name: 'Ubud, Bali, Indonesia',
+      center: [115.26, -8.5],
+      context: [{ id: 'country.3', text: 'Indonesia', short_code: 'id' }]
+    });
+
+    expect(city.isCountry).toBe(false);
   });
 
   it('leaves the country code empty for a dropped pin', () => {

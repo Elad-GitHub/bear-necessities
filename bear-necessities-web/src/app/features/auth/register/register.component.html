@@ -70,6 +70,11 @@
           {{ errorMessage() }}
         </div>
 
+        <p class="legal-consent">
+          By applying you agree to our <a routerLink="/legal/terms" target="_blank">Terms of Use</a>
+          and <a routerLink="/legal/privacy" target="_blank">Privacy Policy</a>, and confirm you are 18 or older.
+        </p>
+
         <button mat-raised-button color="primary" type="submit" class="full-width submit-btn" [disabled]="isLoading()">
           <mat-spinner *ngIf="isLoading()" diameter="20" strokeWidth="3"></mat-spinner>
           <span *ngIf="!isLoading()">Apply to Join</span>

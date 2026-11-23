@@ -43,6 +43,7 @@ export class TripsService {
     if (options.country) params['country'] = options.country;
     if (options.stopsPerDay) params['stopsPerDay'] = options.stopsPerDay;
     if (options.radiusKm) params['radiusKm'] = options.radiusKm;
+    if (options.wish?.trim()) params['wish'] = options.wish.trim();
 
     return this.api.get<Itinerary>('/trips/itinerary', params);
   }

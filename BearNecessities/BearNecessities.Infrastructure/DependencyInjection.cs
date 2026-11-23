@@ -203,7 +203,12 @@ public static class DependencyInjection
         services.AddScoped<UpdateMyProfileHandler>();
         services.AddScoped<GetTripSuggestionsHandler>();
         services.AddScoped<PlanItineraryHandler>();
-        services.AddSingleton<IItineraryPlanner, NearestNeighborItineraryPlanner>();
+        services.Configure<Trips.GeminiSettings>(configuration.GetSection(Trips.GeminiSettings.SectionName));
+        services.AddSingleton<SmartItineraryPlanner>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<Trips.AiPlannerBudget>();
+        services.AddHttpClient<Trips.GeminiItineraryPlanner>();
+        services.AddScoped<IItineraryPlanner, Trips.FallbackItineraryPlanner>();
         services.AddScoped<GetEventsByViewportHandler>();
         services.AddScoped<GetEventsByPlaceHandler>();
 

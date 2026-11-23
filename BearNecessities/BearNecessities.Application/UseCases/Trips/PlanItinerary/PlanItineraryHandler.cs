@@ -11,6 +11,7 @@ public sealed class PlanItineraryHandler : IRequestHandler<PlanItineraryRequest,
     public const int MinCategories = 3;
     public const int MaxDays = 14;
     public const int MaxStopsPerDay = 8;
+    public const int MaxWishLength = 500;
 
     private readonly IUnitOfWork _unitOfWork;
     private readonly IItineraryPlanner _planner;
@@ -24,6 +25,7 @@ public sealed class PlanItineraryHandler : IRequestHandler<PlanItineraryRequest,
     public async Task<PlanItineraryResponse> HandleAsync(PlanItineraryRequest request, CancellationToken cancellationToken = default)
     {
         Validate(request);
+        var wish = string.IsNullOrWhiteSpace(request.Wish) ? null : request.Wish.Trim();
 
         var candidates = await TripCandidateSearch.FindAsync(
             _unitOfWork, request.Country, request.Latitude, request.Longitude,
@@ -33,18 +35,22 @@ public sealed class PlanItineraryHandler : IRequestHandler<PlanItineraryRequest,
             ? Coordinates.Create(request.Latitude.Value, request.Longitude.Value)
             : null;
 
-        var plannedDays = await _planner.PlanAsync(
-            new ItineraryPlanningInput(candidates, request.CategoryIds, start, request.Days, request.StopsPerDay),
+        var plan = await _planner.PlanAsync(
+            new ItineraryPlanningInput(candidates, request.CategoryIds ?? [], start, request.Days, request.StopsPerDay, wish),
             cancellationToken);
 
-        var days = plannedDays
-            .Select((stops, index) => new ItineraryDayDto(
+        var days = plan.Days
+            .Select((day, index) => new ItineraryDayDto(
                 DayNumber: index + 1,
-                Stops: stops.Select(TripCandidateSearch.ToSummary).ToList(),
-                DistanceKm: Math.Round(MeasureDayKm(stops), 1)))
+                Stops: day.Stops.Select(stop => TripCandidateSearch.ToSummary(stop.Place)).ToList(),
+                DistanceKm: Math.Round(MeasureDayKm(day.Stops.Select(stop => stop.Place).ToList()), 1),
+                Title: day.Title,
+                Reasons: day.Stops
+                    .Where(stop => !string.IsNullOrWhiteSpace(stop.Reason))
+                    .ToDictionary(stop => stop.Place.Id.Value, stop => stop.Reason!)))
             .ToList();
 
-        return new PlanItineraryResponse(days, days.Sum(day => day.Stops.Count), _planner.Name);
+        return new PlanItineraryResponse(days, days.Sum(day => day.Stops.Count), plan.Planner);
     }
 
     private static double MeasureDayKm(IReadOnlyList<Place> stops) =>
@@ -56,9 +62,13 @@ public sealed class PlanItineraryHandler : IRequestHandler<PlanItineraryRequest,
     private static void Validate(PlanItineraryRequest request)
     {
         var errors = new Dictionary<string, string[]>();
+        var hasWish = !string.IsNullOrWhiteSpace(request.Wish);
 
-        if (request.CategoryIds is null || request.CategoryIds.Distinct().Count() < MinCategories)
-            errors["categoryIds"] = [$"Pick at least {MinCategories} subcategories."];
+        // A written wish says what the traveller wants, so the subcategory minimum only applies without one
+        if (!hasWish && (request.CategoryIds is null || request.CategoryIds.Distinct().Count() < MinCategories))
+            errors["categoryIds"] = [$"Pick at least {MinCategories} subcategories, or describe your trip."];
+        if (request.Wish?.Length > MaxWishLength)
+            errors["wish"] = [$"Keep the trip description under {MaxWishLength} characters."];
         if (request.Days is < 1 or > MaxDays)
             errors["days"] = [$"Days must be between 1 and {MaxDays}."];
         if (request.StopsPerDay is < 1 or > MaxStopsPerDay)

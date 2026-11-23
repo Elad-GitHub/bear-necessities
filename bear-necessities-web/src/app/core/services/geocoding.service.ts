@@ -12,6 +12,8 @@ export interface GeocodeResult {
   city?: string;
   country?: string;
   countryCode?: string;
+  /** The result is a whole country, so trip planning searches the country rather than a radius. */
+  isCountry?: boolean;
   bbox?: [number, number, number, number];
 }
 
@@ -80,6 +82,7 @@ export class GeocodingService {
       city: findContext('place') || findContext('locality'),
       country: isCountry ? feature.text : findContext('country'),
       countryCode: countryShortCode?.toUpperCase(),
+      isCountry,
       bbox: Array.isArray(feature.bbox) && feature.bbox.length === 4 ? feature.bbox : undefined
     };
   }

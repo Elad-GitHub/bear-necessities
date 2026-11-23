@@ -40,6 +40,10 @@ const routes: Routes = [
     loadChildren: () => import('./features/groups/groups.module').then(m => m.GroupsModule)
   },
   {
+    path: 'legal',
+    loadChildren: () => import('./features/legal/legal.module').then(m => m.LegalModule)
+  },
+  {
     path: 'admin',
     canActivate: [AuthGuard],
     loadChildren: () => import('./features/admin/admin.module').then(m => m.AdminModule)

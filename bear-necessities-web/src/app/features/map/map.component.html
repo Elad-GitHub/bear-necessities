@@ -24,11 +24,14 @@
       {{ itinerary().length }} {{ itinerary().length === 1 ? 'day' : 'days' }} ·
       {{ tripStopCount() }} {{ tripStopCount() === 1 ? 'stop' : 'stops' }}
       <ng-container *ngIf="tripArea()"> around {{ tripArea()?.name }}</ng-container>
+      <span class="trip-ai-tag" *ngIf="isAiPlanned()" title="Stops chosen and explained by AI from places on our map">
+        <span class="material-icons">auto_awesome</span> Planned with AI
+      </span>
     </p>
 
     <div class="trip-empty" *ngIf="itinerary().length === 0">
       <img class="trip-empty-bear" src="brand/bears/hiking-large.webp" alt="" width="77" height="120">
-      <p>No places matched those categories in {{ tripArea()?.name || 'this area' }} yet.</p>
+      <p>No places matched what you asked for in {{ tripArea()?.name || 'this area' }} yet.</p>
       <button class="planner-go" (click)="backToPlanner()">
         <span class="material-icons">tune</span> Change the plan
       </button>
@@ -41,11 +44,13 @@
         <span class="trip-day-meta">{{ day.stops.length }} stops<ng-container *ngIf="day.distanceKm > 0"> · {{ day.distanceKm | number:'1.0-1' }} km</ng-container></span>
         <span class="material-icons">zoom_in_map</span>
       </button>
+      <p class="trip-day-title" *ngIf="day.title">{{ day.title }}</p>
       <ol class="trip-stops">
         <li *ngFor="let stop of day.stops; let stopIndex = index">
           <button (click)="focusTripStop(stop, stopIndex + 1)">
             <span class="trip-stop-name">{{ stop.name }}</span>
             <span class="trip-stop-place" *ngIf="stop.city">{{ stop.city }}</span>
+            <span class="trip-stop-reason" *ngIf="day.reasons?.[stop.id] as reason">{{ reason }}</span>
           </button>
         </li>
       </ol>
@@ -75,13 +80,24 @@
       </div>
     </div>
 
+    <label class="planner-label" for="planner-wish">Describe your trip</label>
+    <textarea id="planner-wish" class="planner-wish" rows="3"
+      [maxLength]="maxTripWishLength"
+      placeholder="e.g. Slow days of yoga and nature, vegan food, no parties"
+      [value]="tripWish()"
+      (input)="tripWish.set($any($event.target).value)"></textarea>
+    <p class="planner-hint planner-ai-note">
+      Plans may be made with AI — check details before you go, and keep personal info out of your description.
+      <a routerLink="/legal/privacy" target="_blank">Privacy</a>
+    </p>
+
     <label class="planner-label">
       What are you into?
-      <span class="planner-count" [class.met]="tripCategoryIds().length >= minTripCategories">
+      <span class="planner-count" [class.met]="tripCategoryIds().length >= minTripCategories || tripWish().trim().length > 0">
         {{ tripCategoryIds().length }}/{{ minTripCategories }} picked
       </span>
     </label>
-    <p class="planner-hint">Pick at least {{ minTripCategories }} subcategories — open a category to choose.</p>
+    <p class="planner-hint">Describe your trip above, or pick at least {{ minTripCategories }} subcategories — or both.</p>
     <app-category-chips
       [wrap]="true"
       [categories]="categoriesService.categories()"
