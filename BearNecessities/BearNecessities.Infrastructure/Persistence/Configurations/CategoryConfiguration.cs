@@ -91,7 +91,10 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             (1, 103, "qigong",              "Qigong"),
             (1, 104, "tai-chi",             "Tai Chi"),
             (1, 106, "acro-yoga",           "Acro Yoga"),
-            (1, 107, "martial-arts",        "Martial Arts"),
+            // Kalaripayattu, Muay Thai, kung fu; capoeira and aikido have their own
+            (1, 107, "martial-arts",        "Traditional Martial Arts"),
+            (1, 111, "capoeira",            "Capoeira"),
+            (1, 112, "aikido",              "Aikido"),
             (1, 108, "contact-improv",      "Contact Dance"),
             (1, 109, "circus-arts",         "Circus Arts"),
             // Mobility, handstands, floor work and Ido Portal-style movement practice

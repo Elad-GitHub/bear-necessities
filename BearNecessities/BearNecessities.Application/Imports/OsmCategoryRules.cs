@@ -56,6 +56,8 @@ public static partial class OsmCategoryRules
         (Word("lomi ?lomi"), "lomi-lomi"),
         (Word("shiatsu"), "shiatsu"),
         (Word("shibari"), "shibari"),
+        (Word("capoeira"), "capoeira"),
+        (Word("aikido"), "aikido"),
         (Word("fab ?lab|makerspace|maker space"), "maker-space")
     ];
 
@@ -96,6 +98,8 @@ public static partial class OsmCategoryRules
         if (Is(tags, "leisure", "hackerspace")) Add("maker-space");
         if (Is(tags, "sport", "tai_chi")) Add("tai-chi");
         if (Is(tags, "sport", "qigong")) Add("qigong");
+        if (Is(tags, "sport", "capoeira")) Add("capoeira");
+        if (Is(tags, "sport", "aikido")) Add("aikido");
         if (Is(tags, "craft", "pottery")) Add("pottery");
         if (Is(tags, "amenity", "music_venue")) Add("live-music");
 

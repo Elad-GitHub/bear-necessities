@@ -62,7 +62,9 @@ public static class OsmPlaceSummary
         ["tuina"] = "Tuina",
         ["drumming-circle"] = "Drum circle",
         ["macrame-fiber-arts"] = "Weaving & fiber arts",
-        ["shibari"] = "Shibari"
+        ["shibari"] = "Shibari",
+        ["capoeira"] = "Capoeira school",
+        ["aikido"] = "Aikido dojo"
     };
 
     public static string? Build(IReadOnlyDictionary<string, string> tags, string categorySlug)

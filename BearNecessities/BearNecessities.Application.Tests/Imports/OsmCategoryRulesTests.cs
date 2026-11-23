@@ -32,6 +32,8 @@ public class OsmCategoryRulesTests
     [InlineData("Lisbon Qigong School", "qigong")]
     [InlineData("Wim Hof Ice Bath Studio", "cold-therapy")]
     [InlineData("Kambo Healing Space", "kambo")]
+    [InlineData("Grupo Capoeira Angola Lisboa", "capoeira")]
+    [InlineData("Lisbon Aikido Dojo", "aikido")]
     public void Classify_PracticeInTheName_ShouldBeRecognised(string name, string expected)
     {
         Classify(("name", name), ("tourism", "guest_house")).Should().Contain(expected);
@@ -83,6 +85,8 @@ public class OsmCategoryRulesTests
     [InlineData("amenity", "coworking_space", "coworking-space")]
     [InlineData("leisure", "hackerspace", "maker-space")]
     [InlineData("sport", "tai_chi", "tai-chi")]
+    [InlineData("sport", "capoeira", "capoeira")]
+    [InlineData("sport", "aikido", "aikido")]
     [InlineData("craft", "pottery", "pottery")]
     [InlineData("amenity", "music_venue", "live-music")]
     public void Classify_CommunitySpaceTag_ShouldBeRecognised(string key, string value, string expected)
