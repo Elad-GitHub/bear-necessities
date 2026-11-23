@@ -25,8 +25,10 @@ public static class OsmPlaceSummary
         ["ayurveda"] = "Ayurveda centre",
         ["acupuncture"] = "Acupuncture",
         ["reiki"] = "Reiki",
-        ["massage"] = "Massage",
         ["thai-massage"] = "Thai massage",
+        ["watsu"] = "Watsu",
+        ["lomi-lomi"] = "Lomi Lomi massage",
+        ["shiatsu"] = "Shiatsu",
         ["energy-healing"] = "Energy healing",
         ["vipassana"] = "Vipassana centre",
         ["meditation"] = "Meditation centre",
@@ -43,7 +45,6 @@ public static class OsmPlaceSummary
         ["hippie-market"] = "Hippie market",
         ["artisan-market"] = "Artisan market",
         ["coworking-space"] = "Co-working space",
-        ["hackerspace"] = "Hackerspace",
         ["maker-space"] = "Maker space",
         ["tai-chi"] = "Tai chi",
         ["qigong"] = "Qigong",
@@ -60,9 +61,8 @@ public static class OsmPlaceSummary
         ["cold-therapy"] = "Ice bath",
         ["tuina"] = "Tuina",
         ["drumming-circle"] = "Drum circle",
-        ["sound-bath"] = "Sound bath",
-        ["macrame-fiber-arts"] = "Macramé",
-        ["human-design"] = "Human design"
+        ["macrame-fiber-arts"] = "Weaving & fiber arts",
+        ["shibari"] = "Shibari"
     };
 
     public static string? Build(IReadOnlyDictionary<string, string> tags, string categorySlug)

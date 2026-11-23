@@ -51,9 +51,11 @@ public static partial class OsmCategoryRules
         (Word("ice bath|wim hof"), "cold-therapy"),
         (Word("tuina|tui na"), "tuina"),
         (Word("drum(ming)? circle"), "drumming-circle"),
-        (Word("sound bath"), "sound-bath"),
         (Word("macram(e|é)"), "macrame-fiber-arts"),
-        (Word("human design"), "human-design"),
+        (Word("watsu"), "watsu"),
+        (Word("lomi ?lomi"), "lomi-lomi"),
+        (Word("shiatsu"), "shiatsu"),
+        (Word("shibari"), "shibari"),
         (Word("fab ?lab|makerspace|maker space"), "maker-space")
     ];
 
@@ -91,7 +93,7 @@ public static partial class OsmCategoryRules
             Add("hot-springs");
         if (Is(tags, "leisure", "garden") && Is(tags, "garden:type", "community")) Add("community-garden");
         if (Is(tags, "amenity", "coworking_space")) Add("coworking-space");
-        if (Is(tags, "leisure", "hackerspace")) Add("hackerspace");
+        if (Is(tags, "leisure", "hackerspace")) Add("maker-space");
         if (Is(tags, "sport", "tai_chi")) Add("tai-chi");
         if (Is(tags, "sport", "qigong")) Add("qigong");
         if (Is(tags, "craft", "pottery")) Add("pottery");
@@ -126,16 +128,17 @@ public static partial class OsmCategoryRules
                 case "acupuncture": add("acupuncture"); break;
                 case "reiki": add("reiki"); break;
                 case "herbalism" or "naturopathy" or "phytotherapy": add("herbalism"); break;
-                case "reflexology" or "massage": add("massage"); break;
+                case "shiatsu": add("shiatsu"); break;
                 case "energy_healing" or "bioenergy" or "pranic_healing": add("energy-healing"); break;
             }
         }
 
+        // Only named styles belong on the map; a plain massage shop is usually an ordinary spa
         var isMassage = Is(tags, "shop", "massage") || Is(tags, "amenity", "massage") || Is(tags, "healthcare", "massage");
         if (!isMassage) return;
         var isThai = Is(tags, "massage", "thai")
             || tags.GetValueOrDefault("name", string.Empty).Contains("thai", StringComparison.OrdinalIgnoreCase);
-        add(isThai ? "thai-massage" : "massage");
+        if (isThai) add("thai-massage");
     }
 
     private static bool Is(IReadOnlyDictionary<string, string> tags, string key, string value) =>

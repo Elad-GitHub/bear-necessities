@@ -90,7 +90,6 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             (1, 102, "ecstatic-dance",      "Ecstatic Dance"),
             (1, 103, "qigong",              "Qigong"),
             (1, 104, "tai-chi",             "Tai Chi"),
-            (1, 105, "breathwork",          "Breathwork"),
             (1, 106, "acro-yoga",           "Acro Yoga"),
             (1, 107, "martial-arts",        "Martial Arts"),
             (1, 108, "contact-improv",      "Contact Dance"),
@@ -104,45 +103,43 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             (2, 203, "workshop",            "Workshop"),
             (2, 204, "ceremony",            "Ceremony"),
             (2, 205, "gathering",           "Gathering"),
-            (2, 206, "conference",          "Conference"),
 
             // Volunteering (parent 3)
             (3, 301, "wwoofing",            "WWOOFing"),
             (3, 302, "permaculture",        "Permaculture"),
             (3, 303, "community-garden",    "Community Garden"),
             (3, 304, "environmental-work",  "Environmental Work"),
-            (3, 305, "co-living",           "Co-Living"),
-            (3, 306, "skill-share",         "Skill Share"),
 
-            // CoWorking (parent 4)
+            // CoWorking (parent 4); co-living keeps its 3xx id from when it sat under Volunteering
             (4, 401, "coworking-space",     "Co-Working Space"),
             (4, 402, "digital-nomad-hub",   "Digital Nomad Hub"),
-            (4, 403, "hackerspace",         "Hackerspace"),
+            (4, 305, "co-living",           "Co-Living"),
             (4, 404, "maker-space",         "Maker Space"),
 
             // Crafting (parent 5)
             (5, 501, "pottery",             "Pottery"),
-            (5, 502, "textile-arts",        "Textile Arts"),
-            (5, 503, "woodworking",         "Woodworking"),
+            (5, 503, "woodworking",         "Woodcraft & Carving"),
             (5, 504, "jewelry-making",      "Jewelry Making"),
             (5, 505, "painting",            "Painting"),
-            (5, 506, "natural-building",    "Natural Building"),
-            // Workshops to learn macramé; buying finished pieces lives under Markets → "Jewelry & Macramé"
-            (5, 507, "macrame-fiber-arts",  "Macramé & Fiber Arts"),
+            (5, 506, "natural-building",    "Natural Building & Bamboo"),
+            // Weaving, dyeing, macramé, basketry; buying finished pieces lives under Markets → "Jewelry & Macramé"
+            (5, 507, "macrame-fiber-arts",  "Weaving, Macramé & Fiber Arts"),
 
-            // Healing (parent 6)
+            // Healing (parent 6); sound baths count as sound healing
             (6, 601, "sound-healing",       "Sound Healing"),
-            (6, 602, "energy-healing",      "Energy Healing"),
-            (6, 603, "massage",             "Massage"),
+            (6, 602, "energy-healing",      "Energy Healing & Cleansing"),
             (6, 604, "reiki",               "Reiki"),
             (6, 605, "plant-medicine",      "Plant Medicine"),
             (6, 606, "somatic-therapy",     "Somatic Therapy"),
             (6, 607, "thai-massage",        "Thai Massage"),
             (6, 608, "tuina",               "Tuina"),
             (6, 609, "acupuncture",         "Acupuncture"),
+            // Named bodywork styles instead of a generic "Massage", which pulled in ordinary spas
+            (6, 610, "watsu",               "Watsu"),
+            (6, 611, "lomi-lomi",           "Lomi Lomi"),
+            (6, 612, "shiatsu",             "Shiatsu"),
 
             // Music & Sound (parent 7)
-            (7, 701, "sound-bath",          "Sound Bath"),
             (7, 702, "kirtan",              "Kirtan"),
             (7, 703, "drumming-circle",     "Drumming Circle"),
             (7, 704, "live-music",          "Live Music"),
@@ -154,14 +151,13 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             (8, 801, "tantra",              "Tantra"),
             (8, 802, "conscious-sexuality", "Conscious Sexuality"),
             (8, 803, "intimacy-workshop",   "Intimacy Workshop"),
+            (8, 804, "shibari",             "Shibari"),
 
             // Spirituality (parent 9)
             (9, 901, "meditation",          "Meditation"),
             (9, 902, "astrology",           "Astrology"),
             (9, 903, "shamanism",           "Shamanism"),
-            (9, 904, "human-design",        "Human Design"),
-            (9, 905, "neo-paganism",        "Neo-Paganism"),
-            (9, 906, "sacred-ceremony",     "Sacred Ceremony"),
+            (9, 906, "sacred-ceremony",     "Sacred Sites & Rituals"),
             (9, 907, "vipassana",           "Vipassana"),
 
             // Wellness (parent 10)
@@ -171,6 +167,8 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             (10, 1004, "yoga-therapy",      "Yoga Therapy"),
             (10, 1005, "fasting-detox",     "Fasting & Detox"),
             (10, 1006, "cold-therapy",      "Cold Therapy"),
+            // Wim Hof, rebirthing, holotropic; keeps its 1xx id from when it sat under Movement
+            (10, 105,  "breathwork",        "Breathwork"),
 
             // Nature (parent 11)
             (11, 1101, "camping",           "Camping Areas"),

@@ -64,17 +64,24 @@ public class OsmCategoryRulesTests
     [Theory]
     [InlineData("Lek Massage", "thai", "thai-massage")]
     [InlineData("Thai Spa & Massage", null, "thai-massage")]
-    [InlineData("Lisbon Massage Studio", null, "massage")]
-    public void Classify_MassageShop_ShouldTellThaiMassageApart(string name, string? style, string expected)
+    [InlineData("Zen Shiatsu Studio", null, "shiatsu")]
+    [InlineData("Aloha Lomi Lomi", null, "lomi-lomi")]
+    public void Classify_MassageShop_ShouldKeepItsNamedStyle(string name, string? style, string expected)
     {
         var tags = new List<(string, string)> { ("name", name), ("shop", "massage") };
         if (style is not null) tags.Add(("massage", style));
         Classify(tags.ToArray()).Should().Contain(expected);
     }
 
+    [Fact]
+    public void Classify_PlainMassageShop_ShouldBeEmpty()
+    {
+        Classify(("name", "Lisbon Massage Studio"), ("shop", "massage")).Should().BeEmpty();
+    }
+
     [Theory]
     [InlineData("amenity", "coworking_space", "coworking-space")]
-    [InlineData("leisure", "hackerspace", "hackerspace")]
+    [InlineData("leisure", "hackerspace", "maker-space")]
     [InlineData("sport", "tai_chi", "tai-chi")]
     [InlineData("craft", "pottery", "pottery")]
     [InlineData("amenity", "music_venue", "live-music")]
