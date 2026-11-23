@@ -30,11 +30,13 @@ public static class TripGeography
     public static Coordinates CoordinatesOf(Place place) => Coordinates.Create(place.Latitude, place.Longitude);
 
     /// <summary>
-    /// Where the trip starts: the place with the most interest matches around it within a day's area.
+    /// Where the trip starts: the place with the most of what the traveller wants around it - within a short
+    /// trip's whole region, so all its days can be filled, or within a day's area for a longer trip.
     /// A city or point request looks only near that point; a country-wide request looks everywhere.
     /// </summary>
-    public static Place? FindAnchor(IReadOnlyList<Place> pool, TripInterests interests, Coordinates? start, bool isCountryWide)
+    public static Place? FindAnchor(IReadOnlyList<Place> pool, TripInterests interests, Coordinates? start, bool isCountryWide, int days)
     {
+        var scoringRadiusKm = IsShortTrip(days) ? SingleRegionRadiusKm : DayRadiusKm;
         if (pool.Count == 0) return null;
 
         var nearStart = start is null || isCountryWide
@@ -44,7 +46,7 @@ public static class TripGeography
             nearStart = [pool.MinBy(place => DistanceKm(start, place))!];
 
         return nearStart
-            .OrderByDescending(candidate => AreaScore(candidate, pool, interests))
+            .OrderByDescending(candidate => AreaScore(candidate, pool, interests, scoringRadiusKm))
             .ThenBy(candidate => start is null ? 0 : DistanceKm(start, candidate))
             .First();
     }
@@ -52,19 +54,20 @@ public static class TripGeography
     // Covering another of the traveller's interests outweighs any number of extra places for one they already have
     private const int DistinctInterestWeight = 100;
 
-    /// <summary>How much of what the traveller wants lies within a day's area around a place: variety first, then amount.</summary>
-    public static int AreaScore(Place center, IReadOnlyList<Place> pool, TripInterests interests)
+    /// <summary>How much of what the traveller wants lies around a place: variety first, then amount.</summary>
+    public static int AreaScore(Place center, IReadOnlyList<Place> pool, TripInterests interests, double radiusKm = DayRadiusKm)
     {
-        var nearby = pool.Where(place => DistanceKm(center, place) <= DayRadiusKm).ToList();
+        var nearby = pool.Where(place => DistanceKm(center, place) <= radiusKm).ToList();
         var distinctInterests = interests.Wanted.Count(interestId =>
             nearby.Any(place => place.Categories.Any(category => category.Id.Value == interestId)));
         return distinctInterests * DistinctInterestWeight + nearby.Sum(place => Math.Max(1, interests.MatchCount(place)));
     }
 
     /// <summary>
-    /// Drops stops and days that break the rules, keeping the plan's order; used on answers from an AI planner.
+    /// Drops stops and days that break the rules - distances, and one place of each kind per day -
+    /// keeping the plan's order; used on answers from an AI planner.
     /// </summary>
-    public static IReadOnlyList<PlannedDay> Enforce(IReadOnlyList<PlannedDay> days, int requestedDays)
+    public static IReadOnlyList<PlannedDay> Enforce(IReadOnlyList<PlannedDay> days, int requestedDays, TripInterests interests)
     {
         var kept = new List<PlannedDay>();
         Place? tripStart = null;
@@ -78,9 +81,17 @@ public static class TripGeography
             tripStart ??= dayStart;
             if (IsShortTrip(requestedDays) && DistanceKm(tripStart, dayStart) > SingleRegionRadiusKm) continue;
 
+            var kindsToday = new HashSet<Guid>();
             var stops = day.Stops
                 .Where(stop => DistanceKm(dayStart, stop.Place) <= DayRadiusKm)
                 .Where(stop => !IsShortTrip(requestedDays) || DistanceKm(tripStart, stop.Place) <= SingleRegionRadiusKm)
+                .Where(stop =>
+                {
+                    var kinds = interests.KindsOf(stop.Place);
+                    if (kinds.Any(kindsToday.Contains)) return false;
+                    kindsToday.UnionWith(kinds);
+                    return true;
+                })
                 .ToList();
             kept.Add(day with { Stops = stops });
             previousDayStart = dayStart;

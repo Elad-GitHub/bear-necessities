@@ -30,6 +30,8 @@ public sealed class GeminiItineraryPlanner
         $"{TripGeography.DayRadiusKm:0} km of that day's first stop; each day's first stop must be within " +
         $"{TripGeography.MaxDayHopKm:0} km of the previous day's first stop; trips of {TripGeography.SingleRegionMaxDays} days " +
         $"or fewer stay within {TripGeography.SingleRegionRadiusKm:0} km of the first stop of the trip. " +
+        "Variety rule: at most one place of each category per day (one ayurveda place a day, not four); " +
+        "spread places of the same category over different days. " +
         "Start the trip at the suggested starting place. Fewer stops are better than breaking these rules. " +
         "Order each day to keep travel short. " +
         "Follow the traveller's wishes, including what they want to avoid. Use each place at most once. " +
@@ -88,13 +90,13 @@ public sealed class GeminiItineraryPlanner
         var pool = input.Candidates
             .Where(place => !interests.IsRuledOut(place) && (interests.IsEmpty || interests.MatchCount(place) > 0))
             .ToList();
-        var anchor = TripGeography.FindAnchor(pool, interests, input.Start, input.IsCountryWide);
+        var anchor = TripGeography.FindAnchor(pool, interests, input.Start, input.IsCountryWide, input.Days);
         if (anchor is null)
             return new PlannedItinerary([], PlannerName);
 
         var shortlist = Shortlist(pool, anchor, interests, input.Days);
         var answerJson = await GenerateAsync(BuildPrompt(input, interests, shortlist), cancellationToken);
-        return ReadItinerary(answerJson, shortlist, input);
+        return ReadItinerary(answerJson, shortlist, input, interests);
     }
 
     // Places the trip can reach from its starting area, best interest matches first; the anchor is place 1
@@ -176,7 +178,8 @@ public sealed class GeminiItineraryPlanner
     }
 
     // Keeps only valid, unused place numbers within the day and stop limits
-    private static PlannedItinerary ReadItinerary(string answerJson, IReadOnlyList<Place> shortlist, ItineraryPlanningInput input)
+    private static PlannedItinerary ReadItinerary(
+        string answerJson, IReadOnlyList<Place> shortlist, ItineraryPlanningInput input, TripInterests interests)
     {
         using var answer = JsonDocument.Parse(answerJson);
         var used = new HashSet<int>();
@@ -201,7 +204,7 @@ public sealed class GeminiItineraryPlanner
         }
 
         // The model is asked to follow the distance rules; this makes sure of it
-        var withinRules = TripGeography.Enforce(days, input.Days).Where(day => day.Stops.Count > 0).ToList();
+        var withinRules = TripGeography.Enforce(days, input.Days, interests).Where(day => day.Stops.Count > 0).ToList();
         if (withinRules.Count == 0)
             throw new InvalidOperationException("Gemini chose no valid places");
         return new PlannedItinerary(withinRules, PlannerName);

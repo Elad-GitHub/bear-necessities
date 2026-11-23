@@ -6,6 +6,8 @@ export interface ActiveTrip {
   days: ItineraryDay[];
   area: GeocodeResult;
   isAiPlanned: boolean;
+  /** Days the traveller asked for; the plan can be shorter when the area runs out of places. */
+  requestedDays: number;
 }
 
 const STORAGE_KEY = 'active_trip';

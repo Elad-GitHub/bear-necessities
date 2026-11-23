@@ -32,7 +32,7 @@ public sealed class SmartItineraryPlanner : IItineraryPlanner
         if (remaining.Count == 0 || input.Days < 1 || input.StopsPerDay < 1)
             return new PlannedItinerary([], PlannerName);
 
-        var tripStart = TripGeography.FindAnchor(remaining, interests, input.Start, input.IsCountryWide)!;
+        var tripStart = TripGeography.FindAnchor(remaining, interests, input.Start, input.IsCountryWide, input.Days)!;
         var isShortTrip = TripGeography.IsShortTrip(input.Days);
         bool InRegion(Place place) =>
             !isShortTrip || TripGeography.DistanceKm(tripStart, place) <= TripGeography.SingleRegionRadiusKm;
@@ -53,7 +53,8 @@ public sealed class SmartItineraryPlanner : IItineraryPlanner
         return new PlannedItinerary(days, PlannerName);
     }
 
-    // The day begins at its center, then takes the nearest place of the next interest within the day's area
+    // The day begins at its center, then takes the nearest place of the next interest within the day's area,
+    // one place of each kind per day ("one ayurveda, not four")
     private static List<Place> BuildDayStops(
         Place center, List<Place> remaining, Queue<Guid> rotation, TripInterests interests,
         Func<Place, bool> isInDayArea, int stopsPerDay)
@@ -61,14 +62,17 @@ public sealed class SmartItineraryPlanner : IItineraryPlanner
         remaining.Remove(center);
         MoveToBack(rotation, center);
         var stops = new List<Place> { center };
+        var kindsToday = interests.KindsOf(center).ToHashSet();
         var position = TripGeography.CoordinatesOf(center);
+        bool IsEligible(Place place) => isInDayArea(place) && !interests.KindsOf(place).Any(kindsToday.Contains);
 
         while (stops.Count < stopsPerDay)
         {
-            var next = TakeNearestInNextInterest(remaining, rotation, interests, position, isInDayArea)
-                ?? TakeNearest(remaining, interests, position, isInDayArea);
+            var next = TakeNearestInNextInterest(remaining, rotation, interests, position, IsEligible)
+                ?? TakeNearest(remaining, interests, position, IsEligible);
             if (next is null) break;
             stops.Add(next);
+            kindsToday.UnionWith(interests.KindsOf(next));
             position = TripGeography.CoordinatesOf(next);
         }
         return stops;

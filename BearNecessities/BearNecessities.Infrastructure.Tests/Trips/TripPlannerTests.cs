@@ -45,15 +45,25 @@ public class TripPlannerTests
         }
     }
 
-    private List<Place> Places(int count) => Enumerable.Range(1, count).Select(i =>
+    private readonly Category _reiki = Category.Create("reiki", "Reiki");
+    private readonly Category _hiking = Category.Create("hiking", "Hiking");
+    private readonly Category _pottery = Category.Create("pottery", "Pottery");
+
+    // Each place a different kind, so a day may hold any of them
+    private List<Place> Places(int count)
     {
-        var place = Place.Create($"Shala {i}", 38m + i * 0.01m, 23m, "UTC", new UserId(Guid.NewGuid()));
-        place.AddCategory(_yoga);
-        return place;
-    }).ToList();
+        var kinds = new[] { _yoga, _reiki, _hiking, _pottery };
+        return Enumerable.Range(1, count).Select(i =>
+        {
+            var place = Place.Create($"Shala {i}", 38m + i * 0.01m, 23m, "UTC", new UserId(Guid.NewGuid()));
+            place.AddCategory(kinds[(i - 1) % kinds.Length]);
+            return place;
+        }).ToList();
+    }
 
     private ItineraryPlanningInput Input(List<Place> places, int days = 2, int stopsPerDay = 2) =>
-        new(places, [_yoga.Id.Value], Coordinates.Create(38m, 23m), days, stopsPerDay, "quiet yoga days");
+        new(places, [_yoga.Id.Value, _reiki.Id.Value, _hiking.Id.Value, _pottery.Id.Value],
+            Coordinates.Create(38m, 23m), days, stopsPerDay, "quiet yoga days");
 
     private static FallbackItineraryPlanner Planner(FakeGemini fake, string? apiKey = "test-key", int maxPerMinute = 10)
     {
@@ -106,6 +116,17 @@ public class TripPlannerTests
 
         plan.Planner.Should().Be("gemini");
         plan.Days.SelectMany(day => day.Stops).Select(stop => stop.Place.Name).Should().Equal("Shala 1");
+    }
+
+    [Fact]
+    public async Task PlanAsync_GeminiPuttingTwoOfAKindInADay_ShouldKeepOnlyTheFirst()
+    {
+        // Places 1 and 5 are both yoga
+        const string answer = """{"days":[{"title":"Yoga twice","stops":[{"place":1,"reason":"a"},{"place":5,"reason":"b"},{"place":2,"reason":"c"}]}]}""";
+
+        var plan = await Planner(new FakeGemini(HttpStatusCode.OK, answer)).PlanAsync(Input(Places(5), days: 1, stopsPerDay: 3));
+
+        plan.Days[0].Stops.Select(stop => stop.Place.Name).Should().Equal("Shala 1", "Shala 2");
     }
 
     [Fact]

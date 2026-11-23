@@ -29,6 +29,13 @@
       </span>
     </p>
 
+    <p class="trip-short-note" *ngIf="isTripShorterThanAsked()">
+      <span class="material-icons">info</span>
+      We found enough close together for {{ itinerary().length }} of your {{ requestedTripDays() }} days —
+      we keep each day within about 20 km and don't repeat an activity in a day.
+      Try adding more interests, or another area for the rest of your trip.
+    </p>
+
     <div class="trip-empty" *ngIf="itinerary().length === 0">
       <img class="trip-empty-bear" src="brand/bears/hiking-large.webp" alt="" width="77" height="120">
       <p>No places matched what you asked for in {{ tripArea()?.name || 'this area' }} yet.</p>

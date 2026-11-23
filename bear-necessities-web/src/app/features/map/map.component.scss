@@ -147,6 +147,20 @@ $planner-primary-dark: #004d40;
     color: #616161;
   }
 
+  .trip-short-note {
+    display: flex;
+    gap: 6px;
+    margin: 0 0 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #fff8e1;
+    color: #5d4037;
+    font-size: 12.5px;
+    line-height: 1.45;
+
+    .material-icons { font-size: 16px; color: #f9a825; }
+  }
+
   .trip-ai-tag {
     display: inline-flex;
     align-items: center;

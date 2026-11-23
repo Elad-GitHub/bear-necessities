@@ -124,6 +124,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   readonly maxTripWishLength = MAX_TRIP_WISH_LENGTH;
   itinerary = signal<ItineraryDay[]>([]);
   isAiPlanned = signal(false);
+  requestedTripDays = signal(0);
+  isTripShorterThanAsked = computed(() =>
+    this.itinerary().length > 0 && this.itinerary().length < this.requestedTripDays());
   selectedTripDay = signal<number | null>(null);
   tripStopCount = computed(() => this.itinerary().reduce((total, day) => total + day.stops.length, 0));
   // A written description says what the traveller wants, so it stands in for the subcategory minimum
@@ -430,7 +433,10 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         this.isPlanning.set(false);
         this.isPlannerOpen.set(false);
         this.isAiPlanned.set(itinerary.planner === AI_PLANNER);
-        this.tripSession.save({ days: itinerary.days, area, isAiPlanned: this.isAiPlanned() });
+        this.requestedTripDays.set(this.tripDays());
+        this.tripSession.save({
+          days: itinerary.days, area, isAiPlanned: this.isAiPlanned(), requestedDays: this.tripDays()
+        });
         this.showItinerary(itinerary.days, area);
       },
       error: () => {
@@ -920,9 +926,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       // A trip planned before opening one of its stops is still on when coming back
       const savedTrip = this.tripSession.get();
       if (savedTrip) {
-        this.isAiPlanned.set(savedTrip.isAiPlanned);
-        this.tripArea.set(savedTrip.area);
-        this.showItinerary(savedTrip.days, savedTrip.area, !this.mapViewState.get());
+        // Map events fire outside Angular's zone; without this the panel waited for the next click to appear
+        this.zone.run(() => {
+          this.isAiPlanned.set(savedTrip.isAiPlanned);
+          this.requestedTripDays.set(savedTrip.requestedDays ?? savedTrip.days.length);
+          this.tripArea.set(savedTrip.area);
+          this.showItinerary(savedTrip.days, savedTrip.area, !this.mapViewState.get());
+        });
       }
       this.loadPlacesForViewport();
       // A filter chosen before leaving the map is still on when coming back

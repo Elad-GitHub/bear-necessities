@@ -36,27 +36,46 @@ public class SmartItineraryPlannerTests
     [Fact]
     public void Plan_ShouldSplitStopsIntoDays()
     {
+        var kinds = new[] { _yoga, _food, _dance };
         var candidates = Enumerable.Range(0, 20)
-            .Select(i => PlaceAt($"Place {i}", 38m + i * 0.01m, 23m, i % 2 == 0 ? _yoga : _food))
+            .Select(i => PlaceAt($"Place {i}", 38m + i * 0.005m, 23m, kinds[i % 3]))
             .ToList();
 
-        var plan = _planner.Plan(Input(candidates, days: 3, stopsPerDay: 4));
+        var plan = _planner.Plan(Input(candidates, days: 3, stopsPerDay: 3));
 
         plan.Days.Should().HaveCount(3);
-        plan.Days.Should().OnlyContain(day => day.Stops.Count == 4);
+        plan.Days.Should().OnlyContain(day => day.Stops.Count == 3);
         plan.Days.SelectMany(day => day.Stops).Select(stop => stop.Place).Should().OnlyHaveUniqueItems();
         plan.Planner.Should().Be("smart");
     }
 
     [Fact]
-    public void Plan_FewerCandidatesThanSlots_ShouldUseAllAndShortenLastDay()
+    public void Plan_ShouldTakeOnePlaceOfEachKindPerDay()
     {
-        var candidates = Enumerable.Range(0, 5).Select(i => PlaceAt($"Place {i}", 38m + i * 0.01m, 23m, _yoga)).ToList();
+        // Five yoga places: one yoga a day, spread over the three days asked for
+        var candidates = Enumerable.Range(0, 5).Select(i => PlaceAt($"Shala {i}", 38m + i * 0.01m, 23m, _yoga)).ToList();
 
         var plan = _planner.Plan(Input(candidates, days: 3, stopsPerDay: 4));
 
-        plan.Days.Should().HaveCount(2);
-        plan.Days[1].Stops.Should().HaveCount(1);
+        plan.Days.Should().HaveCount(3);
+        plan.Days.Should().OnlyContain(day => day.Stops.Count == 1);
+    }
+
+    [Fact]
+    public void Plan_PlaceWithAKindAlreadyInTheDay_ShouldWaitForAnotherDay()
+    {
+        var start = Coordinates.Create(38m, 23m);
+        var candidates = new List<Place>
+        {
+            PlaceAt("Yoga", 38.001m, 23m, _yoga),
+            PlaceAt("Yoga and dance", 38.002m, 23m, _yoga, _dance),
+            PlaceAt("Vegan", 38.003m, 23m, _food)
+        };
+
+        var plan = _planner.Plan(Input(candidates, days: 2, stopsPerDay: 3, start));
+
+        Names(plan)[0].Should().Equal("Yoga", "Vegan");
+        Names(plan)[1].Should().Equal("Yoga and dance");
     }
 
     [Fact]
@@ -216,21 +235,21 @@ public class PlanItineraryHandlerTests
             .Setup(x => x.FindByCountryAsync("Greece", It.IsAny<CancellationToken>()))
             .ReturnsAsync(places);
 
-    // About 3 km apart, so all six fit a short trip's region
-    private static List<Place> YogaPlaces(Category category) => Enumerable.Range(0, 6).Select(i =>
+    // About 3 km apart, so all six fit a short trip's region; kinds take turns so a day can hold one of each
+    private static List<Place> PlacesOfKinds(params Category[] kinds) => Enumerable.Range(0, 6).Select(i =>
     {
         var place = TestDataBuilder.BuildPlace(new UserId(Guid.NewGuid()), ListingStatus.Live);
         place.UpdateCoordinates(38m + i * 0.03m, 23m, "", "");
-        place.AddCategory(category);
+        place.AddCategory(kinds[i % kinds.Length]);
         return place;
     }).ToList();
 
     [Fact]
     public async Task HandleAsync_ShouldReturnNumberedDaysWithDistancesAndReasons()
     {
-        var category = Category.Create("yoga", "Yoga");
-        GivenCountryPlaces(YogaPlaces(category));
-        var categories = new List<Guid> { category.Id.Value, Guid.NewGuid(), Guid.NewGuid() };
+        var kinds = new[] { Category.Create("yoga", "Yoga"), Category.Create("reiki", "Reiki"), Category.Create("hiking", "Hiking") };
+        GivenCountryPlaces(PlacesOfKinds(kinds));
+        var categories = kinds.Select(kind => kind.Id.Value).ToList();
 
         var response = await _handler.HandleAsync(new PlanItineraryRequest("Greece", null, null, categories, Days: 2, StopsPerDay: 3));
 
@@ -244,11 +263,13 @@ public class PlanItineraryHandlerTests
     [Fact]
     public async Task HandleAsync_WishWithoutCategories_ShouldPlan()
     {
-        GivenCountryPlaces(YogaPlaces(Category.Create("yoga", "Yoga")));
+        GivenCountryPlaces(PlacesOfKinds(Category.Create("yoga", "Yoga")));
 
-        var response = await _handler.HandleAsync(new PlanItineraryRequest("Greece", null, null, [], Days: 1, StopsPerDay: 2, Wish: "yoga"));
+        var response = await _handler.HandleAsync(new PlanItineraryRequest("Greece", null, null, [], Days: 2, StopsPerDay: 2, Wish: "yoga"));
 
+        // Only yoga was asked for, so one yoga place on each day
         response.TotalStops.Should().Be(2);
+        response.Days.Should().HaveCount(2);
     }
 
     [Fact]

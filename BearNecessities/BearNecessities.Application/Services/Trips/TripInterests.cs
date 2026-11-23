@@ -114,6 +114,16 @@ public sealed partial class TripInterests
     public bool IsRuledOut(Place place) =>
         place.Categories.Any(category => RuledOut.Contains(category.Id.Value));
 
+    /// <summary>
+    /// The kinds of activity a place counts as for this traveller: its wanted subcategories,
+    /// or all of its subcategories when the traveller named none. A day holds at most one of each kind.
+    /// </summary>
+    public IReadOnlyList<Guid> KindsOf(Place place) =>
+        place.Categories
+            .Select(category => category.Id.Value)
+            .Where(categoryId => IsEmpty || Wanted.Contains(categoryId))
+            .ToList();
+
     /// <summary>Names of the wanted subcategories a place offers, in the traveller's order of interest.</summary>
     public IReadOnlyList<string> MatchedNames(Place place) =>
         Wanted.Where(id => place.Categories.Any(category => category.Id.Value == id))
