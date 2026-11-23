@@ -414,13 +414,12 @@ $planner-primary-dark: #004d40;
 }
 
 .map-container {
+  // top + bottom set the height; adding height: 100% pushed the map 48px past the page and made it scroll
   position: absolute;
   top: 48px;
   left: 0;
   right: 0;
   bottom: 0;
-  width: 100%;
-  height: 100%;
 }
 
 ::ng-deep {
