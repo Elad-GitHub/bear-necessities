@@ -731,6 +731,150 @@ $planner-primary-dark: #004d40;
   }
 }
 
+// --- Meeting point ---
+.meet-button {
+  position: absolute;
+  left: 12px;
+  bottom: 36px;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border: none;
+  border-radius: 22px;
+  background: white;
+  color: $planner-primary-dark;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+
+  .material-icons { font-size: 18px; color: #e65100; }
+
+  &:hover { background: #fff3e0; }
+}
+
+.meet-card {
+  position: absolute;
+  left: 12px;
+  bottom: 36px;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 24px);
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.22);
+  font-size: 13.5px;
+  color: #212121;
+
+  > .material-icons { color: #e65100; }
+}
+
+.meet-editor {
+  flex-direction: column;
+  align-items: stretch;
+  width: 300px;
+  padding: 14px;
+
+  .meet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    strong { display: inline-flex; align-items: center; gap: 4px; font-size: 15px; }
+    strong .material-icons { color: #e65100; }
+  }
+
+  .meet-hint { margin: 0; font-size: 12px; color: #757575; }
+  .meet-when { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 600; }
+  .meet-when .material-icons { font-size: 18px; color: $planner-primary; }
+  .meet-note { margin: 0; color: #424242; overflow-wrap: anywhere; }
+}
+
+.meet-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #424242;
+
+  span { font-weight: 400; color: #9e9e9e; }
+
+  input {
+    padding: 7px 9px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13.5px;
+
+    &:focus { outline: none; border-color: $planner-primary; }
+  }
+}
+
+.meet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.meet-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 1;
+  padding: 8px 10px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  background: white;
+  color: #212121;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+
+  .material-icons { font-size: 17px; }
+
+  &.primary { border-color: $planner-primary; background: $planner-primary; color: white; }
+  &.whatsapp { border-color: #25d366; color: #128c7e; }
+  &:hover { filter: brightness(0.96); }
+}
+
+.meet-close {
+  display: flex;
+  margin-left: auto;
+  padding: 2px;
+  border: none;
+  background: none;
+  color: #757575;
+  cursor: pointer;
+
+  .material-icons { font-size: 18px; }
+}
+
+@media (max-width: 760px) {
+  // Above the "found" chip that sits at the bottom on phones
+  .meet-button, .meet-card { bottom: 72px; }
+}
+
+// The pin is a Mapbox marker, outside this component's view encapsulation
+::ng-deep .meeting-pin {
+  cursor: grab;
+
+  .material-icons {
+    font-size: 44px;
+    color: #e65100;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+  }
+}
+
 // Rings around filter matches (Mapbox markers live outside this component's view, hence ::ng-deep)
 // The element itself is positioned by Mapbox with a transform, so the ring animates on an inner layer
 ::ng-deep .filter-pulse {

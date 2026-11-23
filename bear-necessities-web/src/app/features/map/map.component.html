@@ -165,5 +165,60 @@
     </ng-container>
   </div>
 
+  <!-- Meeting point: drop a spot and time, share it; or see one a friend sent -->
+  <button class="meet-button" *ngIf="!isPickingMeetingPoint() && !meetingPoint()" (click)="startMeetingPoint()"
+    title="Drop a meeting point and share it with friends">
+    <span class="material-icons">share_location</span> Meet here
+  </button>
+
+  <div class="meet-card" *ngIf="isPickingMeetingPoint()" role="status">
+    <span class="material-icons">touch_app</span>
+    Tap the map where you want to meet
+    <button class="meet-close" (click)="closeMeetingPoint()" aria-label="Cancel">
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+
+  <div class="meet-card meet-editor" *ngIf="meetingPoint() as point">
+    <div class="meet-header">
+      <strong><span class="material-icons">location_on</span> {{ isMeetingPointShared() ? 'Meet here' : 'Your meeting point' }}</strong>
+      <button class="meet-close" (click)="closeMeetingPoint()" aria-label="Close">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <ng-container *ngIf="isMeetingPointShared(); else editing">
+      <p class="meet-when" *ngIf="meetingTimeLabel() as when"><span class="material-icons">schedule</span> {{ when }}</p>
+      <p class="meet-note" *ngIf="point.note">{{ point.note }}</p>
+      <a class="meet-action primary" [href]="meetingDirectionsLink()" target="_blank" rel="noopener">
+        <span class="material-icons">directions_walk</span> Directions
+      </a>
+    </ng-container>
+
+    <ng-template #editing>
+      <p class="meet-hint">Drag the pin to the exact spot.</p>
+      <label class="meet-label">When <span>(optional)</span>
+        <input type="datetime-local" [value]="point.at ?? ''"
+          (input)="updateMeetingPoint({ at: $any($event.target).value || undefined })" />
+      </label>
+      <label class="meet-label">Note <span>(optional)</span>
+        <input type="text" [maxLength]="maxMeetingNoteLength" placeholder="e.g. By the big banyan tree"
+          [value]="point.note ?? ''" (input)="updateMeetingPoint({ note: $any($event.target).value })" />
+      </label>
+      <div class="meet-actions">
+        <button class="meet-action primary" *ngIf="canUseShareSheet" (click)="shareMeetingPoint()">
+          <span class="material-icons">ios_share</span> Share
+        </button>
+        <button class="meet-action whatsapp" (click)="shareMeetingPointOnWhatsApp()">
+          <span class="material-icons">chat</span> WhatsApp
+        </button>
+        <button class="meet-action" (click)="copyMeetingPointLink()">
+          <span class="material-icons">{{ meetingLinkCopied() ? 'check' : 'link' }}</span>
+          {{ meetingLinkCopied() ? 'Copied' : 'Copy link' }}
+        </button>
+      </div>
+    </ng-template>
+  </div>
+
   <app-loading-spinner *ngIf="showInitialSpinner()"></app-loading-spinner>
 </div>

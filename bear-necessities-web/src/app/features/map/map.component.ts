@@ -21,6 +21,10 @@ import { measureSegments, PAW_IMAGE_ID, PawPrint, pawPrintCountFor, registerPawT
 import { loadMapImages } from '../../core/map/map-images';
 import { MapViewStateService } from '../../core/map/map-view-state.service';
 import { TripSessionService } from '../../core/map/trip-session.service';
+import {
+  MAX_MEETING_NOTE_LENGTH, MeetingPoint, describeMeetingTime, directionsLink, meetingPointLink,
+  meetingPointMessage, readMeetingPoint
+} from '../../core/map/meeting-point';
 import { FilterPulse, PulsePoint } from '../../core/map/filter-pulse';
 
 type WhenOption = 'anytime' | 'week' | 'month' | 'custom';
@@ -134,6 +138,20 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     !!this.tripArea()
     && (this.tripCategoryIds().length >= MIN_TRIP_CATEGORIES || this.tripWish().trim().length > 0)
     && !this.isPlanning());
+  // Meeting point: one the traveller is dropping to share, or one that arrived in a shared link
+  readonly maxMeetingNoteLength = MAX_MEETING_NOTE_LENGTH;
+  isPickingMeetingPoint = signal(false);
+  meetingPoint = signal<MeetingPoint | null>(null);
+  isMeetingPointShared = signal(false);
+  meetingLinkCopied = signal(false);
+  meetingTimeLabel = computed(() => describeMeetingTime(this.meetingPoint()?.at));
+  meetingDirectionsLink = computed(() => {
+    const point = this.meetingPoint();
+    return point ? directionsLink(point) : null;
+  });
+  readonly canUseShareSheet = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  private meetingMarker: mapboxgl.Marker | null = null;
+  private pendingMeetingPoint: MeetingPoint | null = null;
   private planningSubscription: Subscription | null = null;
   private walkingBear: mapboxgl.Marker | null = null;
   private walkAnimationFrame: number | null = null;
@@ -314,7 +332,102 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           this.pendingFly = target;
         }
       }
+
+      const sharedPoint = readMeetingPoint(params);
+      if (sharedPoint) {
+        if (this.mapInstance?.isStyleLoaded()) {
+          this.showSharedMeetingPoint(sharedPoint);
+        } else {
+          this.pendingMeetingPoint = sharedPoint;
+        }
+      }
     });
+  }
+
+  // --- Meeting point ---
+
+  startMeetingPoint(): void {
+    this.closeMeetingPoint();
+    this.isPickingMeetingPoint.set(true);
+    if (!this.mapInstance) return;
+    this.mapInstance.getCanvas().style.cursor = 'crosshair';
+    this.mapInstance.once('click', (event) => this.zone.run(() => {
+      if (!this.isPickingMeetingPoint()) return;
+      this.isPickingMeetingPoint.set(false);
+      this.mapInstance!.getCanvas().style.cursor = '';
+      this.meetingPoint.set({ latitude: event.lngLat.lat, longitude: event.lngLat.lng });
+      this.placeMeetingMarker(true);
+    }));
+  }
+
+  updateMeetingPoint(changes: Partial<MeetingPoint>): void {
+    const point = this.meetingPoint();
+    if (point) this.meetingPoint.set({ ...point, ...changes });
+    this.meetingLinkCopied.set(false);
+  }
+
+  async shareMeetingPoint(): Promise<void> {
+    const point = this.meetingPoint();
+    if (!point) return;
+    const link = meetingPointLink(window.location.origin, point);
+    try {
+      await navigator.share({ title: 'Meet me here', text: meetingPointMessage(point, '').trim(), url: link });
+    } catch {
+      // The traveller closed the share sheet; nothing to do
+    }
+  }
+
+  shareMeetingPointOnWhatsApp(): void {
+    const point = this.meetingPoint();
+    if (!point) return;
+    const message = meetingPointMessage(point, meetingPointLink(window.location.origin, point));
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
+  }
+
+  async copyMeetingPointLink(): Promise<void> {
+    const point = this.meetingPoint();
+    if (!point) return;
+    try {
+      await navigator.clipboard.writeText(meetingPointLink(window.location.origin, point));
+      this.meetingLinkCopied.set(true);
+    } catch {
+      this.meetingLinkCopied.set(false);
+    }
+  }
+
+  closeMeetingPoint(): void {
+    this.isPickingMeetingPoint.set(false);
+    this.meetingPoint.set(null);
+    this.isMeetingPointShared.set(false);
+    this.meetingLinkCopied.set(false);
+    this.meetingMarker?.remove();
+    this.meetingMarker = null;
+    if (this.mapInstance) this.mapInstance.getCanvas().style.cursor = '';
+  }
+
+  private showSharedMeetingPoint(point: MeetingPoint): void {
+    this.isPickingMeetingPoint.set(false);
+    this.meetingPoint.set(point);
+    this.isMeetingPointShared.set(true);
+    this.placeMeetingMarker(false);
+    this.mapInstance?.flyTo({ center: [point.longitude, point.latitude], zoom: 15, duration: 1400 });
+  }
+
+  // The sender can drag their point to the exact spot; a received point stays put
+  private placeMeetingMarker(isDraggable: boolean): void {
+    const point = this.meetingPoint();
+    if (!point || !this.mapInstance) return;
+    this.meetingMarker?.remove();
+    const pin = document.createElement('div');
+    pin.className = 'meeting-pin';
+    pin.innerHTML = '<span class="material-icons">location_on</span>';
+    this.meetingMarker = new mapboxgl.Marker({ element: pin, anchor: 'bottom', draggable: isDraggable })
+      .setLngLat([point.longitude, point.latitude])
+      .addTo(this.mapInstance);
+    this.meetingMarker.on('dragend', () => this.zone.run(() => {
+      const lngLat = this.meetingMarker!.getLngLat();
+      this.updateMeetingPoint({ latitude: lngLat.lat, longitude: lngLat.lng });
+    }));
   }
 
   private flyToLocation(target: { latitude: number; longitude: number; bbox?: [number, number, number, number] }): void {
@@ -475,7 +588,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   @HostListener('document:keydown.escape')
   onEscapeKey(): void {
-    if (this.tripActive()) {
+    if (this.isPickingMeetingPoint() || this.meetingPoint()) {
+      this.closeMeetingPoint();
+    } else if (this.tripActive()) {
       this.clearTrip();
     } else if (this.isPlannerOpen()) {
       this.togglePlanner();
@@ -839,6 +954,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     map.on('mouseleave', 'trip-stop-groups', () => { map.getCanvas().style.cursor = ''; });
 
     map.on('click', 'trip-stop-circles', (event) => {
+      if (this.isPickingMeetingPoint()) return;
       const placeId = event.features?.[0]?.properties?.['id'];
       if (placeId) this.zone.run(() => this.router.navigate(['/places', placeId]));
     });
@@ -944,6 +1060,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       if (this.pendingFly) {
         this.flyToLocation(this.pendingFly);
         this.pendingFly = null;
+      }
+      if (this.pendingMeetingPoint) {
+        const sharedPoint = this.pendingMeetingPoint;
+        this.pendingMeetingPoint = null;
+        this.zone.run(() => this.showSharedMeetingPoint(sharedPoint));
       }
     });
 
@@ -1278,6 +1399,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     // Open a place (inside Angular zone so routing/CD fire)
     const openPlace = (event: mapboxgl.MapLayerMouseEvent) => {
+      // While dropping a meeting point, a tap on a place drops the point there instead of opening the place
+      if (this.isPickingMeetingPoint()) return;
       const placeId = event.features?.[0]?.properties?.['id'];
       if (placeId) this.zone.run(() => this.router.navigate(['/places', placeId]));
     };
