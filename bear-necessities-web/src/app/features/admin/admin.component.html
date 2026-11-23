@@ -46,6 +46,11 @@
         Members
         <span class="tab-count" *ngIf="pendingMembers().length">{{ pendingMembers().length }}</span>
       </button>
+      <button class="queue-tab" [class.active]="activeTab() === 'feedback'" (click)="setTab('feedback')">
+        <span class="material-icons">rate_review</span>
+        Feedback
+        <span class="tab-count" *ngIf="openFeedback().length">{{ openFeedback().length }}</span>
+      </button>
     </div>
 
     <div class="loading-state" *ngIf="isLoading()">
@@ -292,6 +297,55 @@
             <button class="action-btn reject" [disabled]="isProcessing(member.id)" (click)="rejectMember(member)">
               <span class="material-icons">cancel</span>
               Reject
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Feedback inbox -->
+    <ng-container *ngIf="!isLoading() && activeTab() === 'feedback'">
+      <div class="empty-state" *ngIf="openFeedback().length === 0">
+        <img class="empty-trail" src="brand/paw-trail.svg" alt="" width="150" height="60">
+        <h3>Inbox zero!</h3>
+        <p>No bug reports or ideas waiting for you.</p>
+      </div>
+
+      <div class="pending-list" *ngIf="openFeedback().length > 0">
+        <div class="pending-card" *ngFor="let feedback of openFeedback()">
+          <div class="card-main">
+            <div class="place-icon">
+              <span class="material-icons">{{ feedbackIcon(feedback) }}</span>
+            </div>
+            <div class="place-info">
+              <p class="feedback-message">{{ feedback.message }}</p>
+              <p class="place-meta">
+                <span class="status-chip">{{ feedback.kind | uppercase }}</span>
+                <span>
+                  <span class="material-icons">schedule</span>
+                  {{ feedback.createdAt | date:'MMM d, y, HH:mm' }}
+                </span>
+                <span *ngIf="feedback.sentBy">
+                  <span class="material-icons">person</span>
+                  {{ feedback.sentBy }}
+                </span>
+                <span *ngIf="feedback.sentByEmail || feedback.contactEmail">
+                  <span class="material-icons">mail</span>
+                  <a [href]="'mailto:' + (feedback.sentByEmail || feedback.contactEmail)">{{ feedback.sentByEmail || feedback.contactEmail }}</a>
+                </span>
+                <span *ngIf="feedback.pageUrl">
+                  <span class="material-icons">link</span>
+                  {{ feedback.pageUrl }}
+                </span>
+              </p>
+              <p class="feedback-agent" *ngIf="feedback.userAgent">{{ feedback.userAgent }}</p>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button class="action-btn approve" [disabled]="isProcessing(feedback.id)" (click)="markFeedbackHandled(feedback)">
+              <span class="material-icons">done_all</span>
+              Handled
             </button>
           </div>
         </div>

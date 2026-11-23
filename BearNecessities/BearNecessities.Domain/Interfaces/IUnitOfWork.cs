@@ -16,5 +16,6 @@ public interface IUnitOfWork
     ISavedItemRepository SavedItems { get; }
     IGroupRepository Groups { get; }
     IEditSuggestionRepository EditSuggestions { get; }
+    IFeedbackRepository Feedback { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

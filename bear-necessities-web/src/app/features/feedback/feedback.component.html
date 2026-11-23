@@ -1,0 +1,57 @@
+<app-navbar></app-navbar>
+
+<section class="feedback-page">
+  <ng-container *ngIf="!isSent(); else thanks">
+    <h1>Send us a note</h1>
+    <p class="intro">Found a bug, have an idea, or spotted a listing that's wrong? We read every message.</p>
+
+    <form [formGroup]="feedbackForm" (ngSubmit)="sendFeedback()">
+      <div class="kind-choice" role="radiogroup" aria-label="What is this about?">
+        <button type="button" class="kind-option" *ngFor="let option of kinds"
+          role="radio" [attr.aria-checked]="feedbackForm.controls.kind.value === option.kind"
+          [class.selected]="feedbackForm.controls.kind.value === option.kind"
+          (click)="selectKind(option.kind)">
+          <span class="material-icons">{{ option.icon }}</span>
+          {{ option.label }}
+        </button>
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+        <mat-label>Your message</mat-label>
+        <textarea matInput formControlName="message" rows="6" [maxlength]="maxLength"
+          [placeholder]="messagePlaceholder()"></textarea>
+        <mat-hint align="end">{{ feedbackForm.controls.message.value.length }} / {{ maxLength }}</mat-hint>
+        <mat-error *ngIf="feedbackForm.controls.message.hasError('required')">Please write a few words</mat-error>
+        <mat-error *ngIf="feedbackForm.controls.message.hasError('minlength')">Tell us a little more</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic" *ngIf="!authService.isAuthenticated()">
+        <mat-label>Your email (optional)</mat-label>
+        <input matInput type="email" formControlName="contactEmail" placeholder="you@example.com">
+        <mat-hint>Only if you'd like a reply</mat-hint>
+        <mat-error *ngIf="feedbackForm.controls.contactEmail.hasError('email')">That email doesn't look right</mat-error>
+      </mat-form-field>
+
+      <p class="privacy-note">
+        We also save which page you came from and your browser type, to help us find bugs.
+        See our <a routerLink="/legal/privacy">Privacy Policy</a>.
+      </p>
+
+      <button mat-raised-button color="primary" type="submit" [disabled]="isSending()">
+        {{ isSending() ? 'Sending...' : 'Send' }}
+      </button>
+    </form>
+  </ng-container>
+
+  <ng-template #thanks>
+    <div class="thanks">
+      <img src="brand/bears/waving-large.webp" alt="" width="96" height="120">
+      <h1>Thank you!</h1>
+      <p>Your message reached us. It helps make Bear Necessities better for everyone.</p>
+      <div class="thanks-actions">
+        <button mat-stroked-button color="primary" (click)="sendAnother()">Send another</button>
+        <a mat-raised-button color="primary" routerLink="/map">Back to the map</a>
+      </div>
+    </div>
+  </ng-template>
+</section>

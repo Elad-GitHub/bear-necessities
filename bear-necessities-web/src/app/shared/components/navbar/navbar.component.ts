@@ -163,10 +163,14 @@ export class NavbarComponent {
     this.router.navigate(['/profile'], { queryParams: { tab } });
   }
 
+  openFeedback(): void {
+    this.closePanel();
+    this.router.navigate(['/feedback'], { queryParams: { from: this.router.url } });
+  }
+
   isAdmin(): boolean {
     return this.authService.isAdmin();
   }
-
 
   logout(): void {
     this.closePanel();

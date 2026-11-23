@@ -22,6 +22,7 @@ public class BearNecessitiesDbContext : DbContext
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<Report> Reports => Set<Report>();
     public DbSet<EditSuggestion> EditSuggestions => Set<EditSuggestion>();
+    public DbSet<FeedbackMessage> FeedbackMessages => Set<FeedbackMessage>();
     public DbSet<SavedItem> SavedItems => Set<SavedItem>();
     public DbSet<ListingChangeLog> ListingChangeLogs => Set<ListingChangeLog>();
     public DbSet<PlaceExternalLink> PlaceExternalLinks => Set<PlaceExternalLink>();

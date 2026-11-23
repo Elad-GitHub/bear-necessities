@@ -129,6 +129,7 @@ public static class DependencyInjection
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<IReportRepository, ReportRepository>();
         services.AddScoped<IEditSuggestionRepository, EditSuggestionRepository>();
+        services.AddScoped<IFeedbackRepository, FeedbackRepository>();
         services.AddScoped<IRsvpRepository, RsvpRepository>();
         services.AddScoped<IConversationRepository, ConversationRepository>();
         services.AddScoped<ISavedItemRepository, SavedItemRepository>();
@@ -167,6 +168,9 @@ public static class DependencyInjection
         services.AddScoped<RemovePlacePhotoHandler>();
         services.AddScoped<GetPendingEditSuggestionsHandler>();
         services.AddScoped<ReviewEditSuggestionHandler>();
+        services.AddScoped<Application.UseCases.Feedback.SubmitFeedbackHandler>();
+        services.AddScoped<Application.UseCases.Feedback.GetOpenFeedbackHandler>();
+        services.AddScoped<Application.UseCases.Feedback.HandleFeedbackHandler>();
         services.AddScoped<RejectPlaceHandler>();
         services.AddScoped<DeletePlaceHandler>();
         services.AddScoped<GetPendingPlacesHandler>();

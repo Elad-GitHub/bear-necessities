@@ -142,6 +142,11 @@
       </button>
     </nav>
 
+    <button class="panel-link" (click)="openFeedback()">
+      <span class="material-icons panel-link-icon">rate_review</span>
+      <span class="link-text"><strong>Send Feedback</strong><small>Report a bug or share an idea</small></span>
+    </button>
+
     <button class="panel-link logout" (click)="logout()">
       <app-bear-icon name="logout" [size]="30"></app-bear-icon>
       <span class="link-text"><strong>Hibernate</strong><small>Log out</small></span>

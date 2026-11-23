@@ -26,6 +26,8 @@ import {
   meetingPointMessage, readMeetingPoint
 } from '../../core/map/meeting-point';
 import { FilterPulse, PulsePoint } from '../../core/map/filter-pulse';
+import { describeApproximateLocation } from '../../core/map/location-accuracy';
+import { ToastService } from '../../core/services/toast.service';
 
 type WhenOption = 'anytime' | 'week' | 'month' | 'custom';
 
@@ -46,6 +48,7 @@ const POPUP_DESCRIPTION_LENGTH = 120;
 const ONGOING_EVENT_LABEL = 'Ongoing';
 const DAYS_IN_WEEK = 7;
 const DAYS_IN_MONTH = 30;
+const APPROXIMATE_LOCATION_NOTE_MS = 7000;
 const MS_PER_DAY = 86_400_000;
 // The whole map, for counting every match of a filter wherever it is
 const WORLD_BBOX: MapBbox = { northEastLat: 85, northEastLng: 180, southWestLat: -85, southWestLng: -180 };
@@ -161,6 +164,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   private hoverPopup: mapboxgl.Popup | null = null;
   private focusPopup: mapboxgl.Popup | null = null;
+  private hasWarnedApproximateLocation = false;
   private pendingFocusId: string | null = null;
   private pendingFly: { latitude: number; longitude: number; bbox?: [number, number, number, number] } | null = null;
 
@@ -178,7 +182,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private mapViewState: MapViewStateService,
-    private tripSession: TripSessionService
+    private tripSession: TripSessionService,
+    private toastService: ToastService
   ) {
     this.areaSearchTerms.pipe(
       debounceTime(300),
@@ -1021,10 +1026,12 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     // Bottom-right keeps the controls clear of the planner panel / Plan-a-Trip button
     this.mapInstance.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
-    this.mapInstance.addControl(new mapboxgl.GeolocateControl({
+    const geolocateControl = new mapboxgl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
       trackUserLocation: true
-    }), 'bottom-right');
+    });
+    this.mapInstance.addControl(geolocateControl, 'bottom-right');
+    geolocateControl.on('geolocate', (position: GeolocationPosition) => this.warnIfLocationApproximate(position));
 
     this.hoverPopup = new mapboxgl.Popup({
       closeButton: false,
@@ -1443,6 +1450,15 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   // Render each category emoji to a small image Mapbox can use in the symbol layer.
   // Runs once per map load; skips any image already registered.
+  // Tracking fires on every move, so the note shows once per visit to the map
+  private warnIfLocationApproximate(position: GeolocationPosition): void {
+    if (this.hasWarnedApproximateLocation) return;
+    const note = describeApproximateLocation(position.coords.accuracy);
+    if (!note) return;
+    this.hasWarnedApproximateLocation = true;
+    this.zone.run(() => this.toastService.info(note, APPROXIMATE_LOCATION_NOTE_MS));
+  }
+
   private registerCategoryIcons(map: mapboxgl.Map): void {
     const pixelSize = 64;
     for (const emoji of this.categoryIcons.getAllPinEmojis()) {

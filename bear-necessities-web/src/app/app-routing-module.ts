@@ -44,6 +44,11 @@ const routes: Routes = [
     loadChildren: () => import('./features/legal/legal.module').then(m => m.LegalModule)
   },
   {
+    // Open to signed-out visitors too: a broken sign-in is exactly what someone might want to report
+    path: 'feedback',
+    loadChildren: () => import('./features/feedback/feedback.module').then(m => m.FeedbackModule)
+  },
+  {
     path: 'admin',
     canActivate: [AuthGuard],
     loadChildren: () => import('./features/admin/admin.module').then(m => m.AdminModule)

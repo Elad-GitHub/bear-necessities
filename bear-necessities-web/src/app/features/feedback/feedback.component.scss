@@ -1,0 +1,84 @@
+:host {
+  display: block;
+  background: #f7f9f8;
+  min-height: 100vh;
+  padding-top: 64px;
+}
+
+.feedback-page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+  color: #263238;
+}
+
+h1 {
+  margin: 0 0 6px;
+  font-size: 28px;
+  color: #004d40;
+}
+
+.intro {
+  margin: 0 0 24px;
+  color: #546e7a;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.kind-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.kind-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid #b2dfdb;
+  border-radius: 999px;
+  background: #fff;
+  color: #00695c;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+
+  .material-icons { font-size: 18px; }
+
+  &.selected {
+    background: #00796b;
+    border-color: #00796b;
+    color: #fff;
+  }
+}
+
+.full-width { width: 100%; }
+
+.privacy-note {
+  margin: 0;
+  font-size: 13px;
+  color: #757575;
+
+  a { color: #00796b; }
+}
+
+button[type="submit"] { align-self: flex-start; }
+
+.thanks {
+  text-align: center;
+  padding-top: 24px;
+
+  p { color: #546e7a; }
+}
+
+.thanks-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}

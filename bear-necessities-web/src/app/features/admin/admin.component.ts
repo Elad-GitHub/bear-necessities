@@ -7,8 +7,10 @@ import { PlaceSummaryDto } from '../../core/models/place.model';
 import { EditSuggestionDto } from '../../core/models/edit-suggestion.model';
 import { PendingPhotoDto } from '../../core/services/admin.service';
 import { MediaService } from '../../core/services/media.service';
+import { FeedbackService } from '../../core/services/feedback.service';
+import { FeedbackDto } from '../../core/models/feedback.model';
 
-type ModerationTab = 'places' | 'events' | 'edits' | 'photos' | 'members';
+type ModerationTab = 'places' | 'events' | 'edits' | 'photos' | 'members' | 'feedback';
 
 @Component({
   selector: 'app-admin',
@@ -23,6 +25,7 @@ export class AdminComponent implements OnInit {
   pendingMembers = signal<any[]>([]);
   pendingEdits = signal<EditSuggestionDto[]>([]);
   pendingPhotos = signal<PendingPhotoDto[]>([]);
+  openFeedback = signal<FeedbackDto[]>([]);
   isLoading = signal(true);
   rejectingId = signal<string | null>(null);
   rejectReason = signal('');
@@ -32,6 +35,7 @@ export class AdminComponent implements OnInit {
     private adminService: AdminService,
     private toastService: ToastService,
     private mediaService: MediaService,
+    private feedbackService: FeedbackService,
     private router: Router,
     public authService: AuthService
   ) {}
@@ -83,6 +87,29 @@ export class AdminComponent implements OnInit {
     this.adminService.getPendingMembers().subscribe({
       next: (response) => this.pendingMembers.set(response.items || [])
     });
+
+    this.feedbackService.getOpenFeedback().subscribe({
+      next: (response) => this.openFeedback.set(response.items || [])
+    });
+  }
+
+  markFeedbackHandled(feedback: FeedbackDto): void {
+    this.markProcessing(feedback.id, true);
+    this.feedbackService.markFeedbackHandled(feedback.id).subscribe({
+      next: () => {
+        this.openFeedback.set(this.openFeedback().filter(item => item.id !== feedback.id));
+        this.toastService.success('Marked as handled');
+      },
+      error: () => this.markProcessing(feedback.id, false)
+    });
+  }
+
+  feedbackIcon(feedback: FeedbackDto): string {
+    switch (feedback.kind.toLowerCase()) {
+      case 'bug': return 'bug_report';
+      case 'idea': return 'lightbulb';
+      default: return 'chat';
+    }
   }
 
   approveMember(member: any): void {
