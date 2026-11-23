@@ -10,7 +10,7 @@ import { Observable, catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { environment } from '../../../environments/environment';
 
-const AUTH_PATH = '/auth/';
+export const AUTH_PATH = '/auth/';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {

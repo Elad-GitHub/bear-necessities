@@ -3,3 +3,6 @@ build.log
 *.log
 
 HippieLand-session-transcript.json*
+
+# Local dev sign-in details (never committed)
+dev-login.local.md

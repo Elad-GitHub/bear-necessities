@@ -38,6 +38,14 @@ public class OsmCategoryRulesTests
     }
 
     [Theory]
+    [InlineData("Kambo Tailor")]
+    [InlineData("Buntu Kambo")]
+    public void Classify_KamboAsAPlainName_ShouldNotBeAKamboCeremony(string name)
+    {
+        Classify(("name", name), ("shop", "tailor")).Should().NotContain("kambo");
+    }
+
+    [Theory]
     [InlineData("Mercado Hippie de Es Canar", "hippie-market")]
     [InlineData("Feira de Artesanato", "artisan-market")]
     [InlineData("Mercado Municipal de Lagos", "farmers-market")]

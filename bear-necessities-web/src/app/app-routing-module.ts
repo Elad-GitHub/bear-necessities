@@ -21,11 +21,8 @@ const routes: Routes = [
     loadChildren: () => import('./features/event-detail/event-detail.module').then(m => m.EventDetailModule)
   },
   {
-    path: 'login',
-    loadChildren: () => import('./features/auth/auth.module').then(m => m.AuthModule)
-  },
-  {
-    path: 'register',
+    // The auth module owns both /login and /register
+    path: '',
     loadChildren: () => import('./features/auth/auth.module').then(m => m.AuthModule)
   },
   {

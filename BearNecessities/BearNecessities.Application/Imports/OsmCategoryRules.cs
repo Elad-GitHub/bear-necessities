@@ -43,7 +43,8 @@ public static partial class OsmCategoryRules
         (Word("acro ?yoga"), "acro-yoga"),
         (Word("contact improv(isation)?"), "contact-improv"),
         (Word("circus school|circus arts"), "circus-arts"),
-        (Word("kambo"), "kambo"),
+        // "Kambo" alone is also a surname and place name (Kambo Tailor, Buntu Kambo), so it needs a healing word beside it
+        (Word("kambo (ceremon(y|ies)|healing|medicine|therapy|circle|practitioner)|frog medicine"), "kambo"),
         (Word("shaman(ic|ism)?"), "shamanism"),
         (Word("wwoof(ing)?"), "wwoofing"),
         (Word("co-?living"), "co-living"),

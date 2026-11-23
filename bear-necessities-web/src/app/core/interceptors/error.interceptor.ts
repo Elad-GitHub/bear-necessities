@@ -11,6 +11,8 @@ import { catchError } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
 import { TelemetryService } from '../telemetry/telemetry.service';
+import { environment } from '../../../environments/environment';
+import { AUTH_PATH } from './auth.interceptor';
 
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
@@ -31,7 +33,8 @@ export class ErrorInterceptor implements HttpInterceptor {
 
         switch (error.status) {
           case 401:
-            this.authService.logout();
+            // A wrong password on the sign-in form is a 401 too; that form shows its own message
+            if (!request.url.startsWith(environment.apiUrl + AUTH_PATH)) this.authService.logout();
             break;
           case 403:
             this.toastService.error("You don't have permission to perform this action");
