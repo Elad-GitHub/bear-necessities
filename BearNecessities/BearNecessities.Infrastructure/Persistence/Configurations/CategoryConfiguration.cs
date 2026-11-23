@@ -88,8 +88,7 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             // Movement (parent 1)
             (1, 101, "yoga",                "Yoga"),
             (1, 102, "ecstatic-dance",      "Ecstatic Dance"),
-            (1, 103, "qigong",              "Qigong"),
-            (1, 104, "tai-chi",             "Tai Chi"),
+            (1, 104, "tai-chi",             "Tai Chi & Qigong"),
             (1, 106, "acro-yoga",           "Acro Yoga"),
             // Kalaripayattu, Muay Thai, kung fu; capoeira and aikido have their own
             (1, 107, "martial-arts",        "Traditional Martial Arts"),
@@ -114,8 +113,7 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             (3, 304, "environmental-work",  "Environmental Work"),
 
             // CoWorking (parent 4); co-living keeps its 3xx id from when it sat under Volunteering
-            (4, 401, "coworking-space",     "Co-Working Space"),
-            (4, 402, "digital-nomad-hub",   "Digital Nomad Hub"),
+            (4, 401, "coworking-space",     "Coworking & Nomad Hubs"),
             (4, 305, "co-living",           "Co-Living"),
             (4, 404, "maker-space",         "Maker Space"),
 
@@ -125,7 +123,7 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             (5, 504, "jewelry-making",      "Jewelry Making"),
             (5, 505, "painting",            "Painting"),
             (5, 506, "natural-building",    "Natural Building & Bamboo"),
-            // Weaving, dyeing, macramé, basketry; buying finished pieces lives under Markets → "Jewelry & Macramé"
+            // Weaving, dyeing, macramé, basketry; buying finished pieces lives under Markets → "Boho Clothing & Jewelry"
             (5, 507, "macrame-fiber-arts",  "Weaving, Macramé & Fiber Arts"),
 
             // Healing (parent 6); sound baths count as sound healing
@@ -134,8 +132,7 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             (6, 604, "reiki",               "Reiki"),
             (6, 606, "somatic-therapy",     "Somatic Therapy"),
             (6, 607, "thai-massage",        "Thai Massage"),
-            (6, 608, "tuina",               "Tuina"),
-            (6, 609, "acupuncture",         "Acupuncture"),
+            (6, 609, "acupuncture",         "Acupuncture, Tuina & Chinese Medicine"),
             // Named bodywork styles instead of a generic "Massage", which pulled in ordinary spas
             (6, 610, "watsu",               "Watsu"),
             (6, 611, "lomi-lomi",           "Lomi Lomi"),
@@ -144,30 +141,26 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             // Music & Sound (parent 7)
             // Chanting of every tradition; a separate "Chanting" overlapped almost entirely
             (7, 702, "kirtan",              "Kirtan & Mantra"),
-            (7, 703, "drumming-circle",     "Drumming Circle"),
+            (7, 703, "drumming-circle",     "Drum & Song Circles"),
             (7, 704, "live-music",          "Live Music"),
             (7, 706, "dj-set",              "DJ Set"),
-            (7, 707, "singing-circles",     "Singing Circles"),
 
             // Sexuality (parent 8)
             (8, 801, "tantra",              "Tantra"),
-            (8, 802, "conscious-sexuality", "Conscious Sexuality"),
-            (8, 803, "intimacy-workshop",   "Intimacy Workshop"),
+            (8, 802, "conscious-sexuality", "Conscious Intimacy"),
             (8, 804, "shibari",             "Shibari"),
 
             // Spirituality (parent 9)
             (9, 901, "meditation",          "Meditation"),
-            (9, 902, "astrology",           "Astrology"),
+            (9, 902, "astrology",           "Astrology, Numerology, Tarot & Divination"),
             (9, 906, "sacred-ceremony",     "Sacred Sites & Rituals"),
             (9, 907, "vipassana",           "Vipassana"),
 
             // Wellness (parent 10)
-            (10, 1001, "nutrition",         "Nutrition"),
+            (10, 1001, "nutrition",         "Nutrition & Detox"),
             (10, 1002, "ayurveda",          "Ayurveda"),
             // Also takes in the old "Plant Medicine", a name the scene reads as psychedelic ceremonies
             (10, 1003, "herbalism",         "Herbalism & Traditional Medicine"),
-            (10, 1004, "yoga-therapy",      "Yoga Therapy"),
-            (10, 1005, "fasting-detox",     "Fasting & Detox"),
             (10, 1006, "cold-therapy",      "Cold Therapy"),
             // Wim Hof, rebirthing, holotropic; keeps its 1xx id from when it sat under Movement
             (10, 105,  "breathwork",        "Breathwork"),
@@ -193,15 +186,13 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             (13, 1301, "hippie-market",     "Hippie & Tribal Markets"),
             (13, 1302, "artisan-market",    "Artisan & Craft Markets"),
             (13, 1303, "spiritual-supplies","Spiritual Supplies"),
-            (13, 1304, "tribal-clothing",   "Tribal Clothing & Pashminas"),
-            (13, 1305, "jewelry-macrame",   "Jewelry & Macramé"),
+            (13, 1304, "tribal-clothing",   "Boho Clothing & Jewelry"),
             (13, 1306, "farmers-market",    "Farmers Market"),
 
             // Food (parent 14)
-            (14, 1401, "vegan-restaurant",  "Vegan & Vegetarian"),
+            (14, 1401, "vegan-restaurant",  "Vegan, Vegetarian & Raw"),
             (14, 1402, "indian-food",       "Indian Food"),
             (14, 1403, "health-food-cafe",  "Health Food Café"),
-            (14, 1404, "raw-food",          "Raw & Living Food"),
             (14, 1405, "community-kitchen", "Community Kitchen & Dinners"),
             (14, 1406, "food-workshop",     "Cooking Workshops & Food Events"),
         };
