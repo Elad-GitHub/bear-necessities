@@ -95,13 +95,7 @@ if (builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
-// Run migrations and seed demo data
-using (var scope = app.Services.CreateAsyncScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<BearNecessities.Infrastructure.Persistence.BearNecessitiesDbContext>();
-    await dbContext.Database.MigrateAsync();
-    await BearNecessities.Infrastructure.Persistence.DemoDataSeeder.SeedDemoDataAsync(dbContext);
-}
+await BearNecessities.Infrastructure.Persistence.DatabaseStartup.MigrateAndSeedAsync(app.Services);
 
 // Console import commands (run instead of the web host), e.g.:
 //   dotnet run --project BearNecessities.API -- import-osm --iso GR --country Greece [--by-region]
