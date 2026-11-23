@@ -36,7 +36,8 @@ public sealed class PlanItineraryHandler : IRequestHandler<PlanItineraryRequest,
             : null;
 
         var plan = await _planner.PlanAsync(
-            new ItineraryPlanningInput(candidates, request.CategoryIds ?? [], start, request.Days, request.StopsPerDay, wish),
+            new ItineraryPlanningInput(candidates, request.CategoryIds ?? [], start, request.Days, request.StopsPerDay, wish,
+                IsCountryWide: !string.IsNullOrWhiteSpace(request.Country)),
             cancellationToken);
 
         var days = plan.Days

@@ -6,8 +6,9 @@ namespace BearNecessities.Application.Services.Trips;
 
 /// <summary>
 /// Deterministic planner, no AI: reads the traveller's interests from the picked subcategories and the free-text
-/// wish, walks outward from the start taking the nearest place of the next interest in turn (places that match
-/// several interests count as closer), splits the walk into days, and names each day and stop.
+/// wish, starts in the area that best matches them, and builds one day at a time within the
+/// <see cref="TripGeography"/> distance rules, taking the nearest place of the next interest in turn
+/// (places that match several interests count as closer). Each day and stop gets a title or reason.
 /// </summary>
 public sealed class SmartItineraryPlanner : IItineraryPlanner
 {
@@ -31,44 +32,82 @@ public sealed class SmartItineraryPlanner : IItineraryPlanner
         if (remaining.Count == 0 || input.Days < 1 || input.StopsPerDay < 1)
             return new PlannedItinerary([], PlannerName);
 
-        var route = WalkRoute(remaining, interests, input);
-        var days = route
-            .Chunk(input.StopsPerDay)
-            .Select(dayStops => BuildDay(dayStops, interests))
-            .ToList();
+        var tripStart = TripGeography.FindAnchor(remaining, interests, input.Start, input.IsCountryWide)!;
+        var isShortTrip = TripGeography.IsShortTrip(input.Days);
+        bool InRegion(Place place) =>
+            !isShortTrip || TripGeography.DistanceKm(tripStart, place) <= TripGeography.SingleRegionRadiusKm;
+
+        var rotation = new Queue<Guid>(interests.Wanted);
+        var days = new List<PlannedDay>();
+        Place? dayStart = tripStart;
+        while (dayStart is not null && days.Count < input.Days)
+        {
+            var center = dayStart;
+            var stops = BuildDayStops(center, remaining, rotation, interests,
+                place => InRegion(place) && TripGeography.DistanceKm(center, place) <= TripGeography.DayRadiusKm,
+                input.StopsPerDay);
+            days.Add(BuildDay(stops, interests));
+
+            dayStart = NextDayStart(center, remaining, interests, InRegion);
+        }
         return new PlannedItinerary(days, PlannerName);
     }
 
-    private static List<Place> WalkRoute(List<Place> remaining, TripInterests interests, ItineraryPlanningInput input)
+    // The day begins at its center, then takes the nearest place of the next interest within the day's area
+    private static List<Place> BuildDayStops(
+        Place center, List<Place> remaining, Queue<Guid> rotation, TripInterests interests,
+        Func<Place, bool> isInDayArea, int stopsPerDay)
     {
-        var totalStops = Math.Min(input.Days * input.StopsPerDay, remaining.Count);
-        var position = input.Start ?? Centroid(remaining);
-        var rotation = new Queue<Guid>(interests.Wanted);
-        var route = new List<Place>(totalStops);
+        remaining.Remove(center);
+        MoveToBack(rotation, center);
+        var stops = new List<Place> { center };
+        var position = TripGeography.CoordinatesOf(center);
 
-        while (route.Count < totalStops)
+        while (stops.Count < stopsPerDay)
         {
-            var next = TakeNearestInNextInterest(remaining, rotation, interests, position)
-                ?? TakeNearest(remaining, interests, position, _ => true)!;
-            route.Add(next);
-            position = CoordinatesOf(next);
+            var next = TakeNearestInNextInterest(remaining, rotation, interests, position, isInDayArea)
+                ?? TakeNearest(remaining, interests, position, isInDayArea);
+            if (next is null) break;
+            stops.Add(next);
+            position = TripGeography.CoordinatesOf(next);
         }
-        return route;
+        return stops;
     }
 
-    // An interest with nothing left nearby drops out of the rotation so it can't stall the walk
-    private static Place? TakeNearestInNextInterest(List<Place> remaining, Queue<Guid> rotation, TripInterests interests, Coordinates position)
+    // Tomorrow starts within a day's drive, where the most of what the traveller wants is left
+    private static Place? NextDayStart(Place today, IReadOnlyList<Place> remaining, TripInterests interests, Func<Place, bool> isInRegion) =>
+        remaining
+            .Where(place => isInRegion(place) && TripGeography.DistanceKm(today, place) <= TripGeography.MaxDayHopKm)
+            .OrderByDescending(place => TripGeography.AreaScore(place, remaining, interests))
+            .ThenBy(place => TripGeography.DistanceKm(today, place))
+            .FirstOrDefault();
+
+    // The day's first stop already serves one interest, so the rotation moves on to the next
+    private static void MoveToBack(Queue<Guid> rotation, Place place)
     {
-        while (rotation.Count > 0)
+        var order = rotation.ToList();
+        var served = order.FindIndex(categoryId => place.Categories.Any(category => category.Id.Value == categoryId));
+        if (served < 0) return;
+
+        var categoryId = order[served];
+        order.RemoveAt(served);
+        order.Add(categoryId);
+        rotation.Clear();
+        order.ForEach(rotation.Enqueue);
+    }
+
+    // An interest with nothing left in the area drops out of today's turn so it can't stall the day
+    private static Place? TakeNearestInNextInterest(
+        List<Place> remaining, Queue<Guid> rotation, TripInterests interests, Coordinates position, Func<Place, bool> isInDayArea)
+    {
+        for (var tries = rotation.Count; tries > 0; tries--)
         {
             var categoryId = rotation.Dequeue();
-            var match = TakeNearest(remaining, interests, position,
-                place => place.Categories.Any(category => category.Id.Value == categoryId));
-            if (match is null)
-                continue;
-
             rotation.Enqueue(categoryId);
-            return match;
+            var match = TakeNearest(remaining, interests, position,
+                place => isInDayArea(place) && place.Categories.Any(category => category.Id.Value == categoryId));
+            if (match is not null)
+                return match;
         }
         return null;
     }
@@ -83,7 +122,7 @@ public sealed class SmartItineraryPlanner : IItineraryPlanner
                 continue;
 
             var extraMatches = Math.Max(0, interests.MatchCount(remaining[i]) - 1);
-            var score = position.DistanceKmTo(CoordinatesOf(remaining[i])) / (1 + ExtraMatchPull * extraMatches);
+            var score = TripGeography.DistanceKm(position, remaining[i]) / (1 + ExtraMatchPull * extraMatches);
             if (score >= bestScore)
                 continue;
 
@@ -141,9 +180,4 @@ public sealed class SmartItineraryPlanner : IItineraryPlanner
 
     private static string JoinNames(IReadOnlyList<string> names) =>
         names.Count == 1 ? names[0] : $"{string.Join(", ", names.Take(names.Count - 1))} and {names[^1]}";
-
-    private static Coordinates Centroid(IReadOnlyCollection<Place> places) =>
-        Coordinates.Create(places.Average(place => place.Latitude), places.Average(place => place.Longitude));
-
-    private static Coordinates CoordinatesOf(Place place) => Coordinates.Create(place.Latitude, place.Longitude);
 }

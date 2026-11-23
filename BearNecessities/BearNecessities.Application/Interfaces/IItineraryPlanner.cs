@@ -9,7 +9,8 @@ public sealed record ItineraryPlanningInput(
     Coordinates? Start,
     int Days,
     int StopsPerDay,
-    string? Wish = null);
+    string? Wish = null,
+    bool IsCountryWide = false);
 
 /// <summary>One stop of a planned day, with a short line on why it was picked.</summary>
 public sealed record PlannedStop(Place Place, string? Reason);

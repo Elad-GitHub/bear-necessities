@@ -23,10 +23,15 @@ public sealed class GeminiItineraryPlanner
     private const int MaxReasonChars = 160;
     private const int MaxTitleChars = 60;
 
-    private const string SystemInstruction =
+    private static readonly string SystemInstruction =
         "You plan trips for Bear Necessities, a map of conscious-living places (yoga, healing, crafts, eco projects, markets). " +
         "Choose stops only from the numbered places given, and refer to them by number. " +
-        "Group places that are close together on the same day and order each day to keep travel short. " +
+        "Distance rules (use the coordinates): every stop of a day must be within " +
+        $"{TripGeography.DayRadiusKm:0} km of that day's first stop; each day's first stop must be within " +
+        $"{TripGeography.MaxDayHopKm:0} km of the previous day's first stop; trips of {TripGeography.SingleRegionMaxDays} days " +
+        $"or fewer stay within {TripGeography.SingleRegionRadiusKm:0} km of the first stop of the trip. " +
+        "Start the trip at the suggested starting place. Fewer stops are better than breaking these rules. " +
+        "Order each day to keep travel short. " +
         "Follow the traveller's wishes, including what they want to avoid. Use each place at most once. " +
         "Give each day a short title (at most 6 words, usually the area and its theme) and each stop a reason " +
         "of at most 15 words saying why it suits this traveller. Write in English. " +
@@ -80,22 +85,29 @@ public sealed class GeminiItineraryPlanner
     public async Task<PlannedItinerary> PlanAsync(ItineraryPlanningInput input, CancellationToken cancellationToken)
     {
         var interests = TripInterests.From(input.Candidates, input.CategoryIds, input.Wish);
-        var shortlist = Shortlist(input, interests);
-        if (shortlist.Count == 0)
+        var pool = input.Candidates
+            .Where(place => !interests.IsRuledOut(place) && (interests.IsEmpty || interests.MatchCount(place) > 0))
+            .ToList();
+        var anchor = TripGeography.FindAnchor(pool, interests, input.Start, input.IsCountryWide);
+        if (anchor is null)
             return new PlannedItinerary([], PlannerName);
 
+        var shortlist = Shortlist(pool, anchor, interests, input.Days);
         var answerJson = await GenerateAsync(BuildPrompt(input, interests, shortlist), cancellationToken);
         return ReadItinerary(answerJson, shortlist, input);
     }
 
-    // Best interest matches first, then nearest; the model picks from these
-    private List<Place> Shortlist(ItineraryPlanningInput input, TripInterests interests)
+    // Places the trip can reach from its starting area, best interest matches first; the anchor is place 1
+    private List<Place> Shortlist(IReadOnlyList<Place> pool, Place anchor, TripInterests interests, int days)
     {
-        var origin = input.Start ?? Centroid(input.Candidates);
-        return input.Candidates
-            .Where(place => !interests.IsRuledOut(place) && (interests.IsEmpty || interests.MatchCount(place) > 0))
-            .OrderByDescending(interests.MatchCount)
-            .ThenBy(place => origin.DistanceKmTo(Coordinates.Create(place.Latitude, place.Longitude)))
+        var reachKm = TripGeography.IsShortTrip(days)
+            ? TripGeography.SingleRegionRadiusKm
+            : TripGeography.MaxDayHopKm * (days - 1) + TripGeography.DayRadiusKm;
+        return pool
+            .Where(place => TripGeography.DistanceKm(anchor, place) <= reachKm)
+            .OrderByDescending(place => place == anchor)
+            .ThenByDescending(interests.MatchCount)
+            .ThenBy(place => TripGeography.DistanceKm(anchor, place))
             .Take(_settings.MaxCandidates)
             .ToList();
     }
@@ -105,9 +117,7 @@ public sealed class GeminiItineraryPlanner
         var prompt = new StringBuilder();
         prompt.AppendLine(CultureInfo.InvariantCulture,
             $"Plan {input.Days} day(s) with at most {input.StopsPerDay} stops per day.");
-        if (input.Start is not null)
-            prompt.AppendLine(CultureInfo.InvariantCulture,
-                $"The traveller starts near latitude {input.Start.Latitude:0.###}, longitude {input.Start.Longitude:0.###}.");
+        prompt.AppendLine("Suggested starting place: number 1, the area that best matches this traveller.");
         var picked = shortlist
             .SelectMany(place => place.Categories)
             .Where(category => input.CategoryIds.Contains(category.Id.Value))
@@ -190,9 +200,11 @@ public sealed class GeminiItineraryPlanner
             days.Add(new PlannedDay(title, stops));
         }
 
-        if (days.Count == 0)
+        // The model is asked to follow the distance rules; this makes sure of it
+        var withinRules = TripGeography.Enforce(days, input.Days).Where(day => day.Stops.Count > 0).ToList();
+        if (withinRules.Count == 0)
             throw new InvalidOperationException("Gemini chose no valid places");
-        return new PlannedItinerary(days, PlannerName);
+        return new PlannedItinerary(withinRules, PlannerName);
     }
 
     private static string? Shorten(string? text, int maxChars)
@@ -201,9 +213,4 @@ public sealed class GeminiItineraryPlanner
         var singleLine = text.ReplaceLineEndings(" ").Trim();
         return singleLine.Length <= maxChars ? singleLine : singleLine[..maxChars].TrimEnd() + "…";
     }
-
-    private static Coordinates Centroid(IReadOnlyCollection<Place> places) =>
-        places.Count == 0
-            ? Coordinates.Create(0, 0)
-            : Coordinates.Create(places.Average(place => place.Latitude), places.Average(place => place.Longitude));
 }

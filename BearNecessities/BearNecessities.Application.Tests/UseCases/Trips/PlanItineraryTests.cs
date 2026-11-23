@@ -125,6 +125,69 @@ public class SmartItineraryPlannerTests
         Names(plan)[0].Should().NotContain("Club").And.Contain("Shala").And.Contain("Dance Hall");
     }
 
+    // One degree of latitude is about 111 km
+    [Fact]
+    public void Plan_ShouldKeepEachDayWithinItsArea()
+    {
+        var start = Coordinates.Create(38m, 23m);
+        var candidates = new List<Place> { PlaceAt("Here", 38.001m, 23m, _yoga), PlaceAt("50 km away", 38.45m, 23m, _yoga) };
+
+        var plan = _planner.Plan(Input(candidates, days: 1, stopsPerDay: 2, start));
+
+        Names(plan)[0].Should().Equal("Here");
+    }
+
+    [Fact]
+    public void Plan_ShouldNotJumpFurtherThanADaysDriveBetweenDays()
+    {
+        var start = Coordinates.Create(38m, 23m);
+        var candidates = new List<Place>
+        {
+            PlaceAt("Home A", 38.001m, 23m, _yoga),
+            PlaceAt("Home B", 38.002m, 23m, _yoga),
+            PlaceAt("150 km away", 39.35m, 23m, _yoga)
+        };
+
+        var plan = _planner.Plan(Input(candidates, days: 6, stopsPerDay: 1, start));
+
+        plan.Days.SelectMany(day => day.Stops).Select(stop => stop.Place.Name).Should().NotContain("150 km away");
+    }
+
+    [Fact]
+    public void Plan_ShortTrip_ShouldStayInOneRegion()
+    {
+        var start = Coordinates.Create(38m, 23m);
+        var candidates = new List<Place>
+        {
+            PlaceAt("Home", 38.001m, 23m, _yoga),
+            PlaceAt("60 km away", 38.54m, 23m, _yoga)
+        };
+
+        var shortTrip = _planner.Plan(Input(candidates, days: 3, stopsPerDay: 1, start));
+        var longTrip = _planner.Plan(Input(candidates, days: 6, stopsPerDay: 1, start));
+
+        Names(shortTrip).SelectMany(day => day).Should().Equal("Home");
+        Names(longTrip).SelectMany(day => day).Should().Equal("Home", "60 km away");
+    }
+
+    [Fact]
+    public void Plan_CountryWide_ShouldStartWhereMostMatchesAre()
+    {
+        var countryCenter = Coordinates.Create(38m, 23m);
+        var candidates = new List<Place>
+        {
+            PlaceAt("Lonely shala", 38.001m, 23m, _yoga),
+            PlaceAt("Hub yoga", 40m, 23m, _yoga),
+            PlaceAt("Hub vegan", 40.01m, 23m, _food),
+            PlaceAt("Hub dance", 40.02m, 23m, _dance)
+        };
+        var input = Input(candidates, days: 1, stopsPerDay: 3, countryCenter) with { IsCountryWide = true };
+
+        var plan = _planner.Plan(input);
+
+        Names(plan)[0].Should().BeEquivalentTo("Hub yoga", "Hub vegan", "Hub dance");
+    }
+
     [Fact]
     public void Plan_ShouldTitleTheDayAndExplainEachStop()
     {
@@ -153,10 +216,11 @@ public class PlanItineraryHandlerTests
             .Setup(x => x.FindByCountryAsync("Greece", It.IsAny<CancellationToken>()))
             .ReturnsAsync(places);
 
+    // About 3 km apart, so all six fit a short trip's region
     private static List<Place> YogaPlaces(Category category) => Enumerable.Range(0, 6).Select(i =>
     {
         var place = TestDataBuilder.BuildPlace(new UserId(Guid.NewGuid()), ListingStatus.Live);
-        place.UpdateCoordinates(38m + i * 0.1m, 23m, "", "");
+        place.UpdateCoordinates(38m + i * 0.03m, 23m, "", "");
         place.AddCategory(category);
         return place;
     }).ToList();

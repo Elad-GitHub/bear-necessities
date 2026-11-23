@@ -20,6 +20,7 @@ import { PAW_CLUSTER_PAINT, pawClusterLayout, registerPawClusterImages } from '.
 import { measureSegments, PAW_IMAGE_ID, PawPrint, pawPrintCountFor, registerPawTrailImage, samplePawPrints, toPawFeatures } from '../../core/map/paw-trail';
 import { loadMapImages } from '../../core/map/map-images';
 import { MapViewStateService } from '../../core/map/map-view-state.service';
+import { TripSessionService } from '../../core/map/trip-session.service';
 import { FilterPulse, PulsePoint } from '../../core/map/filter-pulse';
 
 type WhenOption = 'anytime' | 'week' | 'month' | 'custom';
@@ -155,7 +156,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     private zone: NgZone,
     private route: ActivatedRoute,
     private router: Router,
-    private mapViewState: MapViewStateService
+    private mapViewState: MapViewStateService,
+    private tripSession: TripSessionService
   ) {
     this.areaSearchTerms.pipe(
       debounceTime(300),
@@ -428,6 +430,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         this.isPlanning.set(false);
         this.isPlannerOpen.set(false);
         this.isAiPlanned.set(itinerary.planner === AI_PLANNER);
+        this.tripSession.save({ days: itinerary.days, area, isAiPlanned: this.isAiPlanned() });
         this.showItinerary(itinerary.days, area);
       },
       error: () => {
@@ -446,6 +449,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   clearTrip(): void {
     this.cancelPlanning();
     this.stopBearWalk();
+    this.tripSession.clear();
     this.tripActive.set(false);
     this.itinerary.set([]);
     this.selectedTripDay.set(null);
@@ -610,7 +614,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       .addTo(this.mapInstance);
   }
 
-  private showItinerary(days: ItineraryDay[], area: GeocodeResult): void {
+  // fitToTrip is off when restoring a trip, so the map stays where the traveller last looked
+  private showItinerary(days: ItineraryDay[], area: GeocodeResult, fitToTrip = true): void {
     if (!this.mapInstance) return;
 
     this.tripActive.set(true);
@@ -646,6 +651,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       }));
 
     this.setTripData(this.tripStopPoints, this.tripRouteLines);
+    if (!fitToTrip) return;
 
     const allStops = days.flatMap(day => day.stops);
     if (allStops.length > 0) {
@@ -911,6 +917,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       this.registerCategoryIcons(this.mapInstance!);
       this.registerBearImages(this.mapInstance!);
       this.filterPulse = new FilterPulse(this.mapInstance!);
+      // A trip planned before opening one of its stops is still on when coming back
+      const savedTrip = this.tripSession.get();
+      if (savedTrip) {
+        this.isAiPlanned.set(savedTrip.isAiPlanned);
+        this.tripArea.set(savedTrip.area);
+        this.showItinerary(savedTrip.days, savedTrip.area, !this.mapViewState.get());
+      }
       this.loadPlacesForViewport();
       // A filter chosen before leaving the map is still on when coming back
       this.updateFilterHighlight();

@@ -88,6 +88,27 @@ public class TripPlannerTests
     }
 
     [Fact]
+    public async Task PlanAsync_GeminiAnswerBreakingDistanceRules_ShouldDropTheFarStops()
+    {
+        // Place 2 sits about 55 km from place 1: too far for the same day, and outside a short trip's region
+        const string answer = """
+            {"days":[
+              {"title":"Day one","stops":[{"place":1,"reason":"Close"},{"place":2,"reason":"Too far"}]},
+              {"title":"Day two","stops":[{"place":2,"reason":"Outside the region"}]}
+            ]}
+            """;
+        var near = Places(1)[0];
+        var far = Place.Create("Far shala", 38.5m, 23m, "UTC", new UserId(Guid.NewGuid()));
+        far.AddCategory(_yoga);
+        var input = Input([near, far], days: 2, stopsPerDay: 2) with { Start = Coordinates.Create(38m, 23m), IsCountryWide = true };
+
+        var plan = await Planner(new FakeGemini(HttpStatusCode.OK, answer)).PlanAsync(input);
+
+        plan.Planner.Should().Be("gemini");
+        plan.Days.SelectMany(day => day.Stops).Select(stop => stop.Place.Name).Should().Equal("Shala 1");
+    }
+
+    [Fact]
     public async Task PlanAsync_GeminiRateLimited_ShouldFallBackToSmartPlanner()
     {
         var plan = await Planner(new FakeGemini(HttpStatusCode.TooManyRequests)).PlanAsync(Input(Places(4)));
