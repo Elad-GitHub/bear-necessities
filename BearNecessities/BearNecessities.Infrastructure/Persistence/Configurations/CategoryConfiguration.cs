@@ -95,7 +95,7 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             (1, 107, "martial-arts",        "Traditional Martial Arts"),
             (1, 111, "capoeira",            "Capoeira"),
             (1, 112, "aikido",              "Aikido"),
-            (1, 108, "contact-improv",      "Contact Dance"),
+            (1, 108, "contact-improv",      "Contact Improvisation"),
             (1, 109, "circus-arts",         "Circus Arts"),
             // Mobility, handstands, floor work and Ido Portal-style movement practice
             (1, 110, "movement-flow",       "Movement & Flow"),
@@ -132,7 +132,6 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             (6, 601, "sound-healing",       "Sound Healing"),
             (6, 602, "energy-healing",      "Energy Healing & Cleansing"),
             (6, 604, "reiki",               "Reiki"),
-            (6, 605, "plant-medicine",      "Plant Medicine"),
             (6, 606, "somatic-therapy",     "Somatic Therapy"),
             (6, 607, "thai-massage",        "Thai Massage"),
             (6, 608, "tuina",               "Tuina"),
@@ -143,10 +142,10 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             (6, 612, "shiatsu",             "Shiatsu"),
 
             // Music & Sound (parent 7)
-            (7, 702, "kirtan",              "Kirtan"),
+            // Chanting of every tradition; a separate "Chanting" overlapped almost entirely
+            (7, 702, "kirtan",              "Kirtan & Mantra"),
             (7, 703, "drumming-circle",     "Drumming Circle"),
             (7, 704, "live-music",          "Live Music"),
-            (7, 705, "chanting",            "Chanting"),
             (7, 706, "dj-set",              "DJ Set"),
             (7, 707, "singing-circles",     "Singing Circles"),
 
@@ -159,14 +158,14 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             // Spirituality (parent 9)
             (9, 901, "meditation",          "Meditation"),
             (9, 902, "astrology",           "Astrology"),
-            (9, 903, "shamanism",           "Shamanism"),
             (9, 906, "sacred-ceremony",     "Sacred Sites & Rituals"),
             (9, 907, "vipassana",           "Vipassana"),
 
             // Wellness (parent 10)
             (10, 1001, "nutrition",         "Nutrition"),
             (10, 1002, "ayurveda",          "Ayurveda"),
-            (10, 1003, "herbalism",         "Herbalism"),
+            // Also takes in the old "Plant Medicine", a name the scene reads as psychedelic ceremonies
+            (10, 1003, "herbalism",         "Herbalism & Traditional Medicine"),
             (10, 1004, "yoga-therapy",      "Yoga Therapy"),
             (10, 1005, "fasting-detox",     "Fasting & Detox"),
             (10, 1006, "cold-therapy",      "Cold Therapy"),
@@ -187,6 +186,8 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             (12, 1204, "cacao-ceremony",    "Cacao Ceremony"),
             (12, 1205, "sweat-lodge",       "Sweat Lodge / Temazcal"),
             (12, 1206, "bufo",              "Bufo / 5-MeO-DMT"),
+            // Keeps its 9xx id from when it sat under Spirituality
+            (12, 903,  "shamanism",         "Shamanism"),
 
             // Markets (parent 13)
             (13, 1301, "hippie-market",     "Hippie & Tribal Markets"),
