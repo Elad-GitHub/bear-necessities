@@ -94,7 +94,10 @@ public sealed class GeminiItineraryPlanner
         if (anchor is null)
             return new PlannedItinerary([], PlannerName);
 
-        var shortlist = Shortlist(pool, anchor, interests, input.Days);
+        // Nearby places outside the matched subcategories go in too, after the matches: the model can read
+        // wishes no subcategory names ("Tibetan culture", "near the river")
+        var notRuledOut = input.Candidates.Where(place => !interests.IsRuledOut(place)).ToList();
+        var shortlist = Shortlist(notRuledOut, anchor, interests, input.Days);
         var answerJson = await GenerateAsync(BuildPrompt(input, interests, shortlist), cancellationToken);
         return ReadItinerary(answerJson, shortlist, input, interests);
     }
