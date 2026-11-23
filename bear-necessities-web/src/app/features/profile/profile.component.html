@@ -36,6 +36,10 @@
   <!-- Tabs -->
   <div class="tabs-container">
     <div class="tabs">
+      <button class="tab" [class.active]="activeTab() === 'schedule'" (click)="setTab('schedule')">
+        <span class="material-icons">event_note</span>
+        My Schedule
+      </button>
       <button class="tab" [class.active]="activeTab() === 'rsvps'" (click)="setTab('rsvps')">
         <app-bear-icon name="going" [size]="20"></app-bear-icon>
         Can't Bear to Miss
@@ -56,6 +60,79 @@
 
   <!-- Content -->
   <div class="tab-content">
+
+    <!-- My schedule -->
+    <ng-container *ngIf="activeTab() === 'schedule'">
+      <div class="loading-state" *ngIf="isLoadingRsvps() || isLoadingSaved()">
+        <span class="material-icons spinning">sync</span> Loading your schedule...
+      </div>
+
+      <ng-container *ngIf="!isLoadingRsvps() && !isLoadingSaved()">
+        <div class="empty-state" *ngIf="isScheduleEmpty()">
+          <span class="material-icons">event_note</span>
+          <h3>Your schedule is empty</h3>
+          <p>Events you're going to, a trip you plan and places you want to visit all gather here.</p>
+          <button class="btn-primary" routerLink="/map">Explore the Map</button>
+        </div>
+
+        <section class="schedule-section" *ngIf="scheduleDays().length > 0">
+          <div class="schedule-heading">
+            <h2><span class="material-icons">celebration</span> Coming up</h2>
+            <button class="schedule-calendar" (click)="downloadCalendar()" title="Download an .ics file for your calendar">
+              <span class="material-icons">event_available</span> Add to my calendar
+            </button>
+          </div>
+          <div class="schedule-day" *ngFor="let day of scheduleDays()">
+            <h3>{{ day.date | date:'EEEE, MMM d, y' }}</h3>
+            <button class="schedule-item" *ngFor="let entry of day.entries" (click)="openEvent(entry.eventId)">
+              <span class="schedule-time">{{ entry.startAt | date:'HH:mm' }}</span>
+              <span class="schedule-what">
+                <strong>{{ entry.title }}</strong>
+                <span *ngIf="entry.placeName">{{ entry.placeName }}</span>
+              </span>
+              <span class="status-chip" [ngClass]="getRsvpStatusClass(entry.status)">{{ entry.status }}</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="schedule-section" *ngIf="plannedTrip as trip">
+          <div class="schedule-heading">
+            <h2><span class="material-icons">route</span> Your trip around {{ trip.area.name }}</h2>
+            <button class="schedule-calendar" (click)="showTripOnMap()">
+              <span class="material-icons">map</span> Show on map
+            </button>
+          </div>
+          <div class="schedule-day" *ngFor="let day of trip.days">
+            <h3>Day {{ day.dayNumber }}<ng-container *ngIf="day.title"> · {{ day.title }}</ng-container></h3>
+            <p class="schedule-stops">{{ day.stops.length }} {{ day.stops.length === 1 ? 'stop' : 'stops' }}: <span *ngFor="let stop of day.stops; let last = last">{{ stop.name }}{{ last ? '' : ' → ' }}</span></p>
+          </div>
+        </section>
+
+        <section class="schedule-section" *ngIf="wantToGo().length > 0">
+          <div class="schedule-heading">
+            <h2><span class="material-icons">star</span> Want to go</h2>
+          </div>
+          <div class="card-list">
+            <div class="list-card" *ngFor="let saved of wantToGo()" (click)="openSavedItem(saved)">
+              <div class="card-icon" [class.event-icon]="saved.targetType === 'Event'">
+                @if (saved.summary?.thumbnailUrl | sizedPhoto: 120; as photo) {
+                  <img class="card-photo" [src]="photo" alt="" loading="lazy" />
+                } @else {
+                  <span class="material-icons">{{ saved.targetType === 'Event' ? 'celebration' : 'place' }}</span>
+                }
+              </div>
+              <div class="card-body">
+                <h3>{{ saved.summary?.name || 'Listing' }}</h3>
+                <p class="card-subtitle" *ngIf="saved.summary?.city || saved.summary?.country">
+                  <span class="material-icons">place</span>
+                  {{ saved.summary?.city }}<ng-container *ngIf="saved.summary?.city && saved.summary?.country">, </ng-container>{{ saved.summary?.country }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </ng-container>
+    </ng-container>
 
     <!-- RSVPs -->
     <ng-container *ngIf="activeTab() === 'rsvps'">

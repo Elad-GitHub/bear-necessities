@@ -120,6 +120,10 @@
         <app-bear-icon name="profile" [size]="30"></app-bear-icon>
         <span class="link-text"><strong>Bear-ly Me</strong><small>Your name, photo and a few words about you</small></span>
       </button>
+      <button class="panel-link" (click)="navigateToProfileTab('schedule')">
+        <span class="material-icons panel-link-icon">event_note</span>
+        <span class="link-text"><strong>My Schedule</strong><small>Your events by day, your trip and where you want to go</small></span>
+      </button>
       <button class="panel-link" (click)="navigateToProfileTab('rsvps')">
         <app-bear-icon name="going" [size]="30"></app-bear-icon>
         <span class="link-text"><strong>Can't Bear to Miss</strong><small>Events you said you'd join</small></span>

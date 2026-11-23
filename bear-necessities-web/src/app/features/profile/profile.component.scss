@@ -190,6 +190,104 @@ $background: #f5f7f5;
   padding: 24px;
 }
 
+// My schedule
+.schedule-section {
+  margin-bottom: 28px;
+}
+
+.schedule-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 18px;
+    color: $primary-dark;
+
+    .material-icons { color: $primary; }
+  }
+}
+
+.schedule-calendar {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border: 1.5px solid $primary;
+  border-radius: 18px;
+  background: $surface;
+  color: $primary;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  .material-icons { font-size: 17px; }
+  &:hover { background: $primary-light; }
+}
+
+.schedule-day {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: $surface;
+  border: 1px solid $border;
+
+  h3 {
+    margin: 0 0 6px;
+    font-size: 14px;
+    color: $text;
+  }
+}
+
+.schedule-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 4px;
+  border: none;
+  border-top: 1px solid #f0f0f0;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:first-of-type { border-top: none; }
+  &:hover strong { color: $primary; text-decoration: underline; }
+
+  .schedule-time {
+    min-width: 48px;
+    font-weight: 700;
+    color: $primary;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .schedule-what {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    font-size: 14px;
+    color: $text;
+
+    span { font-size: 12.5px; color: $text-muted; }
+  }
+}
+
+.schedule-stops {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: $text-muted;
+}
+
 .loading-state {
   display: flex;
   align-items: center;

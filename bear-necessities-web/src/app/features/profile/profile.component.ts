@@ -1,11 +1,14 @@
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ProfileService, MyRsvpDto, SavedItemDto } from '../../core/services/profile.service';
 import { ToastService } from '../../core/services/toast.service';
+import { TripSessionService } from '../../core/map/trip-session.service';
+import { buildScheduleDays, toCalendarFile } from './schedule';
 
-type ProfileTab = 'rsvps' | 'saved' | 'listings';
+type ProfileTab = 'schedule' | 'rsvps' | 'saved' | 'listings';
+const PROFILE_TABS: readonly ProfileTab[] = ['schedule', 'rsvps', 'saved', 'listings'];
 
 @Component({
   selector: 'app-profile',
@@ -14,9 +17,15 @@ type ProfileTab = 'rsvps' | 'saved' | 'listings';
   standalone: false
 })
 export class ProfileComponent implements OnInit {
-  activeTab = signal<ProfileTab>('rsvps');
+  activeTab = signal<ProfileTab>('schedule');
   rsvps = signal<MyRsvpDto[]>([]);
   savedItems = signal<SavedItemDto[]>([]);
+  // My schedule: upcoming events by day, the planned trip, and places marked "Want to go"
+  scheduleDays = computed(() => buildScheduleDays(this.rsvps(), new Date()));
+  wantToGo = computed(() => this.savedItems().filter(saved => saved.saveType === 'WantToGo'));
+  plannedTrip = inject(TripSessionService).get();
+  isScheduleEmpty = computed(() =>
+    this.scheduleDays().length === 0 && this.wantToGo().length === 0 && !this.plannedTrip);
   myListings = signal<any[]>([]);
   myEventListings = signal<any[]>([]);
   isLoadingRsvps = signal(true);
@@ -36,8 +45,8 @@ export class ProfileComponent implements OnInit {
   ngOnInit(): void {
     // Follow the tab in the URL on every change: the side panel links here while this page is already open
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
-      const requestedTab = params.get('tab');
-      if (requestedTab === 'saved' || requestedTab === 'rsvps' || requestedTab === 'listings') {
+      const requestedTab = params.get('tab') as ProfileTab | null;
+      if (requestedTab && PROFILE_TABS.includes(requestedTab)) {
         this.activeTab.set(requestedTab);
       }
     });
@@ -176,6 +185,25 @@ export class ProfileComponent implements OnInit {
 
   openRsvpEvent(rsvp: MyRsvpDto): void {
     this.router.navigate(['/events', rsvp.eventId]);
+  }
+
+  openEvent(eventId: string): void {
+    this.router.navigate(['/events', eventId]);
+  }
+
+  // The trip is kept for the browser tab, so the map shows it again as soon as it opens
+  showTripOnMap(): void {
+    this.router.navigate(['/map']);
+  }
+
+  downloadCalendar(): void {
+    const origin = window.location.origin;
+    const calendar = toCalendarFile(this.scheduleDays(), eventId => `${origin}/events/${eventId}`, new Date());
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob([calendar], { type: 'text/calendar;charset=utf-8' }));
+    link.download = 'bear-necessities-schedule.ics';
+    link.click();
+    URL.revokeObjectURL(link.href);
   }
 
   openSavedItem(saved: SavedItemDto): void {

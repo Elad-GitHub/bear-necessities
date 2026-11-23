@@ -383,6 +383,8 @@ $panel-width: 320px;
   transition: background 150ms ease;
 
   app-bear-icon { color: $primary; }
+  // Same footprint as the 30px bear icons beside it
+  .panel-link-icon { width: 30px; font-size: 28px; text-align: center; color: $primary; }
 
   .link-text {
     display: flex;

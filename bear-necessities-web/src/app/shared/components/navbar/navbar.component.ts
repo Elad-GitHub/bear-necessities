@@ -158,7 +158,7 @@ export class NavbarComponent {
     this.router.navigate(['/map'], { queryParams: { plan: 1 } });
   }
 
-  navigateToProfileTab(tab: 'rsvps' | 'saved' | 'listings'): void {
+  navigateToProfileTab(tab: 'schedule' | 'rsvps' | 'saved' | 'listings'): void {
     this.closePanel();
     this.router.navigate(['/profile'], { queryParams: { tab } });
   }
