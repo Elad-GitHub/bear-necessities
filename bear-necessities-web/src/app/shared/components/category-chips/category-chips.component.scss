@@ -160,7 +160,7 @@ $text-muted: #757575;
   // top/left are set inline from the clicked chip's position.
   position: fixed;
   width: 224px;
-  max-height: 320px;
+  // max-height comes inline from the space left on screen; scrolls only when that runs out
   overflow-y: auto;
   background: white;
   border-radius: 10px;
@@ -175,7 +175,7 @@ $text-muted: #757575;
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 9px 10px;
+  padding: 7px 10px;
   border: none;
   border-radius: 6px;
   background: none;
@@ -230,7 +230,6 @@ $text-muted: #757575;
   .dropdown {
     min-width: 200px;
     max-width: calc(100vw - 24px);
-    max-height: 60vh;
   }
 }
 

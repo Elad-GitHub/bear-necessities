@@ -7,7 +7,6 @@ import { CategoryIconsService } from '../../../core/services/category-icons.serv
 
 const DROPDOWN_WIDTH = 224;
 const DROPDOWN_MIN_HEIGHT = 200;
-const DROPDOWN_MAX_HEIGHT = 320;
 const DROPDOWN_EDGE_GAP = 12;
 
 @Component({
@@ -95,8 +94,8 @@ export class CategoryChipsComponent implements AfterViewInit {
     const opensUpward = spaceBelow < DROPDOWN_MIN_HEIGHT && spaceAbove > spaceBelow;
     this.dropdownTop.set(opensUpward ? null : chip.bottom + 6);
     this.dropdownBottom.set(opensUpward ? window.innerHeight - chip.top + 6 : null);
-    this.dropdownMaxHeight.set(
-      Math.min(DROPDOWN_MAX_HEIGHT, Math.max(DROPDOWN_MIN_HEIGHT, opensUpward ? spaceAbove : spaceBelow)));
+    // Use all the room on screen so a full subcategory list shows without an inner scrollbar
+    this.dropdownMaxHeight.set(Math.max(DROPDOWN_MIN_HEIGHT, opensUpward ? spaceAbove : spaceBelow));
     this.dropdownLeft.set(Math.max(8, Math.min(chip.left, window.innerWidth - DROPDOWN_WIDTH - 8)));
     this.openDropdownId.set(parentId);
   }
