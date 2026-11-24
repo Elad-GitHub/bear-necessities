@@ -52,7 +52,6 @@ public static partial class OsmCategoryRules
         (Word("drum(ming)? circle"), "drumming-circle"),
         (Word("macram(e|é)"), "macrame-fiber-arts"),
         (Word("watsu"), "watsu"),
-        (Word("lomi ?lomi"), "lomi-lomi"),
         (Word("shiatsu"), "shiatsu"),
         (Word("shibari"), "shibari"),
         (Word("capoeira"), "capoeira"),

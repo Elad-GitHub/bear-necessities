@@ -68,7 +68,6 @@ public class OsmCategoryRulesTests
     [InlineData("Lek Massage", "thai", "thai-massage")]
     [InlineData("Thai Spa & Massage", null, "thai-massage")]
     [InlineData("Zen Shiatsu Studio", null, "shiatsu")]
-    [InlineData("Aloha Lomi Lomi", null, "lomi-lomi")]
     public void Classify_MassageShop_ShouldKeepItsNamedStyle(string name, string? style, string expected)
     {
         var tags = new List<(string, string)> { ("name", name), ("shop", "massage") };

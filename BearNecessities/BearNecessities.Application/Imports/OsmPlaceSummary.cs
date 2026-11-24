@@ -27,7 +27,6 @@ public static class OsmPlaceSummary
         ["reiki"] = "Reiki",
         ["thai-massage"] = "Thai massage",
         ["watsu"] = "Watsu",
-        ["lomi-lomi"] = "Lomi Lomi massage",
         ["shiatsu"] = "Shiatsu",
         ["energy-healing"] = "Energy healing",
         ["vipassana"] = "Vipassana centre",

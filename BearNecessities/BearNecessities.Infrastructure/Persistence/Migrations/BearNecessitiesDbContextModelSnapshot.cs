@@ -545,22 +545,12 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = new Guid("00000000-0000-0000-0000-000000000611"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Lomi Lomi",
-                            ParentId = new Guid("00000000-0000-0000-0000-000000000006"),
-                            Slug = "lomi-lomi",
-                            SortOrder = 36,
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
-                        },
-                        new
-                        {
                             Id = new Guid("00000000-0000-0000-0000-000000000612"),
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Shiatsu",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000006"),
                             Slug = "shiatsu",
-                            SortOrder = 37,
+                            SortOrder = 36,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -570,7 +560,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Kirtan & Mantra",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000007"),
                             Slug = "kirtan",
-                            SortOrder = 38,
+                            SortOrder = 37,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -580,7 +570,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Drum & Song Circles",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000007"),
                             Slug = "drumming-circle",
-                            SortOrder = 39,
+                            SortOrder = 38,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -590,7 +580,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Live Music",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000007"),
                             Slug = "live-music",
-                            SortOrder = 40,
+                            SortOrder = 39,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -600,7 +590,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "DJ Set",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000007"),
                             Slug = "dj-set",
-                            SortOrder = 41,
+                            SortOrder = 40,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -610,7 +600,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Tantra",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000008"),
                             Slug = "tantra",
-                            SortOrder = 42,
+                            SortOrder = 41,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -620,7 +610,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Conscious Intimacy",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000008"),
                             Slug = "conscious-sexuality",
-                            SortOrder = 43,
+                            SortOrder = 42,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -630,7 +620,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Shibari",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000008"),
                             Slug = "shibari",
-                            SortOrder = 44,
+                            SortOrder = 43,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -640,7 +630,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Meditation",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000009"),
                             Slug = "meditation",
-                            SortOrder = 45,
+                            SortOrder = 44,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -650,7 +640,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Astrology, Numerology, Tarot & Divination",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000009"),
                             Slug = "astrology",
-                            SortOrder = 46,
+                            SortOrder = 45,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -660,7 +650,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Sacred Sites & Rituals",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000009"),
                             Slug = "sacred-ceremony",
-                            SortOrder = 47,
+                            SortOrder = 46,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -670,7 +660,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Vipassana",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000009"),
                             Slug = "vipassana",
-                            SortOrder = 48,
+                            SortOrder = 47,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -680,7 +670,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Nutrition & Detox",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000010"),
                             Slug = "nutrition",
-                            SortOrder = 49,
+                            SortOrder = 48,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -690,7 +680,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Ayurveda",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000010"),
                             Slug = "ayurveda",
-                            SortOrder = 50,
+                            SortOrder = 49,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -700,7 +690,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Herbalism & Traditional Medicine",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000010"),
                             Slug = "herbalism",
-                            SortOrder = 51,
+                            SortOrder = 50,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -710,7 +700,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Cold Therapy",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000010"),
                             Slug = "cold-therapy",
-                            SortOrder = 52,
+                            SortOrder = 51,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -720,7 +710,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Breathwork",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000010"),
                             Slug = "breathwork",
-                            SortOrder = 53,
+                            SortOrder = 52,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -730,7 +720,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Camping Areas",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000011"),
                             Slug = "camping",
-                            SortOrder = 54,
+                            SortOrder = 53,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -740,7 +730,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Farms & Farm Stays",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000011"),
                             Slug = "farm-stay",
-                            SortOrder = 55,
+                            SortOrder = 54,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -750,7 +740,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Hot Springs",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000011"),
                             Slug = "hot-springs",
-                            SortOrder = 56,
+                            SortOrder = 55,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -760,7 +750,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Hiking & Trekking",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000011"),
                             Slug = "hiking",
-                            SortOrder = 57,
+                            SortOrder = 56,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -770,7 +760,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Eco-Village",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000011"),
                             Slug = "eco-village",
-                            SortOrder = 58,
+                            SortOrder = 57,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -780,7 +770,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Ayahuasca",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000012"),
                             Slug = "ayahuasca",
-                            SortOrder = 59,
+                            SortOrder = 58,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -790,7 +780,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Mushroom Ceremonies",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000012"),
                             Slug = "psilocybin",
-                            SortOrder = 60,
+                            SortOrder = 59,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -800,7 +790,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Kambo",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000012"),
                             Slug = "kambo",
-                            SortOrder = 61,
+                            SortOrder = 60,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -810,7 +800,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Cacao Ceremony",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000012"),
                             Slug = "cacao-ceremony",
-                            SortOrder = 62,
+                            SortOrder = 61,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -820,7 +810,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Sweat Lodge / Temazcal",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000012"),
                             Slug = "sweat-lodge",
-                            SortOrder = 63,
+                            SortOrder = 62,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -830,7 +820,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Bufo / 5-MeO-DMT",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000012"),
                             Slug = "bufo",
-                            SortOrder = 64,
+                            SortOrder = 63,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -840,7 +830,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Shamanism",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000012"),
                             Slug = "shamanism",
-                            SortOrder = 65,
+                            SortOrder = 64,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -850,7 +840,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Hippie & Tribal Markets",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000013"),
                             Slug = "hippie-market",
-                            SortOrder = 66,
+                            SortOrder = 65,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -860,7 +850,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Artisan & Craft Markets",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000013"),
                             Slug = "artisan-market",
-                            SortOrder = 67,
+                            SortOrder = 66,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -870,7 +860,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Spiritual Supplies",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000013"),
                             Slug = "spiritual-supplies",
-                            SortOrder = 68,
+                            SortOrder = 67,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -880,7 +870,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Boho Clothing & Jewelry",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000013"),
                             Slug = "tribal-clothing",
-                            SortOrder = 69,
+                            SortOrder = 68,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -890,7 +880,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Farmers Market",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000013"),
                             Slug = "farmers-market",
-                            SortOrder = 70,
+                            SortOrder = 69,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -900,7 +890,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Vegan, Vegetarian & Raw",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000014"),
                             Slug = "vegan-restaurant",
-                            SortOrder = 71,
+                            SortOrder = 70,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -910,7 +900,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Indian Food",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000014"),
                             Slug = "indian-food",
-                            SortOrder = 72,
+                            SortOrder = 71,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -920,7 +910,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Health Food Café",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000014"),
                             Slug = "health-food-cafe",
-                            SortOrder = 73,
+                            SortOrder = 72,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -930,7 +920,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Community Kitchen & Dinners",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000014"),
                             Slug = "community-kitchen",
-                            SortOrder = 74,
+                            SortOrder = 73,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
@@ -940,7 +930,7 @@ namespace BearNecessities.Infrastructure.Persistence.Migrations
                             Name = "Cooking Workshops & Food Events",
                             ParentId = new Guid("00000000-0000-0000-0000-000000000014"),
                             Slug = "food-workshop",
-                            SortOrder = 75,
+                            SortOrder = 74,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });

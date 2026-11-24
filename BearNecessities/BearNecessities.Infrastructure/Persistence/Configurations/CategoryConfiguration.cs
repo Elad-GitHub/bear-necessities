@@ -135,7 +135,6 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             (6, 609, "acupuncture",         "Acupuncture, Tuina & Chinese Medicine"),
             // Named bodywork styles instead of a generic "Massage", which pulled in ordinary spas
             (6, 610, "watsu",               "Watsu"),
-            (6, 611, "lomi-lomi",           "Lomi Lomi"),
             (6, 612, "shiatsu",             "Shiatsu"),
 
             // Music & Sound (parent 7)
