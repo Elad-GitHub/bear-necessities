@@ -28,6 +28,7 @@ import {
 import { FilterPulse, PulsePoint } from '../../core/map/filter-pulse';
 import { describeApproximateLocation } from '../../core/map/location-accuracy';
 import { ToastService } from '../../core/services/toast.service';
+import { MapPoint } from './happening-now/happening-now-panel.component';
 
 type WhenOption = 'anytime' | 'week' | 'month' | 'custom';
 
@@ -102,6 +103,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   mapInstance: mapboxgl.Map | null = null;
   // "When?" filter: Anytime shows every place; with days chosen, only what's open or happening then
   whenOption = signal<WhenOption>('anytime');
+  isNowOpen = signal(false);
+  nowCenter = signal<MapPoint | null>(null);
   isDatePickerOpen = signal(false);
   customFrom = signal('');
   customTo = signal('');
@@ -195,6 +198,22 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       }
       this.geocodingService.search(term, 5).subscribe(results => this.tripAreaResults.set(results));
     });
+  }
+
+  toggleNow(): void {
+    if (this.isNowOpen()) {
+      this.isNowOpen.set(false);
+      return;
+    }
+    const center = this.mapInstance?.getCenter();
+    if (!center) return;
+    this.nowCenter.set({ latitude: center.lat, longitude: center.lng });
+    this.isDatePickerOpen.set(false);
+    this.isNowOpen.set(true);
+  }
+
+  openEvent(eventId: string): void {
+    this.router.navigate(['/events', eventId]);
   }
 
   setWhen(option: Exclude<WhenOption, 'custom'>): void {

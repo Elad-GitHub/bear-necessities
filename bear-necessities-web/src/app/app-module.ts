@@ -1,4 +1,5 @@
-import { NgModule, APP_INITIALIZER, ErrorHandler } from '@angular/core';
+import { NgModule, APP_INITIALIZER, ErrorHandler, isDevMode } from '@angular/core';
+import { provideServiceWorker } from '@angular/service-worker';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
@@ -26,6 +27,11 @@ import { TelemetryErrorHandler } from './core/telemetry/telemetry-error-handler'
     AppRoutingModule
   ],
   providers: [
+    // Keeps the app, and the places and plans already seen, usable without signal (production builds only)
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000'
+    }),
     {
       provide: APP_INITIALIZER,
       useFactory: (authService: AuthService) => () => authService.loadFromStorage(),

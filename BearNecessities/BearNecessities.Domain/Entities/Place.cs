@@ -5,6 +5,8 @@ namespace BearNecessities.Domain.Entities;
 
 public sealed class Place : AuditableEntity<PlaceId>
 {
+    public const int MaxOpeningHoursLength = 255;
+
     private readonly List<Category> _categories = new();
     private readonly List<PlaceExternalLink> _externalLinks = new();
     private readonly List<Media> _media = new();
@@ -27,6 +29,8 @@ public sealed class Place : AuditableEntity<PlaceId>
     public string? Country { get; private set; }
     public string? CountryCode { get; private set; }
     public string Timezone { get; private set; } = default!;
+    // OpenStreetMap opening_hours syntax, e.g. "Mo-Fr 09:00-18:00; Sa 10:00-14:00"
+    public string? OpeningHours { get; private set; }
     public ListingSourceType Source { get; private set; }
     public string? ExternalSourceId { get; private set; }
     public bool IsVerified { get; private set; }
@@ -129,6 +133,13 @@ public sealed class Place : AuditableEntity<PlaceId>
     public void SetDescription(string? description)
     {
         Description = description;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetOpeningHours(string? openingHours)
+    {
+        var trimmed = openingHours?.Trim();
+        OpeningHours = string.IsNullOrEmpty(trimmed) || trimmed.Length > MaxOpeningHoursLength ? null : trimmed;
         UpdatedAt = DateTime.UtcNow;
     }
 

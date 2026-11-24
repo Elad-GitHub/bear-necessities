@@ -430,6 +430,26 @@ $planner-primary-dark: #004d40;
   }
 }
 
+// "Now" opens the happening-now panel rather than filtering by dates, so it reads differently
+.when-filter .when-now {
+  color: #2e7d32;
+  border-right: 1px solid #eeeeee;
+  border-radius: 18px 0 0 18px;
+  margin-right: 2px;
+
+  .now-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2e7d32;
+  }
+
+  &.active {
+    background: #2e7d32;
+    .now-dot { background: white; }
+  }
+}
+
 // Little card under the filter for choosing exact days
 .when-picker {
   position: absolute;

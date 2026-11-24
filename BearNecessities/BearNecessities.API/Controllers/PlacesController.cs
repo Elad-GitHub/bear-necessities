@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using BearNecessities.Application.UseCases.Places.ApprovePlace;
 using BearNecessities.Application.UseCases.Places.CreatePlace;
 using BearNecessities.Application.UseCases.Places.DeletePlace;
+using BearNecessities.Application.UseCases.Places.GetHappeningNow;
 using BearNecessities.Application.UseCases.Places.GetMyPlaces;
 using BearNecessities.Application.UseCases.Places.GetPendingPlaces;
 using BearNecessities.Application.UseCases.Places.GetPlaceById;
@@ -29,6 +30,7 @@ public class PlacesController : BaseApiController
     private readonly SearchPlacesHandler _searchHandler;
     private readonly GetMyPlacesHandler _myPlacesHandler;
     private readonly RemovePlacePhotoHandler _removePhotoHandler;
+    private readonly GetHappeningNowHandler _happeningNowHandler;
 
     public PlacesController(
         GetPlacesByViewportHandler viewportHandler,
@@ -42,7 +44,8 @@ public class PlacesController : BaseApiController
         GetPendingPlacesHandler pendingHandler,
         SearchPlacesHandler searchHandler,
         GetMyPlacesHandler myPlacesHandler,
-        RemovePlacePhotoHandler removePhotoHandler)
+        RemovePlacePhotoHandler removePhotoHandler,
+        GetHappeningNowHandler happeningNowHandler)
     {
         _viewportHandler = viewportHandler;
         _densityHandler = densityHandler;
@@ -56,6 +59,7 @@ public class PlacesController : BaseApiController
         _searchHandler = searchHandler;
         _myPlacesHandler = myPlacesHandler;
         _removePhotoHandler = removePhotoHandler;
+        _happeningNowHandler = happeningNowHandler;
     }
 
     [HttpGet("mine")]
@@ -97,6 +101,15 @@ public class PlacesController : BaseApiController
         var response = await _viewportHandler.HandleAsync(request, cancellationToken);
         return Ok(response);
     }
+
+    // Places open right now and events on now or soon, around the visitor's location
+    [HttpGet("now")]
+    public async Task<IActionResult> GetHappeningNow(
+        [FromQuery] decimal lat,
+        [FromQuery] decimal lng,
+        [FromQuery] double? radiusKm = null,
+        CancellationToken cancellationToken = default) =>
+        Ok(await _happeningNowHandler.HandleAsync(new GetHappeningNowRequest(lat, lng, radiusKm), cancellationToken));
 
     [HttpGet("density")]
     public async Task<IActionResult> GetDensity(

@@ -7,6 +7,9 @@ import {
 import { Router } from '@angular/router';
 import { resolveMediaUrl } from '../utils/media-url';
 
+// Angular's service worker names the cache of the "api" data group in ngsw-config.json "...:data:api:..."
+const OFFLINE_API_CACHE_MARKER = ':data:api:';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -53,7 +56,16 @@ export class AuthService {
     }
 
     this.clearStorage();
+    this.clearOfflineCopies();
     this.router.navigate(['/map']);
+  }
+
+  // The service worker keeps API answers (RSVPs, saved places, messages) for offline use; the next person on this device mustn't see them
+  private clearOfflineCopies(): void {
+    if (typeof caches === 'undefined') return;
+    caches.keys()
+      .then(names => Promise.all(names.filter(name => name.includes(OFFLINE_API_CACHE_MARKER)).map(name => caches.delete(name))))
+      .catch(() => undefined);
   }
 
   /** Keeps the signed-in user (and its stored copy) in step after they edit their profile. */

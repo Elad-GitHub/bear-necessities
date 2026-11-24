@@ -10,11 +10,18 @@ export interface ActiveTrip {
   requestedDays: number;
 }
 
+interface StoredTrip {
+  trip: ActiveTrip;
+  savedAt: number;
+}
+
 const STORAGE_KEY = 'active_trip';
+const KEEP_TRIP_DAYS = 30;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /**
- * Keeps the planned trip while the traveller opens a stop's page, so coming back to the map
- * shows the same route instead of an empty map. Kept for the browser tab's lifetime.
+ * Keeps the planned trip on this device until the traveller exits it, so the route is still there
+ * after opening a stop's page, closing the browser, or opening the app without signal.
  */
 @Injectable({ providedIn: 'root' })
 export class TripSessionService {
@@ -36,17 +43,24 @@ export class TripSessionService {
 
   private writeStored(trip: ActiveTrip | null): void {
     try {
-      if (trip) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(trip));
-      else sessionStorage.removeItem(STORAGE_KEY);
+      if (trip) localStorage.setItem(STORAGE_KEY, JSON.stringify({ trip, savedAt: Date.now() } satisfies StoredTrip));
+      else localStorage.removeItem(STORAGE_KEY);
     } catch {
       // Storage can be blocked (private mode); the in-memory copy still covers in-app navigation
     }
   }
 
+  // An old plan from a past trip would be a surprise; it drops after a month
   private readStored(): ActiveTrip | null {
     try {
-      const stored = sessionStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) as ActiveTrip : null;
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return null;
+      const { trip, savedAt } = JSON.parse(stored) as StoredTrip;
+      if (!trip || Date.now() - savedAt > KEEP_TRIP_DAYS * MS_PER_DAY) {
+        localStorage.removeItem(STORAGE_KEY);
+        return null;
+      }
+      return trip;
     } catch {
       return null;
     }

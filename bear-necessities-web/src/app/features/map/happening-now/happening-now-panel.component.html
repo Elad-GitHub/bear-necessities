@@ -1,0 +1,59 @@
+<div class="now-panel" role="dialog" aria-label="Happening now">
+  <div class="now-header">
+    <h3><span class="live-dot"></span> Happening now</h3>
+    <button class="now-close" (click)="closed.emit()" aria-label="Close">
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+
+  <p class="now-where" *ngIf="!isLoading()">
+    <span class="material-icons">{{ isAroundUser() ? 'my_location' : 'center_focus_weak' }}</span>
+    Within {{ radiusKm }} km of {{ isAroundUser() ? 'you' : 'the map centre' }}
+    <button *ngIf="isAroundUser()" class="now-link" (click)="useMapCenter()">Use the map instead</button>
+  </p>
+
+  <p class="now-empty" *ngIf="isOffline()">You're offline. What's open right now needs a connection.</p>
+
+  <div class="now-loading" *ngIf="isLoading()">
+    <span class="material-icons spin">sync</span> Looking around...
+  </div>
+
+  <ng-container *ngIf="!isLoading() && result() as found">
+    <section *ngIf="found.events.length > 0">
+      <h4>On now and later today</h4>
+      <ul class="now-list">
+        <li *ngFor="let happening of found.events">
+          <button (click)="eventSelected.emit(happening.id)">
+            <span class="now-time" [class.ongoing]="happening.isOngoing">{{ describeStart(happening) }}</span>
+            <span class="now-name">{{ happening.title }}</span>
+            <span class="now-meta">{{ happening.placeName }} · {{ describeDistance(happening.distanceKm) }}</span>
+          </button>
+        </li>
+      </ul>
+    </section>
+
+    <section *ngIf="found.openPlaces.length > 0">
+      <h4>Open right now</h4>
+      <ul class="now-list">
+        <li *ngFor="let place of found.openPlaces; trackBy: trackPlace">
+          <button (click)="placeSelected.emit(place.id)">
+            <span class="now-name">{{ place.name }}</span>
+            <span class="now-meta">
+              <span class="open-tag">{{ describeOpenUntil(place.closesAt) }}</span> · {{ describeDistance(place.distanceKm) }}
+            </span>
+          </button>
+        </li>
+      </ul>
+    </section>
+
+    <div class="now-empty" *ngIf="isEmpty()">
+      <p>Nothing open or happening here right now that we know of.</p>
+      <button *ngIf="isAroundUser()" class="now-link" (click)="useMapCenter()">Look around the map instead</button>
+    </div>
+
+    <p class="now-note" *ngIf="found.placesNearby > found.placesWithHours">
+      {{ found.placesWithHours }} of {{ found.placesNearby }} places nearby list their opening hours,
+      so others may be open too.
+    </p>
+  </ng-container>
+</div>

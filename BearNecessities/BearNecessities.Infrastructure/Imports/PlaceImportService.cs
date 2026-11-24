@@ -22,11 +22,13 @@ public sealed class PlaceImportService : IPlaceImportService
 
     private readonly BearNecessitiesDbContext _db;
     private readonly ILogger<PlaceImportService> _logger;
+    private readonly ITimeZoneLookup _timeZones;
 
-    public PlaceImportService(BearNecessitiesDbContext db, ILogger<PlaceImportService> logger)
+    public PlaceImportService(BearNecessitiesDbContext db, ILogger<PlaceImportService> logger, ITimeZoneLookup timeZones)
     {
         _db = db;
         _logger = logger;
+        _timeZones = timeZones;
     }
 
     public async Task<ImportReport> ImportAsync(
@@ -169,10 +171,12 @@ public sealed class PlaceImportService : IPlaceImportService
         IReadOnlyDictionary<string, Category> categoriesBySlug,
         bool autoApprove)
     {
-        var place = Place.Create(candidate.Name, candidate.Latitude, candidate.Longitude, "UTC", owner.Id);
+        var place = Place.Create(candidate.Name, candidate.Latitude, candidate.Longitude,
+            _timeZones.FindTimeZone(candidate.Latitude, candidate.Longitude), owner.Id);
 
         if (!string.IsNullOrWhiteSpace(candidate.Description))
             place.SetDescription(candidate.Description);
+        place.SetOpeningHours(candidate.OpeningHours);
 
         place.SetAddress(candidate.Address, candidate.City, candidate.Country, candidate.CountryCode);
         place.SetIsPermanent(candidate.IsPermanent);

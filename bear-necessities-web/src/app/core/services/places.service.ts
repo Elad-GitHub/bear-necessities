@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { PlaceSummaryDto, PlaceDetailDto, PlaceDensityResponse } from '../models/place.model';
+import { HappeningNowResponse } from '../models/happening-now.model';
 import { ApiService } from './api.service';
 
 /** Days chosen in the map's "When?" filter, as YYYY-MM-DD. */
@@ -69,6 +70,11 @@ export class PlacesService {
     if (!dates) return;
     params['from'] = dates.from;
     params['to'] = dates.to;
+  }
+
+  /** Places open right now and events on now or soon, around a point. */
+  getHappeningNow(latitude: number, longitude: number, radiusKm: number): Observable<HappeningNowResponse> {
+    return this.api.get<HappeningNowResponse>('/places/now', { lat: latitude, lng: longitude, radiusKm });
   }
 
   getById(id: string): Observable<PlaceDetailDto> {

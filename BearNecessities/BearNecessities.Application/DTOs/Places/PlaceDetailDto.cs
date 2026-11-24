@@ -27,4 +27,5 @@ public record PlaceDetailDto(
     DateTime CreatedAt,
     string? PhotoUrl = null,
     string? PhotoCredit = null,
-    string? PhotoCreditUrl = null);
+    string? PhotoCreditUrl = null,
+    string? OpeningHours = null);

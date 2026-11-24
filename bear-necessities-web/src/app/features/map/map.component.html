@@ -139,6 +139,10 @@
       <app-bear-icon name="going" [size]="20"></app-bear-icon>
       When?
     </span>
+    <button class="when-now" [class.active]="isNowOpen()" (click)="toggleNow()" [attr.aria-expanded]="isNowOpen()"
+      title="What's open and what's on near you right now">
+      <span class="now-dot"></span> Now
+    </button>
     <button [class.active]="whenOption() === 'anytime'" (click)="setWhen('anytime')">Anytime</button>
     <button [class.active]="whenOption() === 'week'" (click)="setWhen('week')">This week</button>
     <button [class.active]="whenOption() === 'month'" (click)="setWhen('month')">This month</button>
@@ -152,6 +156,10 @@
       <button class="when-apply" (click)="applyCustomDates()" [disabled]="!customFrom()">Show</button>
     </div>
   </div>
+
+  <app-happening-now-panel *ngIf="isNowOpen() && !tripActive()" [mapCenter]="nowCenter()!"
+    (closed)="isNowOpen.set(false)" (placeSelected)="focusPlace($event)" (eventSelected)="openEvent($event)">
+  </app-happening-now-panel>
 
   <!-- How many places match the filter anywhere on the map, with a jump to them -->
   <div class="found-chip" *ngIf="foundSummary() as found" role="status">

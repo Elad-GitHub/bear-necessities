@@ -16,4 +16,5 @@ public sealed record ImportPlace(
     string? Country = null,
     string? CountryCode = null,
     string? Website = null,
+    string? OpeningHours = null,
     bool IsPermanent = true);

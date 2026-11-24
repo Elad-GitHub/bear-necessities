@@ -30,6 +30,7 @@ public class PlaceConfiguration : IEntityTypeConfiguration<Place>
         builder.Property(p => p.Country).HasMaxLength(100);
         builder.Property(p => p.CountryCode).HasMaxLength(3);
         builder.Property(p => p.Timezone).IsRequired().HasMaxLength(100);
+        builder.Property(p => p.OpeningHours).HasMaxLength(Place.MaxOpeningHoursLength);
         builder.Property(p => p.ExternalSourceId).HasMaxLength(256);
 
         builder.Property(p => p.OwnerId)

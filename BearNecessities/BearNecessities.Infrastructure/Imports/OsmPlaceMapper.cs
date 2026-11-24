@@ -37,6 +37,7 @@ public static class OsmPlaceMapper
             Country: countryName ?? iso,
             CountryCode: iso.ToUpperInvariant(),
             Website: Tag(tags, "website") ?? Tag(tags, "contact:website"),
+            OpeningHours: Tag(tags, "opening_hours"),
             IsPermanent: true);
     }
 

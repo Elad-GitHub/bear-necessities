@@ -2,3 +2,25 @@
   display: block;
   height: 100%;
 }
+
+.offline-banner {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  z-index: 2000;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: #37474f;
+  color: white;
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+
+  .material-icons { font-size: 18px; }
+}

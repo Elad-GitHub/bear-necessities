@@ -65,6 +65,7 @@ public sealed class GetPlaceByIdHandler
             CreatedAt: place.CreatedAt,
             PhotoUrl: place.PhotoUrl,
             PhotoCredit: place.PhotoCredit,
-            PhotoCreditUrl: place.PhotoCreditUrl));
+            PhotoCreditUrl: place.PhotoCreditUrl,
+            OpeningHours: place.OpeningHours));
     }
 }

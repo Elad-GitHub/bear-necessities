@@ -136,6 +136,7 @@ public static class DependencyInjection
         services.AddScoped<IGroupRepository, GroupRepository>();
 
         // Bulk import pipeline (OSM + CSV → shared importer)
+        services.AddSingleton<ITimeZoneLookup, Places.GeoTimeZoneLookup>();
         services.AddScoped<IPlaceImportService, Imports.PlaceImportService>();
         services.AddScoped<Imports.CsvImportService>();
         services.AddScoped<Imports.OsmPbfImportService>();
@@ -213,6 +214,7 @@ public static class DependencyInjection
         services.AddSingleton<Trips.AiPlannerBudget>();
         services.AddHttpClient<Trips.GeminiItineraryPlanner>();
         services.AddScoped<IItineraryPlanner, Trips.FallbackItineraryPlanner>();
+        services.AddScoped<BearNecessities.Application.UseCases.Places.GetHappeningNow.GetHappeningNowHandler>();
         services.AddScoped<GetEventsByViewportHandler>();
         services.AddScoped<GetEventsByPlaceHandler>();
 
