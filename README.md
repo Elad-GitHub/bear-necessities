@@ -6,7 +6,7 @@
 cacao ceremonies, hippie markets and festival grounds — wherever you land, find the places and gatherings
 that speak to you.
 
-![The map: festival grounds near Idanha-a-Nova with the next event's date on the pin](docs/screenshots/map.png)
+![The map around Ubud, Bali: bears for single places, honey paws for clusters](docs/screenshots/map.png)
 
 ## What it does
 
@@ -18,17 +18,20 @@ that speak to you.
   always open plus what's happening then, so festival grounds only appear while a festival is on.
 - **Happening now.** One tap shows what's on near you in the next few hours, and which places are
   open right now by their opening hours, in the place's own time zone.
+
+  ![Happening now in Ubud: places open right now, with closing time and distance](docs/screenshots/now.png)
+
 - **14 categories, 70+ subcategories**, each drawn as a bear (Movement, Healing, Music & Sound,
   Ceremonies…). Filtered matches pulse on the map, and a chip counts them worldwide with a jump to them.
 
-  ![Filtering by Retreat: the match pulses and a chip offers to fly there](docs/screenshots/filter.png)
+  ![Filtering by Retreat: matches pulse worldwide and a chip offers to fly there](docs/screenshots/filter.png)
 
 - **Community-built and moderated.** Anyone can add a place or event ("Drop a paw"), suggest an edit,
   share photos or attach them to a review. Everything from members waits in **Paw of Approval** — new
   listings, suggested edits (shown field by field, now vs. suggested), photos and new members — while
   admins' own changes go live straight away.
 
-  ![A place page with the community gallery and a review with a photo](docs/screenshots/place.png)
+  ![A place page with its photos, directions and reviews](docs/screenshots/place.png)
   ![Paw of Approval: member photos waiting for review](docs/screenshots/approvals.png)
 
 - **Photos with credit.** Places without their own photos get a freely licensed one from Wikimedia
