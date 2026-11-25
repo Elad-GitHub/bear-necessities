@@ -16,7 +16,9 @@ that speak to you.
   A venue with something coming up wears a gold ring and the date; its page says what's next.
 - **"When?" filter.** Anytime, this week, this month or picked dates: with dates chosen the map keeps what's
   always open plus what's happening then, so festival grounds only appear while a festival is on.
-- **14 categories, 80+ subcategories**, each drawn as a bear (Movement, Healing, Music & Sound,
+- **Happening now.** One tap shows what's on near you in the next few hours, and which places are
+  open right now by their opening hours, in the place's own time zone.
+- **14 categories, 70+ subcategories**, each drawn as a bear (Movement, Healing, Music & Sound,
   Ceremonies…). Filtered matches pulse on the map, and a chip counts them worldwide with a jump to them.
 
   ![Filtering by Retreat: the match pulses and a chip offers to fly there](docs/screenshots/filter.png)
@@ -31,9 +33,16 @@ that speak to you.
 
 - **Photos with credit.** Places without their own photos get a freely licensed one from Wikimedia
   Commons, matched by location and name, with the photographer credited.
-- **Bear-foot trip planner** groups what's around a destination into a few days of stops.
+- **Bear-foot trip planner** turns a destination and a free-text wish ("sound healing and a quiet beach")
+  into a few days of stops at sensible distances, one activity of each kind per day. Gemini plans the
+  days when a key is set; otherwise the built-in planner does.
+- **My Schedule** lays out your upcoming events by day, next to the planned trip and your Want-to-go places.
+- **Meeting points.** Drop a spot and a time on the map and share the link with friends.
+- **Works offline.** The app keeps the places and events you've already seen, and your
+  planned trip, for when the signal drops.
 - **Profiles** with a photo (or a bear on honey yellow until there is one), saved places
   (want to go / been there / loved it), RSVPs and the listings you've added.
+- **Feedback from inside the app.** Anyone can send a bug report or an idea; admins read them in an inbox.
 
 ![The bear icon set](docs/screenshots/bear-icons.png)
 
@@ -43,10 +52,11 @@ that speak to you.
 |---|---|
 | API | .NET 8, ASP.NET Core, EF Core 8, SQL Server, Serilog |
 | Architecture | Clean Architecture (Domain → Application → Infrastructure → API), one handler per use case, value-object IDs, Unit of Work |
-| Web | Angular 22, signals, Mapbox GL JS v3 |
+| Web | Angular 22, signals, Mapbox GL JS v3, Angular service worker for offline use |
 | Storage | Cloudflare R2 (S3-compatible) with presigned uploads |
-| Data | OpenStreetMap via the Overpass API, Wikimedia Commons for photos |
-| Tests | xUnit, Moq, FluentAssertions (167 tests), Vitest |
+| Data | OpenStreetMap via the Overpass API or Geofabrik extracts, Wikimedia Commons for photos, GeoTimeZone for local time |
+| AI | Gemini for trip plans (optional) |
+| Tests | xUnit, Moq, FluentAssertions (290 tests), Vitest |
 
 ```
 BearNecessities/            .NET solution
@@ -54,7 +64,7 @@ BearNecessities/            .NET solution
   BearNecessities.Application     use-case handlers, DTOs
   BearNecessities.Infrastructure  EF Core, repositories, OSM import, photo matching, storage
   BearNecessities.API             controllers, auth, command-line import tools
-  BearNecessities.Application.Tests
+  BearNecessities.*.Tests         Domain, Application and Infrastructure tests
 bear-necessities-web/       Angular app
   design/                         scripts that generate the bear icons and paw markers
 ```
@@ -72,6 +82,7 @@ dotnet user-secrets set "JwtSettings:SecretKey" "<a long random string>"
 dotnet user-secrets set "Storage:AccountId" "<Cloudflare account id>"
 dotnet user-secrets set "Storage:AccessKey" "<R2 access key>"
 dotnet user-secrets set "Storage:SecretKey" "<R2 secret key>"
+dotnet user-secrets set "Gemini:ApiKey" "<optional: Gemini key for trip plans>"
 ```
 
 **2. API** (applies migrations and seeds demo data on start):
