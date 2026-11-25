@@ -102,7 +102,8 @@ await BearNecessities.Infrastructure.Persistence.DatabaseStartup.MigrateAndSeedA
 //   dotnet run --project BearNecessities.API -- import-pbf --file ./portugal-latest.osm.pbf --iso PT --country Portugal
 //   dotnet run --project BearNecessities.API -- import-csv --file ./places.csv --approve
 //   dotnet run --project BearNecessities.API -- find-photos [--country PT] [--limit 500]
-string[] consoleCommands = ["import-osm", "import-pbf", "import-csv", "find-photos"];
+//   dotnet run --project BearNecessities.API -- fix-timezones
+string[] consoleCommands = ["import-osm", "import-pbf", "import-csv", "find-photos", "fix-timezones"];
 if (args.Length > 0 && consoleCommands.Contains(args[0]))
 {
     static string? ArgValue(string[] all, string key)
@@ -120,6 +121,11 @@ if (args.Length > 0 && consoleCommands.Contains(args[0]))
         var photos = services.GetRequiredService<BearNecessities.Infrastructure.Imports.PlacePhotoService>();
         var (checkedCount, foundCount) = await photos.FindMissingPhotosAsync(ArgValue(args, "--country"), limit);
         Console.WriteLine($"Photos -> checked={checkedCount}, found={foundCount}");
+    }
+    else if (args[0] == "fix-timezones")
+    {
+        var backfill = services.GetRequiredService<BearNecessities.Infrastructure.Places.PlaceTimezoneBackfillService>();
+        Console.WriteLine($"Time zones -> {await backfill.BackfillAsync()}");
     }
     else if (args[0] == "import-osm")
     {

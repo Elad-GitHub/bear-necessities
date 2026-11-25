@@ -137,6 +137,7 @@ public static class DependencyInjection
 
         // Bulk import pipeline (OSM + CSV → shared importer)
         services.AddSingleton<ITimeZoneLookup, Places.GeoTimeZoneLookup>();
+        services.AddScoped<Places.PlaceTimezoneBackfillService>();
         services.AddScoped<IPlaceImportService, Imports.PlaceImportService>();
         services.AddScoped<Imports.CsvImportService>();
         services.AddScoped<Imports.OsmPbfImportService>();
