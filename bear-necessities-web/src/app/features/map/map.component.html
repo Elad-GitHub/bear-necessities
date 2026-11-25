@@ -48,7 +48,7 @@
       <button class="trip-day-header" (click)="focusTripDay(day)">
         <span class="trip-day-dot" [style.background]="dayColor(day.dayNumber)"></span>
         <strong>Day {{ day.dayNumber }}</strong>
-        <span class="trip-day-meta">{{ day.stops.length }} stops<ng-container *ngIf="day.distanceKm > 0"> · {{ day.distanceKm | number:'1.0-1' }} km</ng-container></span>
+        <span class="trip-day-meta">{{ day.stops.length }} {{ day.stops.length === 1 ? 'stop' : 'stops' }}<ng-container *ngIf="day.distanceKm > 0"> · {{ day.distanceKm | number:'1.0-1' }} km</ng-container></span>
         <span class="material-icons">zoom_in_map</span>
       </button>
       <p class="trip-day-title" *ngIf="day.title">{{ day.title }}</p>

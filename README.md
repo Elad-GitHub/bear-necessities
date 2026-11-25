@@ -6,7 +6,7 @@
 cacao ceremonies, hippie markets and festival grounds — wherever you land, find the places and gatherings
 that speak to you.
 
-![The map around Ubud, Bali: bears for single places, honey paws for clusters](docs/screenshots/map.png)
+![The map around Ubud, Bali: bears for single places, honey paws for clusters](docs/screenshots/map-ubud.png)
 
 ## What it does
 
@@ -19,26 +19,32 @@ that speak to you.
 - **Happening now.** One tap shows what's on near you in the next few hours, and which places are
   open right now by their opening hours, in the place's own time zone.
 
-  ![Happening now in Ubud: places open right now, with closing time and distance](docs/screenshots/now.png)
+  ![Happening now in Ubud: places open right now, with closing time and distance](docs/screenshots/happening-now.png)
 
 - **14 categories, 70+ subcategories**, each drawn as a bear (Movement, Healing, Music & Sound,
   Ceremonies…). Filtered matches pulse on the map, and a chip counts them worldwide with a jump to them.
 
-  ![Filtering by Retreat: matches pulse worldwide and a chip offers to fly there](docs/screenshots/filter.png)
+  ![Filtering by Retreat: matches pulse worldwide and a chip offers to fly there](docs/screenshots/filter-retreat.png)
 
 - **Community-built and moderated.** Anyone can add a place or event ("Drop a paw"), suggest an edit,
   share photos or attach them to a review. Everything from members waits in **Paw of Approval** — new
   listings, suggested edits (shown field by field, now vs. suggested), photos and new members — while
   admins' own changes go live straight away.
 
-  ![A place page with its photos, directions and reviews](docs/screenshots/place.png)
+  ![A place page with its photos, directions and reviews](docs/screenshots/place-page.png)
   ![Paw of Approval: member photos waiting for review](docs/screenshots/approvals.png)
 
 - **Photos with credit.** Places without their own photos get a freely licensed one from Wikimedia
   Commons, matched by location and name, with the photographer credited.
-- **Bear-foot trip planner** turns a destination and a free-text wish ("sound healing and a quiet beach")
-  into a few days of stops at sensible distances, one activity of each kind per day. Gemini plans the
-  days when a key is set; otherwise the built-in planner does.
+- **Bear-foot trip planner (AI).** Pick a destination, describe the trip in your own words ("slow days of
+  yoga and sound healing, vegan food, no parties"), pick interests if you like, and choose how many days.
+  Gemini turns the places on the map into a day-by-day plan: each day gets a title, its own colour and
+  route on the map, and a line on why each stop fits you. Days stay within about 20 km, with one activity
+  of each kind per day. Without a Gemini key, or if it is slow, the built-in planner makes the plan.
+
+  ![The trip planner: a destination, a trip described in plain words and the number of days](docs/screenshots/trip-planner-wish.png)
+  ![A three-day plan around Ubud made with AI, each day in its own colour on the map](docs/screenshots/trip-planner-days.png)
+
 - **My Schedule** lays out your upcoming events by day, next to the planned trip and your Want-to-go places.
 - **Meeting points.** Drop a spot and a time on the map and share the link with friends.
 - **Works offline.** The app keeps the places and events you've already seen, and your
